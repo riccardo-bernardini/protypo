@@ -1,2 +1,2 @@
-# protypo
+# Protypo
 Another template engine "alla mia maniera" (in my style)
