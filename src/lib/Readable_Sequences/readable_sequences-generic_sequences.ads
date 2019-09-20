@@ -2,7 +2,7 @@ with Ada.Containers.Vectors;
 
 generic
    type Element_Type is private;
-package Generic_Sequences is
+package Readable_Sequences.Generic_Sequences is
    type Sequence is tagged private;
    type Cursor is private;
 
@@ -75,4 +75,4 @@ private
           raise Constraint_Error);
 
 
-end Generic_Sequences;
+end Readable_Sequences.Generic_Sequences;

@@ -1,5 +1,5 @@
 pragma Ada_2012;
-package body Generic_Sequences is
+package body Readable_Sequences.Generic_Sequences is
 
    ------------
    -- Append --
@@ -89,4 +89,4 @@ package body Generic_Sequences is
       Seq.Position := Seq.Position + 1;
    end Next;
 
-end Generic_Sequences;
+end Readable_Sequences.Generic_Sequences;
