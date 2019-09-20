@@ -2,6 +2,37 @@ pragma Ada_2012;
 package body Readable_Sequences.Generic_Sequences is
 
    ------------
+   -- Create --
+   ------------
+
+   function Create (Init : Element_Array) return Sequence
+   is
+      Result : Sequence := Sequence'(Vector         => Element_Vectors.Empty_Vector,
+                                     Position       => Cursor'First,
+                                     Old_Position   => <>,
+                                     Position_Saved => False);
+   begin
+      Result.Append (Init);
+
+      return Result;
+   end Create;
+
+
+   ------------
+   -- Append --
+   ------------
+
+   procedure Append
+     (Seq      : in out Sequence;
+      Elements : Element_Array)
+   is
+   begin
+      for C of Elements loop
+         Seq.Append (C);
+      end loop;
+   end Append;
+
+   ------------
    -- Append --
    ------------
 
@@ -69,7 +100,7 @@ package body Readable_Sequences.Generic_Sequences is
      (Seq : in out Sequence)
    is
    begin
-   if not Seq.Position_Saved then
+      if not Seq.Position_Saved then
          raise Constraint_Error;
       end if;
 

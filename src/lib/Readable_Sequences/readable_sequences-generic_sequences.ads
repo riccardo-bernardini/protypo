@@ -2,11 +2,17 @@ with Ada.Containers.Vectors;
 
 generic
    type Element_Type is private;
+   type Element_Array is array (Positive range <>) of Element_Type;
 package Readable_Sequences.Generic_Sequences is
    type Sequence is tagged private;
    type Cursor is private;
 
    Beginning : constant Cursor;
+
+   function Create (Init : Element_Array) return Sequence;
+
+   procedure Append (Seq      : in out Sequence;
+                     Elements : Element_Array);
 
    procedure Append (To   : in out Sequence;
                      What : Element_Type);
@@ -62,7 +68,7 @@ private
    is (Seq.Position_Saved);
 
 
-   function current_Position (Seq : Sequence) return Cursor
+   function Current_Position (Seq : Sequence) return Cursor
    is (Seq.Position);
 
    function End_Of_Sequence (Seq : Sequence) return Boolean
