@@ -14,6 +14,12 @@ A symbol table is a structure mapping names to value, but differently from a nor
 * When the block is exited,the corresponding node is deleted and the node who opened the block becomes the active one.
 * The root node can never be deleted and it contains the *global* symbols
 
+### Cursors
+
+There two type of *cursors* (like "internal pointer")
+1. Cursors to entries (used to read/write an entry value)
+1. Cursors to nodes (used to create new blocks, see below)
+
 ## Opening new blocks
 
 There are two cases when it is necessary to open a new block.  The first case is an *internal block* like, for example, an Ada `declare`
@@ -36,4 +42,18 @@ procedure Foo(X: Integer) is
  ```
  In this case we loose the connection with the local symbols of the caller, therefore the block is created as child of the root.
  
- In general, we can create a new block as a child of any node.  This would allow to have procedures defined inside other procedures, ... 
+ In general, we can create a new block as a child of any node.  This would allow to have procedures defined inside other procedures.  Therefore, we can imagine having the following procedures
+ 
+ ```
+ procedure Open_Block (Table  : Symbol_Table; 
+                       Parent : Table_Block := Table.Current_Block)
+ with Post => Parent_Of(Table.Current_Block) = Parent;
+                      
+ function Root (Table : Symbol) return Table_Block;
+ 
+ function Current_Block (Table : Symbol) return Table_Block;
+ 
+ procedure Close_Current_Block (Table : Symbol_Table)
+ with Pre => Table.Current_Block /= Table.Root;
+ 
+ ```
