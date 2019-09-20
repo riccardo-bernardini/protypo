@@ -6,3 +6,10 @@
 
 obj/gnatinspect.db
 obj/gpsauto.cgpr
+obj/generic_symbol_table.ads.stderr
+obj/generic_symbol_table.ads.stdout
+obj/generic_symbol_table.ali
+obj/gnatinspect.db
+obj/gnatinspect.db-shm
+obj/gnatinspect.db-wal
+obj/gpsauto.cgpr
