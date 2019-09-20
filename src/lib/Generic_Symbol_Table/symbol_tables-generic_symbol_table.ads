@@ -55,6 +55,8 @@ package Symbol_Tables.Generic_Symbol_Table is
                       return Boolean
    is (Table.Find (Name) /= No_Element);
 
+   function Value (Pos : Cursor) return Symbol_Value;
+
    function Contains (Block : Table_Block;
                       Name  : Symbol_Name)
                       return Boolean;
@@ -129,4 +131,9 @@ private
                       Name  : Symbol_Name)
                       return Boolean
    is (Block.Map.Contains (Name));
+
+
+   function Value (Pos : Cursor) return Symbol_value
+   is (Symbol_Maps.Element (Pos.Internal_Cursor));
+
 end Symbol_Tables.Generic_Symbol_Table;
