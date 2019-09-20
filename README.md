@@ -50,3 +50,33 @@ for WP in project.wps loop
 end loop;
 "\end{wp}";
 ```
+
+## Comments 
+
+We distinguish between three types of comments
+* In-code comments
+* Template comments
+* Target comments and *transparent* target comments
+
+The first type of comment is found in the code sections within #{...}#, they begin with -- and end at the end of line. 
+
+Template comments are found in the doc section, begin with '#--' at the beginning of the line (maybe with spaces in front?) and end the end of the line.  Template comments are just ignored, their presence has no influence on the result.
+
+Target comments are still found in the doc section. They are considered comments for the target language and are copied as they are in the output string. Inside target comments **start-of-code markers and marked names are ignored**.  If we want to be able to generate part of the target comment with code, we can write a *transparent* target comment that is a special case of target comment.  The marker for transparent target comments can be replaced by another string before storing it in the output string.
+
+The markers for template and target comments are configurable to be adapted to the specific target language.
+
+### Example
+
+In case of LaTeX as target language, transparent target comments begin with '%#\s' and it is replaced by '%'.  Therefore,
+
+```
+% This is just a comment #{ and this is ignored }# #this.too
+%# This is a transparent comment and #this.is.not.ignored (comment again)
+```
+is mapped to
+
+```
+"% This is just a comment #{ and this is ignored }# #this.too
+% This is a transparent comment and "; this.is.not.ignored; "(comment again)";
+```
