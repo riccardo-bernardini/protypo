@@ -8,7 +8,7 @@ generic
    type Symbol_Value (<>) is private;
    with function Hash (Key : Symbol_Name) return Ada.Containers.Hash_Type;
    with function Equivalent_Names (X, Y : Symbol_Name) return Boolean;
-package Generic_Symbol_Table is
+package Symbol_Tables.Generic_Symbol_Table is
    type Symbol_Table is
      new Finalization.Limited_Controlled
    with
@@ -55,11 +55,20 @@ package Generic_Symbol_Table is
                       return Boolean
    is (Table.Find (Name) /= No_Element);
 
+   function Contains (Block : Table_Block;
+                      Name  : Symbol_Name)
+                      return Boolean;
+
    procedure Create (Table         : in out Symbol_Table;
                      Name          : Symbol_Name;
                      Initial_Value : Symbol_Value)
      with
-       Post => Table.Contains (Name);
+       Pre =>
+         not Contains (Table.Current_Block, Name),
+     Post =>
+       Contains (Table.Current_Block, Name)
+     and
+       Table.Current_Block = Table.Current_Block'Old;
 
    procedure Update (Pos       : Cursor;
                      New_Value : Symbol_Value)
@@ -114,4 +123,10 @@ private
    function Parent_Of (T     : Symbol_Table;
                        Block : Table_Block) return Table_Block
    is (Block.Parent);
-end Generic_Symbol_Table;
+
+
+   function Contains (Block : Table_Block;
+                      Name  : Symbol_Name)
+                      return Boolean
+   is (Block.Map.Contains (Name));
+end Symbol_Tables.Generic_Symbol_Table;

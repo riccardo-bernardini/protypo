@@ -2,7 +2,7 @@ pragma Ada_2012;
 
 with Ada.Unchecked_Deallocation;
 
-package body Generic_Symbol_Table is
+package body Symbol_Tables.Generic_Symbol_Table is
 
 
 
@@ -124,4 +124,4 @@ package body Generic_Symbol_Table is
       Object.Current := Object.Root;
    end Initialize;
 
-end Generic_Symbol_Table;
+end Symbol_Tables.Generic_Symbol_Table;
