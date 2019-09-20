@@ -1,43 +1,15 @@
-with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
+with Readable_Sequences.Generic_Sequences;
+with Protypo.Tokens;
 
 package Protypo.Scanning is
-   type Token_Class is
-     (Int,
-      Real,
-      Text,
-      Plus,
-      Minus,
-      Mult,
-      Div,
-      Dot,
-      Open_Parenthesis,
-      Close_Parenthesis,
-      End_Of_Statement,
-      Kw_If,
-      Kw_Then,
-      Kw_Else,
-      Kw_End);
+   type Token_Array is array (Positive range<>) of Tokens.Token;
 
-   type Token is private;
+   package Token_Sequences is
+     new Readable_Sequences.Generic_Sequences (Element_Type  => Tokens.Token,
+                                               Element_Array => Token_Array);
 
-   function Class (Tk : Token) return Token_Class;
-   function Value (Tk : Token) return String;
+   subtype Token_List is Token_Sequences.Sequence;
 
-   type Token_List is tagged private;
-
-   function Tokenize(Input : String) return Token_List;
-private
-   type Token is
-      record
-         Class : Token_Class;
-         Value : Unbounded_String;
-      end record;
-
-
-   function Class (Tk : Token) return Token_Class
-   is (Tk.Class);
-
-   function Value (Tk : Token) return String
-   is (To_String (Tk.Value));
+   function Tokenize (Input : String) return Token_List;
 
 end Protypo.Scanning;
