@@ -11,7 +11,20 @@ with Ada.Characters.Latin_9; use Ada.Characters.Latin_9;
 with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Scanning is
+   type Error_Reason is
+     (Unexpected_Short_End);
 
+   -----------
+   -- Error --
+   -----------
+
+   procedure Error (Reason : Error_Reason)
+   is
+   begin
+      raise Scanning_Error with (case Reason is
+                                    when Unexpected_Short_End =>
+                                      "Unexpected end of short code");
+   end Error;
 
    type Set_String is array (Positive range <>) of Character_Set;
 
@@ -121,7 +134,7 @@ package body Protypo.Scanning is
       pragma Unreferenced (Input);
    begin
       pragma Compile_Time_Warning (True, "Code_Scanner unimplemented");
-      raise Program_Error;
+      raise Program_Error with "Unimplemented";
    end Code_Scanner;
 
    procedure  Small_Code_Scanner (Input  : in out String_Sequences.Sequence;
@@ -166,13 +179,13 @@ package body Protypo.Scanning is
 
                   State := In_ID;
                else
-                  raise Constraint_Error;
+                  Error (Unexpected_Short_End);
                end if;
          end case;
       end loop;
 
       if State = After_Dot then
-         raise Constraint_Error;
+         Error (Unexpected_Short_End);
       end if;
 
       pragma Assert (ID_Name.Length > 0);

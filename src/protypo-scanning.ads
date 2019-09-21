@@ -15,4 +15,6 @@ package Protypo.Scanning is
    procedure Dump (Item : Token_List);
    -- Print to stdout the content of Item.  Useful for debugging
 
+   Scanning_Error : exception;
+
 end Protypo.Scanning;

@@ -1,0 +1,9 @@
+\documentclass{pippo}
+\begin{WPs}
+\wpitem{#WP.number}{#WP.start}
+% Vediamo cosa combina #qui.dentro ciao
+%# Questo invece #dovrebbe
+#--  Questa dovrebbe essere completamente ignorata
+\end{WPs}
+#-- #questo.dovrebbe.
+
