@@ -10,6 +10,9 @@ package Protypo.Scanning is
 
    subtype Token_List is Token_Sequences.Sequence;
 
-   function Tokenize (Input : String) return Token_List;
+   function Tokenize (Template : String) return Token_List;
+
+   procedure Dump (Item : Token_List);
+   -- Print to stdout the content of Item.  Useful for debugging
 
 end Protypo.Scanning;

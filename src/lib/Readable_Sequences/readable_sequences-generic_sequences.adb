@@ -1,6 +1,33 @@
 pragma Ada_2012;
 package body Readable_Sequences.Generic_Sequences is
 
+   ----------
+   -- Dump --
+   ----------
+
+   function Dump (Seq : Sequence) return Element_Array
+   is
+      Result : Element_Array (Integer (Seq.Vector.First_Index) .. Integer (Seq.Vector.Last_Index));
+   begin
+      for K in Result'Range loop
+         Result (K) := Seq.Vector (Cursor (K));
+      end loop;
+
+      return Result;
+   end Dump;
+
+   -----------
+   -- Clear --
+   -----------
+
+   procedure Clear (Seq : in out Sequence)
+   is
+   begin
+      Seq.Vector.Clear;
+      Seq.Position := Beginning;
+      Seq.Position_Saved := False;
+   end Clear;
+
    ------------
    -- Create --
    ------------
@@ -111,13 +138,47 @@ package body Readable_Sequences.Generic_Sequences is
    -- Next --
    ----------
 
-   procedure Next (Seq : in out Sequence) is
+   procedure Next (Seq : in out Sequence;
+                   Step : Positive := 1)
+   is
    begin
-      if Seq.End_Of_Sequence then
-         raise Constraint_Error;
+      if Seq.Remaining < Step then
+         Seq.Position := Seq.Vector.Last_Index + 1;
+         return;
       end if;
 
-      Seq.Position := Seq.Position + 1;
+      Seq.Position := Seq.Position + Cursor (Step);
    end Next;
+
+
+   ----------
+   -- Back --
+   ----------
+
+   procedure Back (Seq : in out Sequence;
+                   Step : Positive := 1)
+   is
+   begin
+      if Seq.Position < Seq.Vector.First_Index + Cursor (Step) then
+         Seq.Position := Seq.Vector.First_Index;
+         return;
+      end if;
+
+      Seq.Position := Seq.Position - Cursor (Step);
+   end Back;
+
+
+   -------------
+   -- Process --
+   -------------
+
+   procedure Process (Seq : Sequence;
+                      Callback : access procedure (Item : Element_Type))
+   is
+   begin
+      for El of Seq.Vector loop
+         Callback (El);
+      end loop;
+   end Process;
 
 end Readable_Sequences.Generic_Sequences;

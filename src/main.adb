@@ -1,6 +1,6 @@
+with Protypo.Scanning;
 procedure Main is
-
+   use Protypo.Scanning;
 begin
-   --  Insert code here.
-   null;
+   Dump (Tokenize ("\wpitem{#WP.index}{#WP.start}{#WP.end}"));
 end Main;
