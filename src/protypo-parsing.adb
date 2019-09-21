@@ -1,7 +1,14 @@
 pragma Ada_2012;
 with Protypo.Tokens;
+with Readable_Sequences.Generic_Sequences;
+
+use Readable_Sequences;
 
 package body Protypo.Parsing is
+
+   package Statement_Sequences is
+     new Generic_Sequences (Element_Type  => Code_Trees.Parsed_Code,
+                            Element_Array => Code_Trees.Tree_Array);
 
    ------------------------------
    -- Parse_Statement_Sequence --
@@ -11,16 +18,30 @@ package body Protypo.Parsing is
      (Input : in out Scanning.Token_List) return Code_Trees.Parsed_Code
    is
       use Tokens;
+      use Code_Trees;
+
+      Result : Statement_Sequences.Sequence;
    begin
       while not Input.End_Of_Sequence loop
          case Class(Input.Read)	 is
-            when Int | Real | Text | Plus | Minus|  Open_Parenthesis =>
-               Parse_Naked_Expression;
+            when Int | Real | Text | Plus | Minus | Open_Parenthesis =>
+               declare
+                  Expr : Parsed_Code := Parse_Expression;
+               begin
+                  Input.Expect (End_Of_Statement);
+                  Result.Append (Naked_Expression (Expr));
+               end;
 
             when Identifier =>
-               Parse_Name;
+               declare
+                  Name : Parsed_Code :=  Parse_Name;
+               begin
+                  if Class (Input.Read) = Assign then
+                     null;
+                  end if;
                pragma Compile_Time_Warning (True, "Warning");
                raise Program_Error;
+               end;
 
             when Kw_If =>
                Parse_Conditional;
