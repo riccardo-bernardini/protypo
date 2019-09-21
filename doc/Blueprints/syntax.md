@@ -50,3 +50,5 @@ Node actions
 * CALL (reference, parameter list)
 * statement list (vector of nodes)
 * naked expression (expression)
+* assignment (name reference, expression)
+* return (expression optional)
