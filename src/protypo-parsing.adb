@@ -13,8 +13,8 @@ package body Protypo.Parsing is
       use Tokens;
    begin
       while not Input.End_Of_Sequence loop
-         case Input.Read is
-            when Int | Real | Text | Plus | Minus  Open_Parenthesis =>
+         case Class(Input.Read)	 is
+            when Int | Real | Text | Plus | Minus|  Open_Parenthesis =>
                Parse_Naked_Expression;
 
             when Identifier =>
@@ -29,8 +29,17 @@ package body Protypo.Parsing is
                Parse_Case;
 
             when Kw_For =>
+               Parse_For_Loop;
+
+            when Kw_While =>
+               Parse_While_Loop;
+
             when Kw_Loop =>
+               Parse_Loop;
+
             when Kw_Return =>
+               Parse_Return;
+
             when Mult             | Div              | Equal |  Different  |
                  Less_Than        | Greater_Than     | Less_Or_Equal       |
                  Greater_Or_Equal | Assign           | Dot                 |
