@@ -67,6 +67,8 @@ package Readable_Sequences.Generic_Sequences is
      with
        Pre => Seq.Remaining > Ahead;
 
+   function Next (Seq : in out Sequence) return Element_Type;
+
 
    procedure Next (Seq  : in out Sequence;
                    Step : Positive := 1)
@@ -80,6 +82,8 @@ package Readable_Sequences.Generic_Sequences is
 
    procedure Process (Seq : Sequence;
                       Callback : access procedure (Item : Element_Type));
+
+   Beyond_End : exception;
 private
 
    type Cursor is range 1 .. Integer'Last;
@@ -116,7 +120,7 @@ private
    is (if Seq.Remaining > Ahead then
           Seq.Vector (Cursor (Positive (Seq.Position) + Ahead))
        else
-          raise Constraint_Error);
+          raise Beyond_End);
 
 
 end Readable_Sequences.Generic_Sequences;

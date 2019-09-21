@@ -1,9 +1,15 @@
 \documentclass{pippo}
 \begin{WPs}
+#{ for wp of project.wps loop
+-- Anche con un commento
+}#
 \wpitem{#WP.number}{#WP.start}
+#{ end loop; }#
+
 % Vediamo cosa combina #qui.dentro ciao
 %# Questo invece #dovrebbe
 #--  Questa dovrebbe essere completamente ignorata
 \end{WPs}
 #-- #questo.dovrebbe.
+
 

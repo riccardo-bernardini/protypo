@@ -1,6 +1,19 @@
 pragma Ada_2012;
 package body Readable_Sequences.Generic_Sequences is
 
+
+   ----------
+   -- Next --
+   ----------
+
+   function Next (Seq : in out Sequence) return Element_Type
+   is
+      Result : constant Element_Type := seq.Read;
+   begin
+      seq.Next;
+      return Result;
+   end Next;
+
    ----------
    -- Dump --
    ----------

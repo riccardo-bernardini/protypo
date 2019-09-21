@@ -1,18 +1,23 @@
 pragma Ada_2012;
-with Ada.Strings.Maps.Constants;
+with Ada.Characters.Latin_9;         use Ada.Characters.Latin_9;
+with Ada.Text_IO;                    use Ada.Text_IO;
+with Ada.Strings.Unbounded;          use Ada.Strings.Unbounded;
+with Ada.Strings.Maps.Constants;     use Ada.Strings.Maps.Constants;
 
 with Readable_Sequences.String_Sequences;
-
 use Readable_Sequences;
-use Ada.Strings.Maps;
-use Ada.Strings.Maps.Constants;
 
-with Ada.Characters.Latin_9; use Ada.Characters.Latin_9;
-with Ada.Text_IO; use Ada.Text_IO;
+use Ada.Strings.Maps;
 
 package body Protypo.Scanning is
+
+   Id_Charset : constant Character_Set := Alphanumeric_Set or To_Set ('_');
+
    type Error_Reason is
-     (Unexpected_Short_End);
+     (Unexpected_Short_End,
+      Unexpected_Token_In_Code,
+      Unexpected_Code_End,
+      Bad_Float);
 
    -----------
    -- Error --
@@ -22,8 +27,15 @@ package body Protypo.Scanning is
    is
    begin
       raise Scanning_Error with (case Reason is
-                                    when Unexpected_Short_End =>
-                                      "Unexpected end of short code");
+                                    when Unexpected_Short_End     =>
+                                      "Unexpected end of short code",
+                                    when Unexpected_Token_In_Code =>
+                                      "Unexpected token code",
+                                    when Unexpected_Code_End      =>
+                                      "Unexpected end  code",
+                                    when Bad_Float                =>
+                                      "Bad Float"
+                                );
    end Error;
 
    type Set_String is array (Positive range <>) of Character_Set;
@@ -84,6 +96,23 @@ package body Protypo.Scanning is
                   return Boolean
    is (Peek (Where, To_Set_String (What)));
 
+   ------------------
+   -- Peek_And_Eat --
+   ------------------
+
+   function Peek_And_Eat (Where : in out String_Sequences.Sequence;
+                          What  : String)
+                          return Boolean
+   is
+   begin
+      if Peek (Where, What) then
+         Where.Next (What'Length);
+         return True;
+      else
+         return False;
+      end if;
+   end Peek_And_Eat;
+
    --------------------
    -- At_End_Of_Line --
    --------------------
@@ -131,10 +160,184 @@ package body Protypo.Scanning is
    procedure  Code_Scanner (Input  : in out String_Sequences.Sequence;
                             Result : in out Token_List)
    is
-      pragma Unreferenced (Input);
+      use Tokens;
+
+      function "+" (X : String) return Unbounded_String
+                    renames To_Unbounded_String;
+
+      Simple_Tokens : constant array (Unvalued_Not_Keyword) of Unbounded_String :=
+                        (
+                         Plus              => +"+",
+                         Minus             => +"-",
+                         Mult              => +"*",
+                         Div               => +"/",
+                         Equal             => +"=",
+                         Different         => +"/=",
+                         Less_Than         => +"<",
+                         Greater_Than      => +">",
+                         Less_Or_Equal     => +"<=",
+                         Greater_Or_Equal  => +">=",
+                         Assign            => +":=",
+                         Dot               => +".",
+                         Open_Parenthesis  => +"(",
+                         Close_Parenthesis => +")",
+                         Tokens.Comma      => +",",
+                         End_Of_Statement  => +";"
+                        );
+
+      Keywords : constant array (Keyword_Tokens) of Unbounded_String :=
+                   (Kw_If     => +"if",
+                    Kw_Then   => +"then",
+                    Kw_Elsif  => +"elsif",
+                    Kw_Else   => +"else",
+                    Kw_Case   => +"case",
+                    Kw_When   => +"when",
+                    Kw_For    => +"for",
+                    Kw_Loop   => +"loop",
+                    Kw_Return => +"return",
+                    Kw_End    => +"end",
+                    Kw_And    => +"and",
+                    Kw_Or     => +"or",
+                    Kw_In     => +"in",
+                    Kw_Of     => +"of");
+
+
+      procedure Skip_Spaces is
+         Whitespace : constant Character_Set := To_Set (" " & HT & LF & CR);
+      begin
+         while (not Input.End_Of_Sequence) and then Is_In (Input.Read, Whitespace)  loop
+            Input.Next;
+         end loop;
+      end Skip_Spaces;
+
+      procedure Scan_Identifier is
+         Id : String_Sequences.Sequence;
+      begin
+         while Is_In (Input.Read, Id_Charset) loop
+            Id.Append (Input.Read);
+            Input.Next;
+         end loop;
+
+         for Tk in Keywords'Range loop
+            if To_String (Keywords (Tk)) = Id.Dump then
+               Result.Append (Make_Token (Tk));
+               return;
+            end if;
+         end loop;
+
+         Result.Append (Make_Token (Identifier, Id.Dump));
+      end Scan_Identifier;
+
+      procedure Scan_Number is
+         Buffer : String_Sequences.Sequence;
+      begin
+         if Input.Read = '+' or Input.Read = '-' then
+            Buffer.Append (Input.Next);
+         end if;
+
+         while Is_In (Input.Read, Decimal_Digit_Set) loop
+            Buffer.Append (Input.Next);
+         end loop;
+
+         if Input.Read /= '.' then
+            Result.Append (Make_Token (Int, Buffer.Dump));
+            return;
+         end if;
+
+         Buffer.Append (Input.Next);
+
+         while Is_In (Input.Read, Decimal_Digit_Set) loop
+            Buffer.Append (Input.Next);
+         end loop;
+
+         if Input.Read = 'e' or Input.Read = 'E' then
+            Buffer.Append (Input.Next);
+
+            if Input.Read = '+' or Input.Read = '-' then
+               Buffer.Append (Input.Next);
+            end if;
+
+            if not Is_In (Input.Read, Decimal_Digit_Set) then
+               Error (Bad_Float);
+            end if;
+
+            while Is_In (Input.Read, Decimal_Digit_Set) loop
+               Buffer.Append (Input.Next);
+            end loop;
+         end if;
+
+         Result.Append (Make_Token (Real, Buffer.Dump));
+      end Scan_Number;
+
+      procedure Scan_Text is
+         Buffer : String_Sequences.Sequence;
+      begin
+         Buffer.Clear;
+
+         loop
+            if Peek_And_Eat (Input, """") then
+               if Input.Read /= '"' then
+                  Result.Append (Make_Token (Text, Buffer.Dump));
+                  return;
+               end if;
+            end if;
+
+            Buffer.Append (Input.Next);
+         end loop;
+      end Scan_Text;
    begin
-      pragma Compile_Time_Warning (True, "Code_Scanner unimplemented");
-      raise Program_Error with "Unimplemented";
+      loop
+         Skip_Spaces;
+         exit when Peek_And_Eat (Input, "}#");
+
+         if Peek_And_Eat (Input, "--") then
+            Skip_Comment (Input);
+
+         elsif Is_In (Input.Read, Letter_Set) then
+            Scan_Identifier;
+
+         elsif Is_In (Input.Read, Decimal_Digit_Set or To_Set ("+-")) then
+            Scan_Number;
+
+         elsif Peek_And_Eat (Input, """") then
+            Scan_Text;
+
+         else
+            declare
+               Best_Match_Len : Natural := 0;
+               Best_Match     : Unvalued_Not_Keyword;
+               This_Match_Len : Natural;
+            begin
+               for Tk in Simple_Tokens'Range loop
+                  if Peek (Input, To_String (Simple_Tokens (Tk))) then
+
+                     This_Match_Len := Length (Simple_Tokens (Tk));
+
+                     if  This_Match_Len = Best_Match_Len then
+                        -- This should never happen
+                        raise Program_Error;
+
+                     elsif This_Match_Len > Best_Match_Len then
+                        Best_Match_Len := This_Match_Len;
+                        Best_Match := Tk;
+                     end if;
+                  end if;
+               end loop;
+
+               if Best_Match_Len > 0 then
+                  Result.Append (Make_Token (Best_Match));
+                  Input.Next (Best_Match_Len);
+               else
+                  Put_Line ("[" & Input.Read & "]");
+                  Error (Unexpected_Token_In_Code);
+               end if;
+            end;
+         end if;
+      end loop;
+
+   exception
+      when String_Sequences.Beyond_End =>
+         Error (Unexpected_Code_End);
    end Code_Scanner;
 
    procedure  Small_Code_Scanner (Input  : in out String_Sequences.Sequence;
@@ -145,8 +348,6 @@ package body Protypo.Scanning is
                                   Result : in out Token_List)
    is
       use Tokens;
-
-      Id_Charset : constant Character_Set := Alphanumeric_Set or To_Set ('_');
 
       type Scanner_State is (In_ID, After_Dot);
 

@@ -19,13 +19,24 @@ package Protypo.Tokens is
       End_Of_Statement,
       Kw_If,
       Kw_Then,
+      Kw_Elsif,
       Kw_Else,
+      Kw_Case,
+      Kw_When,
+      Kw_For,
+      Kw_Loop,
+      Kw_Return,
       Kw_End,
       Kw_And,
-      Kw_Or);
+      Kw_Or,
+      Kw_In,
+      Kw_Of);
+
 
    subtype Valued_Token is Token_Class range Int .. Identifier;
-   subtype Unvalued_Token is Token_Class range Plus .. Kw_Or;
+   subtype Unvalued_Token is Token_Class range Plus .. Kw_Of;
+   subtype Unvalued_Not_Keyword is Unvalued_Token range Plus .. End_Of_Statement;
+   subtype Keyword_Tokens is Unvalued_Token range Kw_If .. Kw_Of;
 
    type Token is private;
 
