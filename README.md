@@ -6,17 +6,22 @@ Another template engine "alla mia maniera" (in my style).
 This library is a templating engine that I wrote because unsatisfied of what I found around. It is though to be quite flexible and with a simple conceptual model.  The language syntax is very Ada-like. At the moment it is not strongly typed, but rather duck-typed "a la Ruby."
 
 ## The model
-A template is a program.  Every statement in the program produces an output (that can be void) of type Engine_Value  that is passed to a "consumer" defined by the library user (that is, who writes the application that uses this library).  The consumer can do whatever it wants with the output; in the default case the statement output is converted to string (when meningful) 
+A template is a program written in a language with an Ada-ish syntax.  Differently from Ada (and similarly to C) the language allows *naked expressions* like
 
-A special characteristic of the template language is that any expression can be used as statement (a la C).  A basic syntax can be
+```
+"Hello world";
+```
+Differently from C, however, naked expressions have side-effect.  More precisely, every time a naked expression is evaluated, the result (of type Engine_Value) is passed to a "consumer" defined by the library user (that is, who writes the application that uses this library).  The consumer can do whatever it wants with the output; in the default case the statement output is converted to string (when meningful) and printed on a file.
+
+A basic syntax can be
 
 ```
 statement := simple_statement | compound
-simple_statement := assignment | return | string | name
+simple_statement := assignment | return | expression
 compound  := if | loop | case
 ```
 
-Syntax is very Ada-like, but with some semplification (e.g, no task, type definitions, ...), allowing for indexing components and selectors.  Also assignement could accept a list of names on the LHS.  The only statements that return non-void values are "naked expressions" like `"foo";` or `42;`, any other statement (including assignments) return void.
+As said above, syntax is very Ada-like, but with some semplification (e.g, no task, type definitions, ...), allowing for indexing components and selectors.  Also assignement could accept a list of names on the LHS.  
 
 ## "Here doc" syntax
 
