@@ -47,7 +47,9 @@ names = {'program',
 	 'basic'
 	}
 
-for k=1:length(names)
+alphabet_size = length(names);
+
+for k=1:alphabet_size
   eval([names{k} '=k'])
 end
 
@@ -93,7 +95,7 @@ ELSE seq_stat
   expression stat_loop
   WHILE expression];
 	  
-R_vicini = zeros(size(vicini,1));
+R_vicini = zeros(alphabet_size);
 for k=1:size(vicini,1)
   R_vicini(vicini(k,1), vicini(k,2))=1;
 end
@@ -129,7 +131,7 @@ first = [program seq_stat
 	 stat_for FOR
 	 stat_while WHILE ];
 
-R_first = zeros(size(first,1));
+R_first = zeros(alphabet_size);
 for k=1:size(first,1)
   R_first(first(k,1), first(k,2))=1;
 end
@@ -164,7 +166,13 @@ last = [program EOT
 	stat_for stat_loop
 	stat_while stat_loop];
 	
-R_last = zeros(size(last,1));
+R_last = zeros(alphabet_size);
 for k=1:size(last,1)
   R_last(last(k,1), last(k,2))=1;
 end
+
+first_plus = chiusura(R_first');
+last_plus = chiusura(R_last');
+I = eye(alphabet_size);
+
+R = last_plus' * R_vicini  * (I + first_plus);
