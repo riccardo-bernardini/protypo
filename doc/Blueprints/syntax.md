@@ -2,28 +2,34 @@
 This document describes the syntax of the template language.  The description is ABNF-like, even if not strictly formal. Uppercase identifiers are keywords, strings different from meta-characters (*, |, =, []) stand for themselves, metacharacters are prefixed with '
 
 ```
-program   = sequence_of_statement
+program   = sequence_of_statement  EOT
 sequence_of_statement = statement*
 statement = simple | compound
 simple    = naked_expr | assignment | return  
-compound  = if | case | loop | while | for 
+compound  = if | loop | while | for 
 
-naked_expr = [ expr_list ]
-assignment = name_list := expression ;
+naked_expr = '[ expr_list ']
+assignment = name_list := expr_list ;
 name_list  = name (, name)*
 name       = ID | name . ID | name '( expr_list ')
-return     = RETURN [ expression ] ;
+return     = RETURN [ expr_list ] ;
 
-expression = term ((+|-) term)*
-term       = factor (('*|/) factor)*
+expression = relation  [(AND relation)+ | (OR relation)+ | (XOR relation)+]
+relation   = simple_exp [ COMP simple_exp ]
+simple_exp = term [(+|-) simple_exp]
+term       = factor [('*|/) term]
 factor     = [+|-] basic
 basic     = '( expression ') | name | NUMBER | TEXT
-expr_list  = expression (, expression)*
+expr_list  = expression [, expr_list]
 
 if         = IF expression THEN sequence_of_statement 
              (ELSIF expression THEN sequence_of_statement)* 
              [ELSE sequence_of_statement] 
-             ENDIF ;
+             END IF ;
+             
+loop       = LOOP sequence_of_statement END LOOP;
+for        = FOR ID IN expression loop
+while      = WHILE expression loop
 ```
 Note that a name in basic can denote both a variable access or a function call (they are undistinguishable at the syntax level). By analyzing the FIRST relation we see that
 ```
