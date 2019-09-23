@@ -18,8 +18,9 @@ expression = relation  [(AND relation)+ | (OR relation)+ | (XOR relation)+]
 relation   = simple_exp [ COMP simple_exp ]
 simple_exp = term [(+|-) simple_exp]
 term       = factor [('*|/) term]
-factor     = [+|-|NOT] basic
-basic     = '( expression ') | name | NUMBER | TEXT
+factor     = [ unary_op ] primary
+unary_op   = +|-|NOT
+primary    = '( expression ') | name | NUMBER | TEXT
 expr_list  = expression [, expr_list]
 
 if         = IF expression THEN sequence_of_statement 
