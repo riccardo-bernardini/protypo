@@ -39,12 +39,17 @@ package Protypo.Code_Trees is
 
    function Identifier (Id : String) return Parsed_Code;
    function Function_Call (Function_Ref : Parsed_Code;
-                           Parameters   : Parsed_Code)
+                           Parameters   : Tree_Array)
                            return Parsed_Code;
 
    function Selector (Ref   : Parsed_Code;
                       Field : String)
                       return Parsed_Code;
+
+   function Conditional (Conditions : Tree_Array;
+                         Branches   : Tree_Array;
+                         Else_Branch : Parsed_Code)
+                         return Parsed_Code;
 private
    type Parsed_Code is new Integer;
 

@@ -79,6 +79,11 @@ package body Protypo.Parsing is
       Valid_End  : Token_Mask)
       return Code_Trees.Parsed_Code;
 
+   function Parse_Expression_List
+     (Input      : in out Scanning.Token_List;
+      Valid_End  : Token_Mask) return Statement_Sequences.Sequence;
+
+
    -------------------
    -- Parse_Primary --
    -------------------
@@ -87,17 +92,16 @@ package body Protypo.Parsing is
      (Input      : in out Scanning.Token_List)
       return Code_Trees.Parsed_Code
    is
-      Result : Code_Trees.Parsed_Code := Code_Trees.Empty_Tree;
-      ID     : Code_Trees.Parsed_Code;
-      Indexes : Code_Trees.Parsed_Code;
+      Result  : Code_Trees.Parsed_Code := Code_Trees.Empty_Tree;
+      Indexes : Statement_Sequences.Sequence;
 
       procedure Parse_Indexed_Name is
       begin
          Expect (Input, Open_Parenthesis);
          Input.Next;
 
-         Indexes := Parse_Expression_List (Input);
-         Result := Code_Trees.Function_Call (Result, Indexes);
+         Indexes := Parse_Expression_List (Input, (others => True));
+         Result := Code_Trees.Function_Call (Result, Indexes.Dump);
 
          Expect (Input, Close_Parenthesis);
          Input.Next;
@@ -105,7 +109,7 @@ package body Protypo.Parsing is
 
       procedure Parse_Selector is
       begin
-         Expect(Input, Dot);
+         Expect (Input, Dot);
          Input.Next;
 
          if Class (Input.Read) /= Identifier then
@@ -385,6 +389,95 @@ package body Protypo.Parsing is
       return Code_Trees.Naked_Expression (Result.Dump);
    end Parse_Naked;
 
+   ---------------------
+   -- Parse_name_List --
+   ---------------------
+
+   function Parse_Name_List
+     (Input      : in out Scanning.Token_List) return Statement_Sequences.Sequence
+   is
+      Result : Statement_Sequences.Sequence;
+   begin
+      Result.Append (Parse_Name (Input));
+
+      while Class (Input.Read) = Comma loop
+         Input.Next;
+         Result.Append (Parse_Name (Input));
+      end loop;
+
+      return Result;
+   end Parse_Name_List;
+
+   ------------------
+   -- Parse_Assign --
+   ------------------
+
+   function Parse_Assign (Input : in out Scanning.Token_List)
+                          return Code_Trees.Parsed_Code
+   is
+      Names  : Statement_Sequences.Sequence;
+      Values : Statement_Sequences.Sequence;
+   begin
+      Names := Parse_Name_List (Input);
+
+      Expect (Input, Assign);
+      Input.Next;
+
+      Values := Parse_Expression_List (Input, (others => True));
+
+      if Names.Length /= Values.Length then
+         raise Constraint_Error;
+      end if;
+
+      return Code_Trees.Assignment (LHS        => Names.Dump,
+                                    Expression => Values.Dump);
+   end Parse_Assign;
+
+   -----------------------
+   -- Parse_Conditional --
+   -----------------------
+
+   function Parse_Conditional (Input : in out Scanning.Token_List)
+                               return Code_Trees.Parsed_Code
+   is
+      Branches : Statement_Sequences.Sequence;
+      Conditions : Statement_Sequences.Sequence;
+      Else_Branch : Code_Trees.Parsed_Code := Code_Trees.Empty_Tree;
+   begin
+      Expect (Input, Kw_If);
+      Input.Next;
+
+      Conditions.Append (Parse_Expression (Input, (others => True)));
+
+      Expect (Input, Kw_Then);
+      Input.Next;
+
+      Branches.Append (Parse_Statement_Sequence (Input));
+
+      while Class (Input.Read) = Kw_Elsif loop
+         Input.Next;
+
+         Conditions.Append (Parse_Expression (Input, (others => True)));
+         Branches.Append (Parse_Statement_Sequence (Input));
+      end loop;
+
+      if Class (Input.Read) = Kw_Else then
+         Input.Next;
+         Else_Branch := Parse_Statement_Sequence (Input);
+      end if;
+
+      Expect (Input, Kw_End);
+      Input.Next;
+
+      Expect (Input, Kw_If);
+      Input.Next;
+
+      return Code_Trees.Conditional (Conditions  => Conditions.Dump,
+                                     Branches    => Branches.Dump,
+                                     Else_Branch => Else_Branch);
+   end Parse_Conditional;
+
+
    ------------------------------
    -- Parse_Statement_Sequence --
    ------------------------------
@@ -399,7 +492,7 @@ package body Protypo.Parsing is
       loop
          exit when Valid_End (Class (Input.Read));
 
-         case Class (Input.Read)	 is
+         case Class (Input.Read) is
             when Open_Naked =>
                Result.Append (Parse_Naked (Input));
 
@@ -410,7 +503,9 @@ package body Protypo.Parsing is
                Result.Append (Parse_Conditional (Input));
 
             when Kw_Case =>
-               Result.Append (Parse_Case (Input));
+               raise Program_Error with "Unimplemented";
+
+               --                 Result.Append (Parse_Case (Input));
 
             when Kw_For =>
                Result.Append (Parse_For_Loop (Input));
