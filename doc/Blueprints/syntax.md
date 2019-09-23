@@ -9,10 +9,10 @@ simple    = naked_expr | assignment | return
 compound  = if | case | loop | while | for 
 
 naked_expr = [ expr_list ]
-assignment = name_list := expression ;
+assignment = name_list := expr_list ;
 name_list  = name (, name)*
 name       = ID | name . ID | name '( expr_list ')
-return     = RETURN [ expression ] ;
+return     = RETURN [ expr_list ] ;
 
 expression = term ((+|-) term)*
 term       = factor (('*|/) factor)*
