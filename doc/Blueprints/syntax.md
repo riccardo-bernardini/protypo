@@ -18,7 +18,7 @@ expression = relation  [(AND relation)+ | (OR relation)+ | (XOR relation)+]
 relation   = simple_exp [ COMP simple_exp ]
 simple_exp = term [(+|-) simple_exp]
 term       = factor [('*|/) term]
-factor     = [+|-] basic
+factor     = [+|-|NOT] basic
 basic     = '( expression ') | name | NUMBER | TEXT
 expr_list  = expression [, expr_list]
 
