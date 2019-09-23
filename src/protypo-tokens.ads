@@ -37,7 +37,7 @@ package Protypo.Tokens is
 
 
    subtype Valued_Token   is Token_Class    range Int .. Identifier;
-   subtype Unvalued_Token is Token_Class    range Plus .. Kw_Of;
+   subtype Unvalued_Token is Token_Class    range Plus .. End_Of_Text;
    subtype Not_Keyword    is Unvalued_Token range Plus .. Close_Naked;
    subtype Keyword_Tokens is Unvalued_Token range Kw_If .. Kw_Of;
 

@@ -450,8 +450,9 @@ package body Protypo.Scanning is
    --------------
 
    function Tokenize (Template : String) return Token_List is
+      use Tokens;
 
-      Result : Token_List;
+      Result : Token_List := Token_Sequences.Create (Make_Token (End_Of_Text));
       Input  : String_Sequences.Sequence := String_Sequences.Create (Template);
       Buffer : String_Sequences.Sequence;
 

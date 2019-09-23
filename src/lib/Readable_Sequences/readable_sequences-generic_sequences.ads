@@ -11,6 +11,13 @@ package Readable_Sequences.Generic_Sequences is
 
    function Create (Init : Element_Array) return Sequence;
 
+   function Create (End_Of_Sequence_Marker : Element_Type) return Sequence;
+
+   function Create (Init                   : Element_Array;
+                    End_Of_Sequence_Marker : Element_Type) return Sequence;
+
+   function Has_End_Of_Sequence_Marker (Item : Sequence) return Boolean;
+
    function Dump (Seq : Sequence) return Element_Array;
 
    procedure Clear (Seq : in out Sequence)
@@ -23,7 +30,7 @@ package Readable_Sequences.Generic_Sequences is
    procedure Append (Seq      : in out Sequence;
                      Elements : Element_Array)
      with
-       Post => seq.Length = seq.Length'Old + Elements'Length;
+       Post => Seq.Length = Seq.Length'Old + Elements'Length;
 
    procedure Append (To   : in out Sequence;
                      What : Element_Type)
@@ -65,7 +72,7 @@ package Readable_Sequences.Generic_Sequences is
    function Read (Seq   : Sequence;
                   Ahead : Natural := 0) return Element_Type
      with
-       Pre => Seq.Remaining > Ahead;
+       Pre => Seq.Has_End_Of_Sequence_Marker or Seq.Remaining > Ahead;
 
    function Next (Seq : in out Sequence) return Element_Type;
 
@@ -75,12 +82,12 @@ package Readable_Sequences.Generic_Sequences is
      with
        Post => Seq.Remaining = Integer'Max (Seq.Remaining'Old - Step, 0);
 
-   procedure Back (Seq : in out Sequence;
+   procedure Back (Seq  : in out Sequence;
                    Step : Positive := 1)
      with
        Post => Seq.Remaining = Integer'Min (Seq.Remaining'Old + Step, Seq.Length);
 
-   procedure Process (Seq : Sequence;
+   procedure Process (Seq      : Sequence;
                       Callback : access procedure (Item : Element_Type));
 
    Beyond_End : exception;
@@ -100,6 +107,8 @@ private
          Position       : Cursor := Beginning;
          Old_Position   : Cursor;
          Position_Saved : Boolean := False;
+         Has_End_Marker : Boolean := False;
+         End_Marker     : Element_Type;
       end record;
 
    function Saved_Position (Seq : Sequence)return Boolean
@@ -115,12 +124,17 @@ private
    function Remaining (Seq : Sequence) return Natural
    is (Integer (Seq.Vector.Last_Index) - Integer (Seq.Position) + 1);
 
-   function Read (Seq : Sequence;
+   function Read (Seq   : Sequence;
                   Ahead : Natural := 0) return Element_Type
    is (if Seq.Remaining > Ahead then
           Seq.Vector (Cursor (Positive (Seq.Position) + Ahead))
+       elsif Seq.Has_End_Marker then
+          Seq.End_Marker
        else
           raise Beyond_End);
+
+   function Has_End_Of_Sequence_Marker (Item : Sequence) return Boolean
+   is (Item.Has_End_Marker);
 
 
 end Readable_Sequences.Generic_Sequences;

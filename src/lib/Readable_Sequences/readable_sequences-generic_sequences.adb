@@ -8,9 +8,9 @@ package body Readable_Sequences.Generic_Sequences is
 
    function Next (Seq : in out Sequence) return Element_Type
    is
-      Result : constant Element_Type := seq.Read;
+      Result : constant Element_Type := Seq.Read;
    begin
-      seq.Next;
+      Seq.Next;
       return Result;
    end Next;
 
@@ -45,17 +45,55 @@ package body Readable_Sequences.Generic_Sequences is
    -- Create --
    ------------
 
-   function Create (Init : Element_Array) return Sequence
+   function Create (End_Of_Sequence_Marker : Element_Type) return Sequence
+   is
+   begin
+      return Sequence'(Vector         => Element_Vectors.Empty_Vector,
+                       Position       => Cursor'First,
+                       Old_Position   => <>,
+                       Position_Saved => False,
+                       Has_End_Marker => True,
+                       End_Marker     => End_Of_Sequence_Marker);
+   end Create;
+
+   ------------
+   -- Create --
+   ------------
+
+   function Create (Init                   : Element_Array;
+                    End_Of_Sequence_Marker : Element_Type) return Sequence
    is
       Result : Sequence := Sequence'(Vector         => Element_Vectors.Empty_Vector,
                                      Position       => Cursor'First,
                                      Old_Position   => <>,
-                                     Position_Saved => False);
+                                     Position_Saved => False,
+                                     Has_End_Marker => True,
+                                     End_Marker     => End_Of_Sequence_Marker);
    begin
       Result.Append (Init);
 
       return Result;
    end Create;
+
+   ------------
+   -- Create --
+   ------------
+
+   function Create (Init : Element_Array) return Sequence
+   is
+      Result : Sequence := Sequence'(Vector         => Element_Vectors.Empty_Vector,
+                                     Position       => Cursor'First,
+                                     Old_Position   => <>,
+                                     Position_Saved => False,
+                                     Has_End_Marker => False,
+                                     End_Marker     => <>);
+   begin
+      Result.Append (Init);
+
+      return Result;
+   end Create;
+
+
 
 
    ------------
@@ -151,7 +189,7 @@ package body Readable_Sequences.Generic_Sequences is
    -- Next --
    ----------
 
-   procedure Next (Seq : in out Sequence;
+   procedure Next (Seq  : in out Sequence;
                    Step : Positive := 1)
    is
    begin
@@ -168,7 +206,7 @@ package body Readable_Sequences.Generic_Sequences is
    -- Back --
    ----------
 
-   procedure Back (Seq : in out Sequence;
+   procedure Back (Seq  : in out Sequence;
                    Step : Positive := 1)
    is
    begin
@@ -185,7 +223,7 @@ package body Readable_Sequences.Generic_Sequences is
    -- Process --
    -------------
 
-   procedure Process (Seq : Sequence;
+   procedure Process (Seq      : Sequence;
                       Callback : access procedure (Item : Element_Type))
    is
    begin
