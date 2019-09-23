@@ -36,6 +36,15 @@ package Protypo.Code_Trees is
    function String_Constant (Val : String) return Parsed_Code;
    function Integer_Constant (Val : String) return Parsed_Code;
    function Float_Constant (Val : String) return Parsed_Code;
+
+   function Identifier (Id : String) return Parsed_Code;
+   function Function_Call (Function_Ref : Parsed_Code;
+                           Parameters   : Parsed_Code)
+                           return Parsed_Code;
+
+   function Selector (Ref   : Parsed_Code;
+                      Field : String)
+                      return Parsed_Code;
 private
    type Parsed_Code is new Integer;
 

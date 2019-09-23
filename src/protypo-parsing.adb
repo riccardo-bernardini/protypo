@@ -74,10 +74,65 @@ package body Protypo.Parsing is
       Expect (Input, Mask);
    end Expect;
 
+   function Parse_Expression
+     (Input      : in out Scanning.Token_List;
+      Valid_End  : Token_Mask)
+      return Code_Trees.Parsed_Code;
+
    -------------------
    -- Parse_Primary --
    -------------------
 
+   function Parse_Name
+     (Input      : in out Scanning.Token_List)
+      return Code_Trees.Parsed_Code
+   is
+      Result : Code_Trees.Parsed_Code := Code_Trees.Empty_Tree;
+      ID     : Code_Trees.Parsed_Code;
+      Indexes : Code_Trees.Parsed_Code;
+
+      procedure Parse_Indexed_Name is
+      begin
+         Expect (Input, Open_Parenthesis);
+         Input.Next;
+
+         Indexes := Parse_Expression_List (Input);
+         Result := Code_Trees.Function_Call (Result, Indexes);
+
+         Expect (Input, Close_Parenthesis);
+         Input.Next;
+      end Parse_Indexed_Name;
+
+      procedure Parse_Selector is
+      begin
+         Expect(Input, Dot);
+         Input.Next;
+
+         if Class (Input.Read) /= Identifier then
+            raise Constraint_Error;
+         end if;
+
+         Result := Code_Trees.Selector (Result, Value (Input.Next));
+      end Parse_Selector;
+   begin
+      pragma Assert (Class (Input.Read) = Identifier);
+
+      Result := Code_Trees.Identifier (Value (Input.Next));
+
+      loop
+         if Class (Input.Read) = Open_Parenthesis then
+            Parse_Indexed_Name;
+         end if;
+
+         if Class (Input.Read) /= Dot then
+            exit;
+         else
+            Parse_Selector;
+         end if;
+      end loop;
+
+      return Result;
+   end Parse_Name;
    -------------------
    -- Parse_Primary --
    -------------------
@@ -92,13 +147,13 @@ package body Protypo.Parsing is
 
       Result : Code_Trees.Parsed_Code;
       Mask   : Token_Mask := (others => False);
---          := (Open_Parenthesis => True,
---                                         Identifier       => True,
---                                         Text             => True,
---                                         Int              => True,
---                                         Real             => True,
---
---        others => False);
+      --          := (Open_Parenthesis => True,
+      --                                         Identifier       => True,
+      --                                         Text             => True,
+      --                                         Int              => True,
+      --                                         Real             => True,
+      --
+      --        others => False);
    begin
       for K in Primary_Head loop
          Mask (K) := True;
@@ -112,7 +167,7 @@ package body Protypo.Parsing is
       case Primary_Head (Class (Input.Read)) is
          when Open_Parenthesis =>
             Input.Next;
-            Result := Parse_Expression (Input);
+            Result := Parse_Expression (Input, (others => True));
             Expect (Input, Close_Parenthesis);
             Input.Next;
 
@@ -120,13 +175,13 @@ package body Protypo.Parsing is
             Result := Parse_Name (Input);
 
          when Text =>
-            Result := Code_Trees.String_Constant (Value(Input.Read));
+            Result := Code_Trees.String_Constant (Value (Input.Read));
 
          when Int =>
-            Result := Code_Trees.Integer_Constant (Value(Input.Read));
+            Result := Code_Trees.Integer_Constant (Value (Input.Read));
 
          when Real =>
-            Result := Code_Trees.Float_Constant (Value(Input.Read));
+            Result := Code_Trees.Float_Constant (Value (Input.Read));
 
       end case;
 
