@@ -2,13 +2,13 @@
 This document describes the syntax of the template language.  The description is ABNF-like, even if not strictly formal. Uppercase identifiers are keywords, strings different from meta-characters (*, |, =, []) stand for themselves, metacharacters are prefixed with '
 
 ```
-program   = sequence_of_statement
+program   = sequence_of_statement  EOT
 sequence_of_statement = statement*
 statement = simple | compound
 simple    = naked_expr | assignment | return  
 compound  = if | case | loop | while | for 
 
-naked_expr = [ expr_list ]
+naked_expr = '[ expr_list ']
 assignment = name_list := expr_list ;
 name_list  = name (, name)*
 name       = ID | name . ID | name '( expr_list ')
