@@ -5,6 +5,9 @@ generic
    type Element_Array is array (Positive range <>) of Element_Type;
 package Readable_Sequences.Generic_Sequences is
    type Sequence is tagged private;
+
+   Empty_Sequence : constant Sequence;
+
    type Cursor is private;
 
    Beginning : constant Cursor;
@@ -136,5 +139,12 @@ private
    function Has_End_Of_Sequence_Marker (Item : Sequence) return Boolean
    is (Item.Has_End_Marker);
 
+   Empty_Sequence : constant Sequence :=
+                      Sequence'(Vector         => Element_Vectors.Empty_Vector,
+                                Position       => Cursor'First,
+                                Old_Position   => <>,
+                                Position_Saved => False,
+                                Has_End_Marker => False,
+                                End_Marker     => <>);
 
 end Readable_Sequences.Generic_Sequences;

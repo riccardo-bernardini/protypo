@@ -46,6 +46,13 @@ package body Protypo.Parsing is
       Put_Line (Standard_Error, "Unexpected " & Found'Image & "instead of " & Image (Expected));
    end Unexpected_Token;
 
+   procedure Unexpected_Token (Found    : Token_Class;
+                               Expected : Token_Class)
+   is
+   begin
+      Put_Line (Standard_Error, "Unexpected " & Found'Image & "instead of " & Expected'Image);
+   end Unexpected_Token;
+
 
 
    ------------
@@ -74,6 +81,21 @@ package body Protypo.Parsing is
       Expect (Input, Mask);
    end Expect;
 
+   ------------
+   -- Expect --
+   ------------
+
+   procedure Expect_And_Eat (Input    : in out Scanning.Token_List;
+                             Expected : Token_Class)
+   is
+   begin
+      if Class (Input.Read) /= Expected then
+         Unexpected_Token (Class (Input.Read), Expected);
+      end if;
+
+      Input.Next;
+   end Expect_And_Eat;
+
    function Parse_Expression
      (Input      : in out Scanning.Token_List;
       Valid_End  : Token_Mask)
@@ -97,20 +119,17 @@ package body Protypo.Parsing is
 
       procedure Parse_Indexed_Name is
       begin
-         Expect (Input, Open_Parenthesis);
-         Input.Next;
+         Expect_And_Eat (Input, Open_Parenthesis);
 
          Indexes := Parse_Expression_List (Input, (others => True));
          Result := Code_Trees.Function_Call (Result, Indexes.Dump);
 
-         Expect (Input, Close_Parenthesis);
-         Input.Next;
+         Expect_And_Eat (Input, Close_Parenthesis);
       end Parse_Indexed_Name;
 
       procedure Parse_Selector is
       begin
-         Expect (Input, Dot);
-         Input.Next;
+         Expect_And_Eat (Input, Dot);
 
          if Class (Input.Read) /= Identifier then
             raise Constraint_Error;
@@ -151,13 +170,6 @@ package body Protypo.Parsing is
 
       Result : Code_Trees.Parsed_Code;
       Mask   : Token_Mask := (others => False);
-      --          := (Open_Parenthesis => True,
-      --                                         Identifier       => True,
-      --                                         Text             => True,
-      --                                         Int              => True,
-      --                                         Real             => True,
-      --
-      --        others => False);
    begin
       for K in Primary_Head loop
          Mask (K) := True;
@@ -172,8 +184,8 @@ package body Protypo.Parsing is
          when Open_Parenthesis =>
             Input.Next;
             Result := Parse_Expression (Input, (others => True));
-            Expect (Input, Close_Parenthesis);
-            Input.Next;
+
+            Expect_And_Eat (Input, Close_Parenthesis);
 
          when Identifier =>
             Result := Parse_Name (Input);
@@ -429,6 +441,8 @@ package body Protypo.Parsing is
          raise Constraint_Error;
       end if;
 
+      Expect_And_Eat (Input, End_Of_Statement);
+
       return Code_Trees.Assignment (LHS        => Names.Dump,
                                     Expression => Values.Dump);
    end Parse_Assign;
@@ -440,8 +454,8 @@ package body Protypo.Parsing is
    function Parse_Conditional (Input : in out Scanning.Token_List)
                                return Code_Trees.Parsed_Code
    is
-      Branches : Statement_Sequences.Sequence;
-      Conditions : Statement_Sequences.Sequence;
+      Branches    : Statement_Sequences.Sequence;
+      Conditions  : Statement_Sequences.Sequence;
       Else_Branch : Code_Trees.Parsed_Code := Code_Trees.Empty_Tree;
    begin
       Expect (Input, Kw_If);
@@ -466,17 +480,110 @@ package body Protypo.Parsing is
          Else_Branch := Parse_Statement_Sequence (Input);
       end if;
 
-      Expect (Input, Kw_End);
-      Input.Next;
-
-      Expect (Input, Kw_If);
-      Input.Next;
+      Expect_And_Eat (Input, Kw_End);
+      Expect_And_Eat (Input, Kw_If);
+      Expect_And_Eat (Input, End_Of_Statement);
 
       return Code_Trees.Conditional (Conditions  => Conditions.Dump,
                                      Branches    => Branches.Dump,
                                      Else_Branch => Else_Branch);
    end Parse_Conditional;
 
+
+   ----------------
+   -- Parse_Loop --
+   ----------------
+
+   function Parse_Loop (Input : in out Scanning.Token_List)
+                        return Code_Trees.Parsed_Code
+   is
+      Loop_Body : Code_Trees.Parsed_Code;
+   begin
+      Expect_And_Eat (Input, Kw_Loop);
+
+      Loop_Body := Parse_Statement_Sequence (Input);
+
+      Expect_And_Eat (Input, Kw_End);
+      Expect_And_Eat (Input, Kw_Loop);
+      Expect_And_Eat (Input, End_Of_Statement);
+
+      return Code_Trees.Basic_Loop (Loop_Body);
+   end Parse_Loop;
+
+   --------------------
+   -- Parse_For_Loop --
+   --------------------
+
+   function Parse_For_Loop (Input : in out Scanning.Token_List)
+                            return Code_Trees.Parsed_Code
+   is
+      Variable  : Code_Trees.Parsed_Code;
+      Iterator  : Code_Trees.Parsed_Code;
+      Loop_Body : Code_Trees.Parsed_Code;
+   begin
+      Expect_And_Eat (Input, Kw_For);
+
+      if Class (Input.Read) /= Identifier then
+         Unexpected_Token (Class (Input.Read), Identifier);
+         raise Constraint_Error;
+      end if;
+
+      Variable := Code_Trees.Identifier (Value (Input.Next));
+
+      Expect_And_Eat (Input, Kw_In);
+
+      Iterator := Parse_Expression (Input, (others => True));
+
+      Loop_Body := Parse_Loop (Input);
+
+      return Code_Trees.For_Loop (Variable  => Variable,
+                                  Iterator  => Iterator,
+                                  Loop_Body => Loop_Body);
+   end Parse_For_Loop;
+
+
+   ----------------------
+   -- Parse_While_Loop --
+   ----------------------
+
+   function Parse_While_Loop (Input : in out Scanning.Token_List)
+                            return Code_Trees.Parsed_Code
+   is
+      Condition : Code_Trees.Parsed_Code;
+      Loop_Body : Code_Trees.Parsed_Code;
+   begin
+      Expect_And_Eat (Input, Kw_while);
+
+      Condition := Parse_Expression (Input, (others => True));
+
+      Loop_Body := Parse_Loop (Input);
+
+      return Code_Trees.While_Loop (Condition  => Condition,
+                                    Loop_Body  => Loop_Body);
+   end Parse_While_Loop;
+
+   ------------------
+   -- Parse_Return --
+   ------------------
+
+   function Parse_Return (Input : in out Scanning.Token_List)
+                          return Code_Trees.Parsed_Code
+   is
+      Return_List : Statement_Sequences.Sequence;
+   begin
+      Expect_And_Eat (Input, Kw_Return);
+
+      if Class (Input.Read) = End_Of_Statement then
+         Return_List := Statement_Sequences.Empty_Sequence;
+      else
+         Return_List := Parse_Expression_List (Input, (others => True));
+      end if;
+
+      Expect_And_Eat (Input, End_Of_Statement);
+
+      return Code_Trees.Return_To_Caller (Return_List.Dump);
+
+   end Parse_Return;
 
    ------------------------------
    -- Parse_Statement_Sequence --

@@ -26,6 +26,7 @@ package Protypo.Tokens is
       Kw_Case,
       Kw_When,
       Kw_For,
+      Kw_While,
       Kw_Loop,
       Kw_Return,
       Kw_End,
