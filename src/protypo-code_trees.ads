@@ -19,6 +19,9 @@ package Protypo.Code_Trees is
 
    function Statement_Sequence (Statements : Tree_Array)
                                 return Parsed_Code;
+
+   function Naked_Expression (Statements : Tree_Array)
+                              return Parsed_Code;
 private
    type Parsed_Code is new Integer;
 
