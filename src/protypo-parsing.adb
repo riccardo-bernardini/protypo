@@ -3,8 +3,11 @@ with Protypo.Tokens;
 with Readable_Sequences.Generic_Sequences;
 
 use Readable_Sequences;
-
+use Tokens;
 package body Protypo.Parsing is
+
+   type Token_Mask is array (Token_Class) of Boolean;
+
 
    package Statement_Sequences is
      new Generic_Sequences (Element_Type  => Code_Trees.Parsed_Code,
@@ -15,36 +18,22 @@ package body Protypo.Parsing is
    ------------------------------
 
    function Parse_Statement_Sequence
-     (Input : in out Scanning.Token_List) return Code_Trees.Parsed_Code
+     (Input      : in out Scanning.Token_List;
+      Valid_End  : Token_Mask) return Code_Trees.Parsed_Code
    is
       use Tokens;
       use Code_Trees;
 
       Result : Statement_Sequences.Sequence;
    begin
-      while not Input.End_Of_Sequence loop
+      loop
          case Class(Input.Read)	 is
-            when Int | Real | Text | Plus | Minus | Open_Parenthesis =>
-               declare
-                  Expr : Parsed_Code := Parse_Expression;
-               begin
-                  Input.Expect (End_Of_Statement);
-                  Result.Append (Naked_Expression (Expr));
-               end;
 
             when Identifier =>
-               declare
-                  Name : Parsed_Code :=  Parse_Name;
-               begin
-                  if Class (Input.Read) = Assign then
-                     null;
-                  end if;
-               pragma Compile_Time_Warning (True, "Warning");
-               raise Program_Error;
-               end;
+               Result.Append (Parse_Assign (Input));
 
             when Kw_If =>
-               Parse_Conditional;
+               Result.Append (Parse_Conditional (Input));
 
             when Kw_Case =>
                Parse_Case;

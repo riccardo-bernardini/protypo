@@ -17,6 +17,8 @@ package Protypo.Tokens is
       Close_Parenthesis,
       Comma,
       End_Of_Statement,
+      Open_Naked,
+      Close_Naked,
       Kw_If,
       Kw_Then,
       Kw_Elsif,
@@ -30,12 +32,13 @@ package Protypo.Tokens is
       Kw_And,
       Kw_Or,
       Kw_In,
-      Kw_Of);
+      Kw_Of,
+      End_Of_Text);
 
 
-   subtype Valued_Token is Token_Class range Int .. Identifier;
-   subtype Unvalued_Token is Token_Class range Plus .. Kw_Of;
-   subtype Unvalued_Not_Keyword is Unvalued_Token range Plus .. End_Of_Statement;
+   subtype Valued_Token   is Token_Class    range Int .. Identifier;
+   subtype Unvalued_Token is Token_Class    range Plus .. Kw_Of;
+   subtype Not_Keyword    is Unvalued_Token range Plus .. Close_Naked;
    subtype Keyword_Tokens is Unvalued_Token range Kw_If .. Kw_Of;
 
    type Token is private;

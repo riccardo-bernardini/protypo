@@ -165,7 +165,7 @@ package body Protypo.Scanning is
       function "+" (X : String) return Unbounded_String
                     renames To_Unbounded_String;
 
-      Simple_Tokens : constant array (Unvalued_Not_Keyword) of Unbounded_String :=
+      Simple_Tokens : constant array (Not_Keyword) of Unbounded_String :=
                         (
                          Plus              => +"+",
                          Minus             => +"-",
@@ -182,7 +182,9 @@ package body Protypo.Scanning is
                          Open_Parenthesis  => +"(",
                          Close_Parenthesis => +")",
                          Tokens.Comma      => +",",
-                         End_Of_Statement  => +";"
+                         End_Of_Statement  => +";",
+                         Open_Naked        => +"[",
+                         Close_Naked       => +"]"
                         );
 
       Keywords : constant array (Keyword_Tokens) of Unbounded_String :=
@@ -305,7 +307,7 @@ package body Protypo.Scanning is
          else
             declare
                Best_Match_Len : Natural := 0;
-               Best_Match     : Unvalued_Not_Keyword;
+               Best_Match     : Not_Keyword;
                This_Match_Len : Natural;
             begin
                for Tk in Simple_Tokens'Range loop
