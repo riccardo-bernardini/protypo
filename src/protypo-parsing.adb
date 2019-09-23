@@ -10,8 +10,8 @@ with Readable_Sequences.Generic_Sequences;  use Readable_Sequences;
 package body Protypo.Parsing is
 
    package Statement_Sequences is
-        new Generic_Sequences (Element_Type  => Code_Trees.Parsed_Code,
-                               Element_Array => Code_Trees.Tree_Array);
+     new Generic_Sequences (Element_Type  => Code_Trees.Parsed_Code,
+                            Element_Array => Code_Trees.Tree_Array);
 
    type Token_Mask is array (Token_Class) of Boolean;
 
@@ -47,6 +47,11 @@ package body Protypo.Parsing is
    end Unexpected_Token;
 
 
+
+   ------------
+   -- Expect --
+   ------------
+
    procedure Expect (Input    : in out Scanning.Token_List;
                      Expected : Token_Mask)
    is
@@ -54,29 +59,207 @@ package body Protypo.Parsing is
       if not Expected (Class (Input.Read)) then
          Unexpected_Token (Class (Input.Read), Expected);
       end if;
-
-      Input.Next;
    end Expect;
+
+   ------------
+   -- Expect --
+   ------------
 
    procedure Expect (Input    : in out Scanning.Token_List;
                      Expected : Token_Class)
    is
       Mask : Token_Mask := (others => False);
    begin
-      Mask(Expected) := True;
+      Mask (Expected) := True;
       Expect (Input, Mask);
    end Expect;
 
-    function Parse_Expression
+   -------------------
+   -- Parse_Primary --
+   -------------------
+
+   -------------------
+   -- Parse_Primary --
+   -------------------
+
+   function Parse_Primary
+     (Input      : in out Scanning.Token_List)
+      return Code_Trees.Parsed_Code
+   is
+      subtype Primary_Head is Token_Class
+        with Static_Predicate =>
+          Primary_Head in Open_Parenthesis | Identifier | Text | Int | Real;
+
+      Result : Code_Trees.Parsed_Code;
+      Mask   : Token_Mask := (others => False);
+--          := (Open_Parenthesis => True,
+--                                         Identifier       => True,
+--                                         Text             => True,
+--                                         Int              => True,
+--                                         Real             => True,
+--
+--        others => False);
+   begin
+      for K in Primary_Head loop
+         Mask (K) := True;
+      end loop;
+
+      if not (Class (Input.Read) in Primary_Head) then
+         Unexpected_Token (Class (Input.Read), Mask);
+         raise Constraint_Error;
+      end if;
+
+      case Primary_Head (Class (Input.Read)) is
+         when Open_Parenthesis =>
+            Input.Next;
+            Result := Parse_Expression (Input);
+            Expect (Input, Close_Parenthesis);
+            Input.Next;
+
+         when Identifier =>
+            Result := Parse_Name (Input);
+
+         when Text =>
+            Result := Code_Trees.String_Constant (Value(Input.Read));
+
+         when Int =>
+            Result := Code_Trees.Integer_Constant (Value(Input.Read));
+
+         when Real =>
+            Result := Code_Trees.Float_Constant (Value(Input.Read));
+
+      end case;
+
+      return Result;
+   end Parse_Primary;
+   ------------------
+   -- Parse_factor --
+   ------------------
+
+   function Parse_Factor
+     (Input      : in out Scanning.Token_List)
+      return Code_Trees.Parsed_Code
+   is
+      Result    : Code_Trees.Parsed_Code;
+      Op        : Unary_Operator;
+      Has_Unary : Boolean;
+   begin
+      if Class (Input.Read) in Unary_Operator then
+         Op := Class (Input.Next);
+         Has_Unary := True;
+      end if;
+
+      Result := Parse_Primary (Input);
+
+      if not Has_Unary then
+         return Result;
+      else
+         return Code_Trees.Unary_Operation (Result, Op);
+      end if;
+   end Parse_Factor;
+   ----------------
+   -- Parse_Term --
+   ----------------
+
+   function Parse_Term
      (Input      : in out Scanning.Token_List;
       Valid_End  : Token_Mask)
       return Code_Trees.Parsed_Code
    is
-      subtype Logical_Operator is Token_Class range Kw_And .. Kw_Or;
+      Result : Code_Trees.Parsed_Code;
+      Op     : Binary_Operator;
+   begin
 
+      Result := Parse_Factor (Input);
+
+      while Class (Input.Read) in Mult | Div loop
+         Op := Class (Input.Next);
+
+         Result := Code_Trees.Binary_Operation
+           (Left      => Result,
+            Right     => Parse_Factor (Input),
+            Operation => Op);
+      end loop;
+
+      Expect (Input, Valid_End);
+      return Result;
+   end Parse_Term;
+
+
+   -----------------------
+   -- Parse_Simple_Expr --
+   -----------------------
+
+   function Parse_Simple_Expr
+     (Input      : in out Scanning.Token_List;
+      Valid_End  : Token_Mask)
+      return Code_Trees.Parsed_Code
+   is
       Result : Code_Trees.Parsed_Code;
       Mask   : Token_Mask := Valid_End;
-      Op : Logical_Operator;
+      Op     : Binary_Operator;
+   begin
+      Mask (Plus) := True;
+      Mask (Minus) := True;
+
+      Result := Parse_Term (Input, Mask);
+
+      while Class (Input.Read) in Plus | Minus loop
+         Op := Class (Input.Next);
+
+         Result := Code_Trees.Binary_Operation (Left      => Result,
+                                                Right     => Parse_Term (Input, Valid_End),
+                                                Operation => Op);
+      end loop;
+
+      return Result;
+   end Parse_Simple_Expr;
+
+   --------------------
+   -- Parse_relation --
+   --------------------
+
+   function Parse_Relation
+     (Input      : in out Scanning.Token_List;
+      Valid_End  : Token_Mask)
+      return Code_Trees.Parsed_Code
+   is
+      Result : Code_Trees.Parsed_Code;
+      Mask   : Token_Mask := Valid_End;
+      Op     : Comp_Operator;
+   begin
+      for K in Comp_Operator loop
+         Mask (K) := True;
+      end loop;
+
+      Result := Parse_Simple_Expr (Input, Mask);
+
+      if Class (Input.Read) in Comp_Operator then
+         Op := Class (Input.Next);
+
+         Result := Code_Trees.Binary_Operation
+           (Left      => Result,
+            Right     => Parse_Simple_Expr (Input, Valid_End),
+            Operation => Op);
+      end if;
+
+      Expect (Input, Valid_End);
+
+      return Result;
+   end Parse_Relation;
+
+   ----------------------
+   -- Parse_Expression --
+   ----------------------
+
+   function Parse_Expression
+     (Input      : in out Scanning.Token_List;
+      Valid_End  : Token_Mask)
+      return Code_Trees.Parsed_Code
+   is
+      Result : Code_Trees.Parsed_Code;
+      Mask   : Token_Mask := Valid_End;
+      Op     : Logical_Operator;
    begin
       Mask (Kw_And) := True;
       Mask (Kw_Or) := True;
@@ -86,13 +269,13 @@ package body Protypo.Parsing is
       if Class (Input.Read) in Logical_Operator then
          Op := Class (Input.Read);
          Mask := Valid_End;
-         Mask(Op) := True;
+         Mask (Op) := True;
 
          while Class (Input.Read) = Op loop
             Input.Next;
-            Result := Code_Trees.Binary_Operator (Result,
-                                                  Parse_Relation (Input, Mask),
-                                                  Op);
+            Result := Code_Trees.Binary_Operation (Left      => Result,
+                                                   Right     => Parse_Relation (Input, Mask),
+                                                   Operation => Op);
          end loop;
       end if;
 
@@ -113,7 +296,7 @@ package body Protypo.Parsing is
       Valid_End  : Token_Mask) return Statement_Sequences.Sequence
    is
       Result : Statement_Sequences.Sequence;
-      Mask : Token_Mask := Valid_End;
+      Mask   : Token_Mask := Valid_End;
    begin
       Mask (Comma) := True;
       Result.Append (Parse_Expression (Input, Mask));
@@ -197,7 +380,8 @@ package body Protypo.Parsing is
                  Kw_End           | Kw_And           | Kw_Or               |
                  Open_Parenthesis | Close_Naked      | End_Of_Text         |
                  Kw_When          | Kw_In            | Kw_Of               |
-                 Real =>
+                 Real             | Kw_Xor           | Kw_Not
+               =>
 
                Unexpected_Token (Class (Input.Read), Valid_End);
                exit;

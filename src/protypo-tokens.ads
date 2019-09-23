@@ -31,15 +31,28 @@ package Protypo.Tokens is
       Kw_End,
       Kw_And,
       Kw_Or,
+      Kw_Xor,
+      Kw_Not,
       Kw_In,
       Kw_Of,
       End_Of_Text);
 
 
-   subtype Valued_Token   is Token_Class    range Int .. Identifier;
-   subtype Unvalued_Token is Token_Class    range Plus .. End_Of_Text;
-   subtype Not_Keyword    is Unvalued_Token range Plus .. Close_Naked;
-   subtype Keyword_Tokens is Unvalued_Token range Kw_If .. Kw_Of;
+   subtype Valued_Token     is Token_Class     range Int .. Identifier;
+   subtype Unvalued_Token   is Token_Class     range Plus .. End_Of_Text;
+   subtype Not_Keyword      is Unvalued_Token  range Plus .. Close_Naked;
+   subtype Keyword_Tokens   is Unvalued_Token  range Kw_If .. Kw_Of;
+   subtype Logical_Operator is Unvalued_Token  range Kw_And .. Kw_Xor;
+   subtype Comp_Operator    is Unvalued_Token range Equal .. Greater_Or_Equal;
+   subtype Numeric_Operator is Unvalued_Token  range Plus .. Div;
+
+   subtype Unary_Operator   is Unvalued_Token
+     with Static_Predicate =>
+       Unary_Operator in Plus .. Minus | Kw_Not;
+
+   subtype Binary_Operator  is Unvalued_Token
+     with Static_Predicate =>
+       Binary_Operator in Numeric_Operator | Comp_Operator | Logical_Operator;
 
    type Token is private;
 

@@ -1,3 +1,4 @@
+with Protypo.Tokens;
 
 package Protypo.Code_Trees is
    type Parsed_Code is private;
@@ -22,6 +23,19 @@ package Protypo.Code_Trees is
 
    function Naked_Expression (Statements : Tree_Array)
                               return Parsed_Code;
+
+   function Binary_Operation (Left      : Parsed_Code;
+                              Right     : Parsed_Code;
+                              Operation : Tokens.Binary_Operator)
+                              return Parsed_Code;
+
+   function Unary_Operation (X         : Parsed_Code;
+                             Operation : Tokens.Unary_Operator)
+                             return Parsed_Code;
+
+   function String_Constant (Val : String) return Parsed_Code;
+   function Integer_Constant (Val : String) return Parsed_Code;
+   function Float_Constant (Val : String) return Parsed_Code;
 private
    type Parsed_Code is new Integer;
 
