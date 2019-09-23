@@ -8,8 +8,9 @@ statement = simple | compound
 simple    = naked_expr | assignment | return  
 compound  = if | case | loop | while | for 
 
-naked_expr = expression ;
-assignment = name := expression ;
+naked_expr = [ expr_list ]
+assignment = name_list := expression ;
+name_list  = name (, name)*
 name       = ID | name . ID | name '( expr_list ')
 return     = RETURN [ expression ] ;
 
@@ -26,11 +27,7 @@ if         = IF expression THEN sequence_of_statement
 ```
 Note that a name in basic can denote both a variable access or a function call (they are undistinguishable at the syntax level). By analyzing the FIRST relation we see that
 ```
-naked_expr -> term -> factor -+-> '(, +, -
-                              |
-                              +-> name -> ID
-                              +-> NUMBER, TEXT
-                              
+naked_expr -> [                              
 assignment -> name -> ID
 return     -> RETURN
 if         -> IF
