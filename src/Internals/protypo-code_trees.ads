@@ -20,6 +20,7 @@ package Protypo.Code_Trees is
       While_Block,
       List_Of_Names,
       List_Of_Expressions,
+      Defun,
       Binary_Op,
       Unary_Op,
       Int_Constant,
@@ -67,6 +68,15 @@ package Protypo.Code_Trees is
          Post =>
            Class (Assignment'Result) = Assignment;
 
+   function Definition (Name           : String;
+                        Parameter_List : Tree_Array;
+                        Function_Body  : Parsed_Code;
+                        Is_Function    : Boolean)
+                        return Parsed_Code
+     with 
+       Pre => Class (Function_Body) = Statement_Sequence,
+     Post => Class (Definition'Result) = Defun;
+   
    function Statement_Sequence (Statements : Tree_Array)
                                 return Parsed_Code
      with
@@ -183,68 +193,74 @@ private
    type Node (Class : Non_Terminal) is
       record
          case Class is
+            when Defun => 
+               Is_Function     : Boolean;
+               Definition_Name : Unbounded_String;
+               Function_Body   : Node_Vectors.Vector;
+               Parameter_Names : Node_Vectors.Vector;
+               
             when Statement_Sequence =>
-               Statements : Node_Vectors.Vector;
+               Statements      : Node_Vectors.Vector;
             
             when Naked =>
-               Naked_Values : Node_Vectors.Vector;
+               Naked_Values    : Node_Vectors.Vector;
             
             when Assignment =>
-               Lhs        : Node_Vectors.Vector;
-               Rvalues    : Node_Vectors.Vector;
+               Lhs             : Node_Vectors.Vector;
+               Rvalues         : Node_Vectors.Vector;
             
             when Return_Statement =>
-               Return_Values : Node_Vectors.Vector;
+               Return_Values   : Node_Vectors.Vector;
             
             when Procedure_Call =>
-               Name       : Node_Access;
+               Name            : Node_Access;
             
             when Exit_Statement =>
-               Loop_Label : Label_Type;
+               Loop_Label      : Label_Type;
             
             when If_Block =>
-               Conditions : Node_Vectors.Vector;
-               Branches   : Node_Vectors.Vector;
-               Else_Branch : Node_Access;
+               Conditions      : Node_Vectors.Vector;
+               Branches        : Node_Vectors.Vector;
+               Else_Branch     : Node_Access;
             
             when List_Of_Names =>
-               Names      : Node_Vectors.Vector;
+               Names           : Node_Vectors.Vector;
             
             when List_Of_Expressions =>
-               Exprs      : Node_Vectors.Vector;
+               Exprs           : Node_Vectors.Vector;
             
             when Binary_Op =>
-               Operator   : Tokens.Binary_Operator;
-               Left       : Node_Access;
-               Right      : Node_Access;
+               Operator        : Tokens.Binary_Operator;
+               Left            : Node_Access;
+               Right           : Node_Access;
          
             when Unary_Op =>
-               Uni_Op     : Tokens.Unary_Operator;
-               Operand    : Node_Access;
+               Uni_Op          : Tokens.Unary_Operator;
+               Operand         : Node_Access;
             
             when Int_Constant =>
-               N          : Integer;
+               N               : Integer;
             
             when Real_Constant =>
-               X          : Float;
+               X               : Float;
             
             when Text_Constant =>
-               S          : Unbounded_String;
+               S               : Unbounded_String;
             
             when Selected =>
-               Record_Var : Node_Access;
-               Field_Name : Unbounded_String;
+               Record_Var      : Node_Access;
+               Field_Name      : Unbounded_String;
                
             when Indexed =>
-               Indexed_Var : Node_Access;
-               Indexes     : Node_Vectors.Vector;
+               Indexed_Var     : Node_Access;
+               Indexes         : Node_Vectors.Vector;
                
             when Identifier => 
-               ID_Value   : Unbounded_String;
+               ID_Value        : Unbounded_String;
             
             when Loop_Block | For_Block |  While_Block =>
-               Loop_Body  : Node_Vectors.Vector;
-               Labl       : Label_Type;
+               Loop_Body       : Node_Vectors.Vector;
+               Labl            : Label_Type;
             
                case Class is 
                when Loop_Block =>

@@ -224,24 +224,27 @@ package body Protypo.Scanning is
                         );
 
       Keywords : constant array (Keyword_Tokens) of Unbounded_String :=
-                   (Kw_If     => +"if",
-                    Kw_Then   => +"then",
-                    Kw_Elsif  => +"elsif",
-                    Kw_Else   => +"else",
-                    Kw_Case   => +"case",
-                    Kw_When   => +"when",
-                    Kw_For    => +"for",
-                    Kw_Loop   => +"loop",
-                    Kw_While  => +"while",
-                    Kw_Return => +"return",
-                    Kw_Exit   => +"exit",
-                    Kw_End    => +"end",
-                    Kw_And    => +"and",
-                    Kw_Or     => +"or",
-                    Kw_Xor    => +"xor",
-                    Kw_Not    => +"not",
-                    Kw_In     => +"in",
-                    Kw_Of     => +"of");
+                   (Kw_If        => +"if",
+                    Kw_Then      => +"then",
+                    Kw_Elsif     => +"elsif",
+                    Kw_Else      => +"else",
+                    Kw_Case      => +"case",
+                    Kw_When      => +"when",
+                    Kw_For       => +"for",
+                    Kw_Loop      => +"loop",
+                    Kw_While     => +"while",
+                    Kw_Return    => +"return",
+                    Kw_Function  => +"function",
+                    Kw_Procedure => +"procedure",
+                    Kw_Begin     => +"begin",
+                    Kw_Exit      => +"exit",
+                    Kw_End       => +"end",
+                    Kw_And       => +"and",
+                    Kw_Or        => +"or",
+                    Kw_Xor       => +"xor",
+                    Kw_Not       => +"not",
+                    Kw_In        => +"in",
+                    Kw_Of        => +"of");
 
 
       procedure Skip_Spaces is
@@ -433,8 +436,8 @@ package body Protypo.Scanning is
       pragma Assert (ID_Name.Length > 0);
 
       Result.Append (Make_Token (Identifier, ID_Name.Dump));
-      Result.Append (Make_Token (close_Naked));
---        Result.Append (Make_Token (End_Of_Statement));
+      Result.Append (Make_Token (Close_Naked));
+      --        Result.Append (Make_Token (End_Of_Statement));
 
    end Small_Code_Scanner;
 
@@ -459,7 +462,7 @@ package body Protypo.Scanning is
          Result.Append (Make_Token (Open_Naked));
          Result.Append (Make_Token (Text, Buffer.Dump));
          Result.Append (Make_Token (Close_Naked));
---           Result.Append (Make_Token (End_Of_Statement));
+         --           Result.Append (Make_Token (End_Of_Statement));
          Buffer.Clear;
       end if;
    end Dump_Buffer;
@@ -510,7 +513,7 @@ package body Protypo.Scanning is
                Parenthesis_Level := Parenthesis_Level - 1;
 
                if Parenthesis_Level > 0 then
-                  Buffer.Append (Input.read);
+                  Buffer.Append (Input.Read);
                end if;
 
                Input.Next;

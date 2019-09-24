@@ -647,6 +647,58 @@ package body Protypo.Parsing is
          end case;
       end Parse_Assign_Or_Call;
 
+      function Parse_Defun (Input : in out Scanning.Token_List)
+                            return Code_Trees.Parsed_Code;
+--          with Post => Code_Trees.Class (Parse_Defun'Result) = Code_Trees.Defun;
+
+      function Parse_Defun (Input : in out Scanning.Token_List)
+                            return Code_Trees.Parsed_Code
+      is
+         Def_Function : Boolean := (case Class (Input.Read) is
+                                       when Kw_Procedure => False,
+                                       when Kw_Function  => True,
+                                       when others       => raise Program_Error);
+         Name         : Unbounded_String;
+         Parameter_names : Statement_Sequences.Sequence;
+         Function_Body   : Code_Trees.Parsed_Code;
+      begin
+         Input.Next;
+
+         if Class (Input.Read) /= Identifier then
+            raise Constraint_Error;
+         else
+            Name := To_Unbounded_String (Value (Input.Next));
+         end if;
+
+         if Class (Input.Read) = Open_Parenthesis then
+            Expect_And_Eat (Input, Open_Parenthesis);
+
+            Parameter_Names := Parse_ID_List (Input);
+
+            Expect_And_Eat (Input, Close_Parenthesis);
+         end if;
+
+         Expect_And_Eat (Input, Kw_Begin);
+
+         Function_Body := Parse_Statement_Sequence (Input);
+
+         Expect_And_Eat (Input, Kw_End);
+
+         if not (Class (Input.Read) /= Identifier and then Value (Input.Read) = To_String (Name)) then
+            raise Constraint_Error;
+         else
+            Input.Next;
+         end if;
+
+         Expect_And_Eat (Input, End_Of_Statement);
+
+         return Code_Trees.Definition (Name           => To_String(Name),
+                                       Parameter_List => Parameter_Names.Dump,
+                                       Function_Body  => Function_Body,
+                                       Is_Function    => Def_Function);
+      end Parse_Defun;
+
+
       Result : Statement_Sequences.Sequence;
 
 
@@ -675,6 +727,9 @@ package body Protypo.Parsing is
 
                --                 Result.Append (Parse_Case (Input));
 
+            when Kw_Procedure | Kw_Function =>
+               Result.Append (Parse_Defun (Input));
+
             when Kw_For =>
                Result.Append (Parse_For_Loop (Input));
 
@@ -693,17 +748,16 @@ package body Protypo.Parsing is
             when Kw_Else | Kw_Elsif | Kw_End | End_Of_Text =>
                exit;
 
-            when Int              | Text             | Plus  | Minus       |
-                 Mult             | Div              | Equal |  Different  |
-                 Less_Than        | Greater_Than     | Less_Or_Equal       |
-                 Greater_Or_Equal | Assign           | Dot                 |
-                 Comma            | End_Of_Statement | Close_Parenthesis   |
-                 Kw_Then          | Kw_And           | Kw_Or               |
-                 Open_Parenthesis | Close_Naked      | Label_Separator     |
-                 Kw_When          | Kw_In            | Kw_Of               |
-                 Real             | Kw_Xor           | Kw_Not
-
-               =>
+               when Int              | Text             | Plus  | Minus       |
+               Mult             | Div              | Equal |  Different  |
+               Less_Than        | Greater_Than     | Less_Or_Equal       |
+               Greater_Or_Equal | Assign           | Dot                 |
+               Comma            | End_Of_Statement | Close_Parenthesis   |
+               Kw_Then          | Kw_And           | Kw_Or               |
+               Open_Parenthesis | Close_Naked      | Label_Separator     |
+               Kw_When          | Kw_In            | Kw_Of               |
+               Real             | Kw_Xor           | Kw_Not              |
+               Kw_Begin               =>
 
                Unexpected_Token (Class (Input.Read), End_Of_Text);
                exit;
@@ -714,15 +768,15 @@ package body Protypo.Parsing is
    end Parse_Statement_Sequence;
 
    ------------------------------
---     -- Parse_Statement_Sequence --
---     ------------------------------
---
---     function Parse_Statement_Sequence
---       (Input      : in out Scanning.Token_List)
---        return Code_Trees.Parsed_Code
---     is
---     begin
---        return Parse_Statement_Sequence (Input);
---     end Parse_Statement_Sequence;
+   --     -- Parse_Statement_Sequence --
+   --     ------------------------------
+   --
+   --     function Parse_Statement_Sequence
+   --       (Input      : in out Scanning.Token_List)
+   --        return Code_Trees.Parsed_Code
+   --     is
+   --     begin
+   --        return Parse_Statement_Sequence (Input);
+   --     end Parse_Statement_Sequence;
 
 end Protypo.Parsing;
