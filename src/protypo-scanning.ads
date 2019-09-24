@@ -1,7 +1,7 @@
 with Readable_Sequences.Generic_Sequences;
 with Protypo.Tokens;
 
-package Protypo.Scanning is
+private package Protypo.Scanning is
    type Token_Array is array (Positive range<>) of Tokens.Token;
 
    package Token_Sequences is

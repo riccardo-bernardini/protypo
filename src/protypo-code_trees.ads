@@ -1,9 +1,10 @@
+with Ada.Unchecked_Deallocation;
 with Ada.Containers.Vectors;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 
 with Protypo.Tokens;
-with Protypo.Engine_Values;
 
+private
 package Protypo.Code_Trees is
    type Non_Terminal is
      (
@@ -113,11 +114,12 @@ package Protypo.Code_Trees is
      with
        Post => Class (Indexed_Name'Result) = Indexed;
 
-   function Procedure_Call (Function_Ref : Parsed_Code)
+   function Procedure_Call (Procedure_Name : Parsed_Code;
+                            Parameters     : Tree_Array)
                             return Parsed_Code
      with
        Post => Class (Procedure_Call'Result) = Procedure_Call,
-     Pre => Class (Function_Ref)in Name;
+     Pre => Class (Procedure_Name) in Name;
 
 
    function Selector (Ref   : Parsed_Code;
@@ -126,13 +128,6 @@ package Protypo.Code_Trees is
      with
        Post => Class (Selector'Result) = Selected;
 
-
-   function Conditional (Conditions  : Tree_Array;
-                         Branches    : Tree_Array;
-                         Else_Branch : Parsed_Code)
-                         return Parsed_Code
-     with
-       Post => Class (Conditional'Result) = If_Block;
 
    function Loop_Exit (Label     : String)
                        return Parsed_Code;
@@ -171,6 +166,8 @@ package Protypo.Code_Trees is
      with
        Pre => (for all V of Values => Class (V) in Expression),
        Post => Class (Return_To_Caller'Result) = Return_Statement;
+   
+   procedure Delete (Code : in out Parsed_Code);
 
 private
    subtype Label_Type is Unbounded_String;
@@ -236,11 +233,13 @@ private
                S          : Unbounded_String;
             
             when Selected =>
-               Selection_Handler : Engine_Values.Record_Interface_Access;
-            
+               Record_Var : Node_Access;
+               Field_Name : Unbounded_String;
+               
             when Indexed =>
-               Indexed_Handler : Engine_Values.Array_Interface_Access;
-            
+               Indexed_Var : Node_Access;
+               Indexes     : Node_Vectors.Vector;
+               
             when Identifier => 
                ID_Value   : Unbounded_String;
             
@@ -265,6 +264,13 @@ private
          end case;
       end record;
 
+   procedure Free  is 
+     new Ada.Unchecked_Deallocation (Object => node,
+                                     Name   => Node_Access);
+   
+   procedure Delete (Item : in out Node_Access);
+   procedure Delete (Item : in out Node_Vectors.Vector);
+   
    type Parsed_Code is
       record
          Pt : Node_Access;
