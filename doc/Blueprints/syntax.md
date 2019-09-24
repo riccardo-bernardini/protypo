@@ -5,9 +5,10 @@ This document describes the syntax of the template language.  The description is
 program   = sequence_of_statement  EOT
 sequence_of_statement = statement*
 statement = simple | compound
-simple    = naked_expr | assignment | return  
+simple    = naked_expr | assignment | return | proc_call | exit  
 compound  = if | loop | while | for 
 
+proc_call  = name ;
 naked_expr = '[ expr_list ']
 assignment = name_list := expr_list ;
 name_list  = name (, name)*
@@ -36,10 +37,12 @@ exit       = EXIT [ ID ] ;
 ```
 Note that a name in basic can denote both a variable access or a function call (they are undistinguishable at the syntax level). By analyzing the FIRST relation we see that
 ```
-naked_expr -> [                              
+naked_expr -> [
+proc_call  -> ID
 assignment -> name -> ID
 return     -> RETURN
 if         -> IF
+loops      -> ID
 etc.
 ```
 Therefore, when we are at the beginning of parsing a `statement`, the next non terminal tells us what kind of statement we are going to parse.  The only ambiguity is when the next terminal is an ID that can begin both a `naked_expr` and an `assignment`.  Since if the first non-terminal is an ID, then what follows is a `name`, we can parse a `name` and the check what follows.
