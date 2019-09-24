@@ -7,8 +7,8 @@ sequence_of_statement = statement*
 statement = simple | compound
 simple    = naked_expr | assignment | return | proc_call | exit  
 compound  = if | loop | while | for
-defun     = (FUNCTION | PROCEDURE) ID id_list BEGIN sequence_of_statement END ID;
-id_list   = '( ID (, ID)* ')
+defun     = (FUNCTION | PROCEDURE) ID [ '( id_list ') ] BEGIN sequence_of_statement END ID;
+id_list   = ID (, ID)*
 
 proc_call  = name ;
 naked_expr = '[ expr_list ']
