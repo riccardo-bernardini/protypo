@@ -3,9 +3,9 @@ with Ada.Strings.Equal_Case_Insensitive;
 with Ada.Containers;
 
 with Symbol_Tables.Generic_Symbol_Table;
-with Protypo.Engine_Values;
+with Protypo.API.Engine_Values;
 
-package Protypo.Symbols is
+package Protypo.API.Symbols is
    subtype Symbol_Name is String;
 
    function Hash (X : Symbol_Name) return Ada.Containers.Hash_Type
@@ -22,5 +22,4 @@ package Protypo.Symbols is
         Equivalent_Names => Equivalent);
 
    subtype Table is Protypo_Tables.Symbol_Table;
-
-end Protypo.Symbols;
+end Protypo.API.Symbols;

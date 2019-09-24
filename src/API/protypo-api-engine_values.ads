@@ -1,4 +1,4 @@
-package Protypo.Engine_Values is
+package Protypo.API.Engine_Values is
    type Engine_Value_Class is
      (
       Void,
@@ -61,4 +61,4 @@ package Protypo.Engine_Values is
                      return Engine_Value is abstract;
 private
    type Engine_Value (Class : Engine_Value_Class := Void) is null record;
-end Protypo.Engine_Values;
+end Protypo.API.Engine_Values;

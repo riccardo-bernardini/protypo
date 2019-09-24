@@ -1,7 +1,7 @@
 with Ada.Finalization;
 with Ada.Text_IO;
 
-package Protypo.Consumers.File_Writer is
+package Protypo.API.Consumers.File_Writer is
    type Writer is
      new Ada.Finalization.Limited_Controlled and Consumer_Interface
    with private;
@@ -21,4 +21,4 @@ private
       end record;
 
    overriding procedure Finalize (Obj : in out Writer);
-end Protypo.Consumers.File_Writer;
+end Protypo.API.Consumers.File_Writer;

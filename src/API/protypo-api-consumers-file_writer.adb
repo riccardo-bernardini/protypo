@@ -1,5 +1,5 @@
 pragma Ada_2012;
-package body Protypo.Consumers.File_Writer is
+package body Protypo.API.Consumers.File_Writer is
 
    ----------
    -- Open --
@@ -36,4 +36,4 @@ package body Protypo.Consumers.File_Writer is
       Ada.Text_IO.Close (Obj.Output);
    end Finalize;
 
-end Protypo.Consumers.File_Writer;
+end Protypo.API.Consumers.File_Writer;

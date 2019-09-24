@@ -1,11 +1,11 @@
 with Ada.Finalization;
 
-with Protypo.Consumers;
-with Protypo.Symbols;
+with Protypo.API.Consumers;
+with Protypo.API.Symbols;
 
 private with Protypo.Code_Trees;
 
-package Protypo.API is
+package Protypo.API.Interpreter is
    type Compiled_Code is limited private;
 
    function Compile (Program : String) return Compiled_Code;
@@ -30,4 +30,4 @@ private
       end record;
 
    overriding procedure Finalize(Object : in out Compiled_Code);
-end Protypo.API;
+end Protypo.API.Interpreter;

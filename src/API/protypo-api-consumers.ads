@@ -1,7 +1,7 @@
-package Protypo.Consumers is
+package Protypo.API.Consumers is
    type Consumer_Interface is limited interface;
 
    procedure Process (Consumer  : in out Consumer_Interface;
                       Parameter : String)
    is abstract;
-end Protypo.Consumers;
+end Protypo.API.Consumers;

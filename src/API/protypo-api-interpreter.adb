@@ -2,9 +2,9 @@ pragma Ada_2012;
 with Protypo.Scanning;
 with Protypo.Parsing;
 with Protypo.Code_Trees.Interpreter;
-with Protypo.Consumers.File_Writer;
+with Protypo.API.Consumers.File_Writer;
 
-package body Protypo.API is
+package body Protypo.API.interpreter is
 use Ada.Finalization;
    -------------
    -- Compile --
@@ -74,4 +74,4 @@ use Ada.Finalization;
       Code_Trees.Delete (Object.Code);
    end Finalize;
 
-end Protypo.API;
+end Protypo.API.interpreter;
