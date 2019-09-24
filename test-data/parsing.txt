@@ -1,0 +1,26 @@
+Proviamo con un documento
+#(include test-data/incluso.txt)
+#{
+  x := 0;
+  for wp in Project.WPs loop
+    x := x + wp.PM;
+  end loop;
+
+  gigi : loop
+    x := 3+4.5+length("zorro");
+    print("Ciao a tutti");
+    exit gigi;
+  end loop;
+
+  while not File.end_of_file loop
+    read(something);
+
+     if z < x then
+       write(something_else);
+--     else
+--       z :=0;
+     end if;
+  end loop;
+  
+}#
+Il numero totale di PM è #x.a

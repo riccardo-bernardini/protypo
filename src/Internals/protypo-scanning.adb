@@ -273,10 +273,6 @@ package body Protypo.Scanning is
       procedure Scan_Number is
          Buffer : String_Sequences.Sequence;
       begin
-         if Input.Read = '+' or Input.Read = '-' then
-            Buffer.Append (Input.Next);
-         end if;
-
          while Is_In (Input.Read, Decimal_Digit_Set) loop
             Buffer.Append (Input.Next);
          end loop;
@@ -338,7 +334,7 @@ package body Protypo.Scanning is
          elsif Is_In (Input.Read, Letter_Set) then
             Scan_Identifier;
 
-         elsif Is_In (Input.Read, Decimal_Digit_Set or To_Set ("+-")) then
+         elsif Is_In (Input.Read, Decimal_Digit_Set) then
             Scan_Number;
 
          elsif Peek_And_Eat (Input, """") then
@@ -438,7 +434,7 @@ package body Protypo.Scanning is
 
       Result.Append (Make_Token (Identifier, ID_Name.Dump));
       Result.Append (Make_Token (close_Naked));
-      Result.Append (Make_Token (End_Of_Statement));
+--        Result.Append (Make_Token (End_Of_Statement));
 
    end Small_Code_Scanner;
 
@@ -451,7 +447,7 @@ package body Protypo.Scanning is
      with
        Post =>
          Buffer.Length = 0
-         and Result.Length = Result.Length'Old + (if Buffer.Length'Old > 0 then 4 else 0);
+         and Result.Length = Result.Length'Old + (if Buffer.Length'Old > 0 then 3 else 0);
 
 
    procedure Dump_Buffer (Buffer : in out String_Sequences.Sequence;
@@ -463,7 +459,7 @@ package body Protypo.Scanning is
          Result.Append (Make_Token (Open_Naked));
          Result.Append (Make_Token (Text, Buffer.Dump));
          Result.Append (Make_Token (Close_Naked));
-         Result.Append (Make_Token (End_Of_Statement));
+--           Result.Append (Make_Token (End_Of_Statement));
          Buffer.Clear;
       end if;
    end Dump_Buffer;

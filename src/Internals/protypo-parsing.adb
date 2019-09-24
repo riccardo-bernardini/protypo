@@ -44,6 +44,7 @@ package body Protypo.Parsing is
    is
    begin
       Put_Line (Standard_Error, "Unexpected " & Found'Image & "instead of " & Image (Expected));
+      raise Constraint_Error;
    end Unexpected_Token;
 
    procedure Unexpected_Token (Found    : Token_Class;
@@ -80,6 +81,7 @@ package body Protypo.Parsing is
       Mask (Expected) := True;
       Expect (Input, Mask);
    end Expect;
+   pragma Unreferenced (Expect);
 
    ------------
    -- Expect --
@@ -97,13 +99,12 @@ package body Protypo.Parsing is
    end Expect_And_Eat;
 
    function Parse_Expression
-     (Input      : in out Scanning.Token_List;
-      Valid_End  : Token_Mask)
+     (Input      : in out Scanning.Token_List)
       return Code_Trees.Parsed_Code;
 
    function Parse_Expression_List
-     (Input      : in out Scanning.Token_List;
-      Valid_End  : Token_Mask) return Statement_Sequences.Sequence;
+     (Input      : in out Scanning.Token_List)
+      return Statement_Sequences.Sequence;
 
 
    -------------------
@@ -121,7 +122,7 @@ package body Protypo.Parsing is
       begin
          Expect_And_Eat (Input, Open_Parenthesis);
 
-         Indexes := Parse_Expression_List (Input, (others => True));
+         Indexes := Parse_Expression_List (Input);
          Result := Code_Trees.Indexed_Name (Result, Indexes.Dump);
 
          Expect_And_Eat (Input, Close_Parenthesis);
@@ -183,7 +184,7 @@ package body Protypo.Parsing is
       case Primary_Head (Class (Input.Read)) is
          when Open_Parenthesis =>
             Input.Next;
-            Result := Parse_Expression (Input, (others => True));
+            Result := Parse_Expression (Input);
 
             Expect_And_Eat (Input, Close_Parenthesis);
 
@@ -191,13 +192,13 @@ package body Protypo.Parsing is
             Result := Parse_Name (Input);
 
          when Text =>
-            Result := Code_Trees.String_Constant (Value (Input.Read));
+            Result := Code_Trees.String_Constant (Value (Input.Next));
 
          when Int =>
-            Result := Code_Trees.Integer_Constant (Value (Input.Read));
+            Result := Code_Trees.Integer_Constant (Value (Input.Next));
 
          when Real =>
-            Result := Code_Trees.Float_Constant (Value (Input.Read));
+            Result := Code_Trees.Float_Constant (Value (Input.Next));
 
       end case;
 
@@ -233,8 +234,7 @@ package body Protypo.Parsing is
    ----------------
 
    function Parse_Term
-     (Input      : in out Scanning.Token_List;
-      Valid_End  : Token_Mask)
+     (Input      : in out Scanning.Token_List)
       return Code_Trees.Parsed_Code
    is
       Result : Code_Trees.Parsed_Code;
@@ -252,7 +252,6 @@ package body Protypo.Parsing is
             Operation => Op);
       end loop;
 
-      Expect (Input, Valid_End);
       return Result;
    end Parse_Term;
 
@@ -262,24 +261,20 @@ package body Protypo.Parsing is
    -----------------------
 
    function Parse_Simple_Expr
-     (Input      : in out Scanning.Token_List;
-      Valid_End  : Token_Mask)
+     (Input      : in out Scanning.Token_List)
       return Code_Trees.Parsed_Code
    is
       Result : Code_Trees.Parsed_Code;
-      Mask   : Token_Mask := Valid_End;
       Op     : Binary_Operator;
    begin
-      Mask (Plus) := True;
-      Mask (Minus) := True;
 
-      Result := Parse_Term (Input, Mask);
+      Result := Parse_Term (Input);
 
       while Class (Input.Read) in Plus | Minus loop
          Op := Class (Input.Next);
 
          Result := Code_Trees.Binary_Operation (Left      => Result,
-                                                Right     => Parse_Term (Input, Valid_End),
+                                                Right     => Parse_Term (Input),
                                                 Operation => Op);
       end loop;
 
@@ -291,30 +286,23 @@ package body Protypo.Parsing is
    --------------------
 
    function Parse_Relation
-     (Input      : in out Scanning.Token_List;
-      Valid_End  : Token_Mask)
+     (Input      : in out Scanning.Token_List)
       return Code_Trees.Parsed_Code
    is
       Result : Code_Trees.Parsed_Code;
-      Mask   : Token_Mask := Valid_End;
       Op     : Comp_Operator;
    begin
-      for K in Comp_Operator loop
-         Mask (K) := True;
-      end loop;
-
-      Result := Parse_Simple_Expr (Input, Mask);
+      Result := Parse_Simple_Expr (Input);
 
       if Class (Input.Read) in Comp_Operator then
          Op := Class (Input.Next);
 
          Result := Code_Trees.Binary_Operation
            (Left      => Result,
-            Right     => Parse_Simple_Expr (Input, Valid_End),
+            Right     => Parse_Simple_Expr (Input),
             Operation => Op);
       end if;
 
-      Expect (Input, Valid_End);
 
       return Result;
    end Parse_Relation;
@@ -324,35 +312,23 @@ package body Protypo.Parsing is
    ----------------------
 
    function Parse_Expression
-     (Input      : in out Scanning.Token_List;
-      Valid_End  : Token_Mask)
+     (Input      : in out Scanning.Token_List)
       return Code_Trees.Parsed_Code
    is
       Result : Code_Trees.Parsed_Code;
-      Mask   : Token_Mask := Valid_End;
       Op     : Logical_Operator;
    begin
-      Mask (Kw_And) := True;
-      Mask (Kw_Or) := True;
-
-      Result := Parse_Relation (Input, Mask);
+      Result := Parse_Relation (Input);
 
       if Class (Input.Read) in Logical_Operator then
          Op := Class (Input.Read);
-         Mask := Valid_End;
-         Mask (Op) := True;
 
          while Class (Input.Read) = Op loop
             Input.Next;
             Result := Code_Trees.Binary_Operation (Left      => Result,
-                                                   Right     => Parse_Relation (Input, Mask),
+                                                   Right     => Parse_Relation (Input),
                                                    Operation => Op);
          end loop;
-      end if;
-
-      if not Valid_End (Class (Input.Read)) then
-         Unexpected_Token (Class (Input.Read), Valid_End);
-         Input.Next;
       end if;
 
       return Result;
@@ -363,22 +339,18 @@ package body Protypo.Parsing is
    ---------------------------
 
    function Parse_Expression_List
-     (Input      : in out Scanning.Token_List;
-      Valid_End  : Token_Mask) return Statement_Sequences.Sequence
+     (Input      : in out Scanning.Token_List)
+      return Statement_Sequences.Sequence
    is
       Result : Statement_Sequences.Sequence;
-      Mask   : Token_Mask := Valid_End;
    begin
-      Mask (Comma) := True;
-      Result.Append (Parse_Expression (Input, Mask));
+      Result.Append (Parse_Expression (Input));
 
       while Class (Input.Read) = Comma loop
          Input.Next;
-         Result.Append (Parse_Expression (Input, Mask));
+         Result.Append (Parse_Expression (Input));
       end loop;
 
-      Expect (Input, Valid_End);
-      Input.Next;
 
       return Result;
    end Parse_Expression_List;
@@ -392,11 +364,11 @@ package body Protypo.Parsing is
    is
       Result : Statement_Sequences.Sequence;
    begin
-      Expect (Input, Open_Naked);
+      Expect_And_Eat (Input, Open_Naked);
 
-      Result := Parse_Expression_List (Input, (Close_Naked => True, others => False));
+      Result := Parse_Expression_List (Input);
 
-      Expect (Input, Close_Naked);
+      Expect_And_Eat (Input, Close_Naked);
 
       return Code_Trees.Naked_Expression (Result.Dump);
    end Parse_Naked;
@@ -432,13 +404,18 @@ package body Protypo.Parsing is
    begin
       Expect_And_Eat (Input, Assign);
 
-      Values := Parse_Expression_List (Input, (others => True));
+      Values := Parse_Expression_List (Input);
+
+      Code_Trees.Dump (Values.Read);
 
       if Names.Length /= Values.Length then
          raise Constraint_Error;
       end if;
 
+
+
       Expect_And_Eat (Input, End_Of_Statement);
+
 
       return Code_Trees.Assignment (LHS    => Names.Dump,
                                     Value  => Values.Dump);
@@ -455,20 +432,21 @@ package body Protypo.Parsing is
       Conditions  : Statement_Sequences.Sequence;
       Else_Branch : Code_Trees.Parsed_Code := Code_Trees.Empty_Tree;
    begin
-      Expect (Input, Kw_If);
-      Input.Next;
+      Expect_And_Eat (Input, Kw_If);
 
-      Conditions.Append (Parse_Expression (Input, (others => True)));
+      Conditions.Append (Parse_Expression (Input));
 
-      Expect (Input, Kw_Then);
-      Input.Next;
+      Expect_And_Eat (Input, Kw_Then);
 
       Branches.Append (Parse_Statement_Sequence (Input));
 
       while Class (Input.Read) = Kw_Elsif loop
          Input.Next;
 
-         Conditions.Append (Parse_Expression (Input, (others => True)));
+         Conditions.Append (Parse_Expression (Input));
+
+         Expect_And_Eat (Input, Kw_Then);
+
          Branches.Append (Parse_Statement_Sequence (Input));
       end loop;
 
@@ -553,7 +531,7 @@ package body Protypo.Parsing is
 
       Expect_And_Eat (Input, Kw_In);
 
-      Iterator := Parse_Expression (Input, (others => True));
+      Iterator := Parse_Expression (Input);
 
       Loop_Body := Parse_Loop (Input, Label);
 
@@ -576,7 +554,7 @@ package body Protypo.Parsing is
    begin
       Expect_And_Eat (Input, Kw_While);
 
-      Condition := Parse_Expression (Input, (others => True));
+      Condition := Parse_Expression (Input);
 
       Loop_Body := Parse_Loop (Input, Label);
 
@@ -598,7 +576,7 @@ package body Protypo.Parsing is
       if Class (Input.Read) = End_Of_Statement then
          Return_List := Statement_Sequences.Empty_Sequence;
       else
-         Return_List := Parse_Expression_List (Input, (others => True));
+         Return_List := Parse_Expression_List (Input);
       end if;
 
       Expect_And_Eat (Input, End_Of_Statement);
@@ -612,8 +590,8 @@ package body Protypo.Parsing is
    ------------------------------
 
    function Parse_Statement_Sequence
-     (Input      : in out Scanning.Token_List;
-      Valid_End  : Token_Mask) return Code_Trees.Parsed_Code
+     (Input      : in out Scanning.Token_List)
+      return Code_Trees.Parsed_Code
    is
       subtype Labeled_Construct is Unvalued_Token
         with
@@ -674,8 +652,6 @@ package body Protypo.Parsing is
 
    begin
       loop
-         exit when Valid_End (Class (Input.Read));
-
          case Class (Input.Read) is
             when Open_Naked =>
                Result.Append (Parse_Naked (Input));
@@ -714,21 +690,22 @@ package body Protypo.Parsing is
             when Kw_Return =>
                Result.Append (Parse_Return (Input));
 
+            when Kw_Else | Kw_Elsif | Kw_End | End_Of_Text =>
+               exit;
 
             when Int              | Text             | Plus  | Minus       |
                  Mult             | Div              | Equal |  Different  |
                  Less_Than        | Greater_Than     | Less_Or_Equal       |
                  Greater_Or_Equal | Assign           | Dot                 |
                  Comma            | End_Of_Statement | Close_Parenthesis   |
-                 Kw_Then          | Kw_Elsif         | Kw_Else             |
-                 Kw_End           | Kw_And           | Kw_Or               |
-                 Open_Parenthesis | Close_Naked      | End_Of_Text         |
+                 Kw_Then          | Kw_And           | Kw_Or               |
+                 Open_Parenthesis | Close_Naked      | Label_Separator     |
                  Kw_When          | Kw_In            | Kw_Of               |
-                 Real             | Kw_Xor           | Kw_Not              |
-                 Label_Separator
+                 Real             | Kw_Xor           | Kw_Not
+
                =>
 
-               Unexpected_Token (Class (Input.Read), Valid_End);
+               Unexpected_Token (Class (Input.Read), End_Of_Text);
                exit;
          end case;
       end loop;
@@ -737,15 +714,15 @@ package body Protypo.Parsing is
    end Parse_Statement_Sequence;
 
    ------------------------------
-   -- Parse_Statement_Sequence --
-   ------------------------------
-
-   function Parse_Statement_Sequence
-     (Input      : in out Scanning.Token_List)
-      return Code_Trees.Parsed_Code
-   is
-   begin
-      return Parse_Statement_Sequence (Input, (End_Of_Text => True, others => False));
-   end Parse_Statement_Sequence;
+--     -- Parse_Statement_Sequence --
+--     ------------------------------
+--
+--     function Parse_Statement_Sequence
+--       (Input      : in out Scanning.Token_List)
+--        return Code_Trees.Parsed_Code
+--     is
+--     begin
+--        return Parse_Statement_Sequence (Input);
+--     end Parse_Statement_Sequence;
 
 end Protypo.Parsing;

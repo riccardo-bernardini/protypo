@@ -118,7 +118,7 @@ package body Protypo.Code_Trees is
      (Statements : Tree_Array)
       return Parsed_Code
    is
-      Result : constant Node_Access := new Node (Statement_Sequence);
+      Result : constant Node_Access := new Node (Naked);
    begin
       for Statement of Statements loop
          if not (Statement.Pt.Class in Expression) then
@@ -283,7 +283,7 @@ package body Protypo.Code_Trees is
                            Record_Var  => Ref.Pt,
                            Field_Name  => To_Unbounded_String (Field));
    begin
-      if not (Result.Indexed_Var.Class in Name) then
+      if not (Result.Record_Var.Class in Name) then
          raise Program_Error;
       end if;
 
@@ -472,7 +472,10 @@ package body Protypo.Code_Trees is
          when If_Block =>
             Delete (Item.Conditions);
             Delete (Item.Branches);
-            Delete (Item.Else_Branch);
+
+            if Item.Else_Branch /= null then
+               Delete (Item.Else_Branch);
+            end if;
 
          when List_Of_Names =>
             Delete (Item.Names);
@@ -545,12 +548,15 @@ package body Protypo.Code_Trees is
 
       function Tabbing (N : Natural) return String
       is ((N * 3) * " ");
-   begin
-      if Label /= "" then
-         Put_Line (Tabbing (Level) &  "[" & Label & "]");
-      end if;
 
-      Put_Line (Tabbing (Level) & Item.Class'Image);
+      Full_Label : constant String := Item.Class'Image & (if Label = ""
+                                                          then
+                                                             ""
+                                                          else
+                                                             " (" & Label & ")");
+   begin
+      Put_Line (Tabbing (Level) &  "[" & Full_Label & "]");
+
 
       case Item.Class is
          when Statement_Sequence =>
@@ -575,7 +581,10 @@ package body Protypo.Code_Trees is
          when If_Block =>
             Dump (Item.Conditions, Level + 1, "conditions");
             Dump (Item.Branches, Level + 1, "branches");
-            Dump (Item.Else_Branch, Level + 1, "else branch");
+
+            if Item.Else_Branch /= null then
+               Dump (Item.Else_Branch, Level + 1, "else branch");
+            end if;
 
          when List_Of_Names =>
             Dump (Item.Names, Level + 1);
@@ -593,20 +602,20 @@ package body Protypo.Code_Trees is
             Dump (Item.Operand, Level + 1);
 
          when Int_Constant =>
-            Put_Line (Tabbing(Level) & Item.N'Image);
+            Put_Line (Tabbing (Level) & Item.N'Image);
 
-         when real_Constant =>
-            Put_Line (Tabbing(Level) & Item.X'Image);
+         when Real_Constant =>
+            Put_Line (Tabbing (Level) & Item.X'Image);
 
          when  Text_Constant  =>
-            Put_Line (Tabbing(Level) & """" & To_String (Item.S) & """");
+            Put_Line (Tabbing (Level) & """" & To_String (Item.S) & """");
 
          when Identifier =>
-            Put_Line (Tabbing(Level) &  "<" & To_String (Item.ID_Value) & ">");
+            Put_Line (Tabbing (Level) &  "<" & To_String (Item.ID_Value) & ">");
 
          when Selected =>
             Dump (Item.Record_Var, Level + 1);
-            Put_Line (Tabbing (Level) & To_String (Item.Field_Name));
+            Put_Line (Tabbing (Level + 1) & "." & To_String (Item.Field_Name));
 
          when Indexed =>
             Dump (Item.Indexed_Var, Level + 1);
@@ -614,29 +623,37 @@ package body Protypo.Code_Trees is
 
 
          when Loop_Block =>
+            Put_Line (Tabbing (Level + 1)
+                      & "Label: <" & To_String (Item.Labl) & ">");
+
             Dump (Item.Loop_Body, Level + 1);
 
 
          when For_Block =>
+            Put_Line (Tabbing (Level + 1)
+                      & "Label: <" & To_String (Item.Labl) & ">");
+
             Dump (Item.Loop_Body, Level + 1);
             Dump (Item.Variable, Level + 1);
             Dump (Item.Iterator, Level + 1);
 
          when While_Block =>
+            Put_Line (Tabbing (Level + 1)
+                      & "Label: <" & To_String (Item.Labl) & ">");
+
             Dump (Item.Loop_Body, Level + 1);
             Dump (Item.Condition, Level + 1);
       end case;
 
-      if Label /= "" then
-         Put_Line (Tabbing (Level) &  "[/" & Label & "]");
-      end if;
+      Put_Line (Tabbing (Level) &  "[/" & Full_Label & "]");
    end Dump;
 
    procedure Dump (Code : Parsed_Code)
    is
    begin
-      Put_Line ("QQQ");
+      Put_Line ("<<INTERNAL FORM DUMP>>");
       Dump (Code.Pt, 0);
+      Put_Line ("<</ INTERNAL FORM DUMP>>");
    end Dump;
 
 end Protypo.Code_Trees;
