@@ -45,15 +45,15 @@ package Protypo.Code_Trees is
 
    function Class (X : Parsed_Code) return Non_Terminal;
 
-   function If_Then_Else (Condition   : Tree_Array;
-                          Then_Branch : Tree_Array;
-                          Else_Branch : Parsed_Code)
+   function If_Then_Else (Conditions    : Tree_Array;
+                          Then_Branches : Tree_Array;
+                          Else_Branch   : Parsed_Code)
                           return Parsed_Code
      with
        Pre =>
-         Condition'Length = Then_Branch'Length
-         and (for all Cond of Condition => Class (Cond) in Expression)
-         and (for all B of Then_Branch => Class (B) in Statement_Sequence),
+         Conditions'Length = Then_Branches'Length
+         and (for all Cond of Conditions => Class (Cond) in Expression)
+         and (for all B of Then_Branches => Class (B) in Statement_Sequence),
          Post =>
            Class (If_Then_Else'Result) = If_Block;
 
@@ -114,8 +114,7 @@ package Protypo.Code_Trees is
      with
        Post => Class (Indexed_Name'Result) = Indexed;
 
-   function Procedure_Call (Procedure_Name : Parsed_Code;
-                            Parameters     : Tree_Array)
+   function Procedure_Call (Procedure_Name : Parsed_Code)
                             return Parsed_Code
      with
        Post => Class (Procedure_Call'Result) = Procedure_Call,
@@ -199,7 +198,6 @@ private
             
             when Procedure_Call =>
                Name       : Node_Access;
-               Parameters : Node_Vectors.Vector;
             
             when Exit_Statement =>
                Loop_Label : Label_Type;
@@ -266,7 +264,7 @@ private
       end record;
 
    procedure Free  is 
-     new Ada.Unchecked_Deallocation (Object => node,
+     new Ada.Unchecked_Deallocation (Object => Node,
                                      Name   => Node_Access);
    
    procedure Delete (Item : in out Node_Access);

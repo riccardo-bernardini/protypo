@@ -122,7 +122,7 @@ package body Protypo.Parsing is
          Expect_And_Eat (Input, Open_Parenthesis);
 
          Indexes := Parse_Expression_List (Input, (others => True));
-         Result := Code_Trees.Function_Call (Result, Indexes.Dump);
+         Result := Code_Trees.Indexed_Name (Result, Indexes.Dump);
 
          Expect_And_Eat (Input, Close_Parenthesis);
       end Parse_Indexed_Name;
@@ -440,8 +440,8 @@ package body Protypo.Parsing is
 
       Expect_And_Eat (Input, End_Of_Statement);
 
-      return Code_Trees.Assignment (LHS        => Names.Dump,
-                                    Expression => Values.Dump);
+      return Code_Trees.Assignment (LHS    => Names.Dump,
+                                    Value  => Values.Dump);
    end Parse_Assign;
 
    -----------------------
@@ -481,9 +481,9 @@ package body Protypo.Parsing is
       Expect_And_Eat (Input, Kw_If);
       Expect_And_Eat (Input, End_Of_Statement);
 
-      return Code_Trees.Conditional (Conditions  => Conditions.Dump,
-                                     Branches    => Branches.Dump,
-                                     Else_Branch => Else_Branch);
+      return Code_Trees.If_Then_Else (Conditions    => Conditions.Dump,
+                                      Then_Branches => Branches.Dump,
+                                      Else_Branch   => Else_Branch);
    end Parse_Conditional;
 
 

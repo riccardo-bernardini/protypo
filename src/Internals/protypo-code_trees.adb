@@ -35,22 +35,22 @@ package body Protypo.Code_Trees is
    ------------------
 
    function If_Then_Else
-     (Condition   : Tree_Array;
-      Then_Branch : Tree_Array;
-      Else_Branch : Parsed_Code)
+     (Conditions    : Tree_Array;
+      Then_Branches : Tree_Array;
+      Else_Branch   : Parsed_Code)
       return Parsed_Code
    is
       Result : constant Node_Access := new Node (If_Block);
    begin
-      if Condition'Length /= Then_Branch'Length then
+      if Conditions'Length /= Then_Branches'Length then
          raise Program_Error;
       end if;
 
-      for Cond of Condition loop
+      for Cond of Conditions loop
          Result.Conditions.Append (Cond.Pt);
       end loop;
 
-      for Branch of Then_Branch loop
+      for Branch of Then_Branches loop
          Result.Branches.Append (Branch.Pt);
       end loop;
 
@@ -255,16 +255,14 @@ package body Protypo.Code_Trees is
    --------------------
 
    function Procedure_Call
-     (Procedure_Name : Parsed_Code;
-      Parameters     : Tree_Array)
+     (Procedure_Name : Parsed_Code)
       return Parsed_Code
    is
       Result : constant Node_Access :=
                  new Node'(Class       => Procedure_Call,
-                           Name        => Procedure_Name.Pt,
-                           Parameters  => To_Expression_Vector (Parameters));
+                           Name        => Procedure_Name.Pt);
    begin
-      if not (Result.Indexed_Var.Class in Name) then
+      if not (Result.Name.Class in Name) then
          raise Program_Error;
       end if;
 
@@ -467,7 +465,6 @@ package body Protypo.Code_Trees is
 
          when Procedure_Call =>
             Delete (Item.Name);
-            Delete (Item.Parameters);
 
          when Exit_Statement =>
             null;
@@ -531,7 +528,7 @@ package body Protypo.Code_Trees is
    is
    begin
       for El of Item loop
-         Dump (Item, Level, Label);
+         Dump (El, Level, Label);
       end loop;
    end Dump;
 
@@ -553,7 +550,7 @@ package body Protypo.Code_Trees is
          Put_Line (Tabbing (Level) &  "[" & Label & "]");
       end if;
 
-      Put_Line (Item.Class'Image);
+      Put_Line (Tabbing (Level) & Item.Class'Image);
 
       case Item.Class is
          when Statement_Sequence =>
@@ -571,7 +568,6 @@ package body Protypo.Code_Trees is
 
          when Procedure_Call =>
             Dump (Item.Name, Level + 1, "procedure");
-            Dump (Item.Parameters, Level + 1, "parameters");
 
          when Exit_Statement =>
             null;
@@ -596,8 +592,17 @@ package body Protypo.Code_Trees is
             Put_Line (Tabbing (Level) & Item.Uni_Op'Image);
             Dump (Item.Operand, Level + 1);
 
-         when Int_Constant | Real_Constant |  Text_Constant | Identifier =>
-            null;
+         when Int_Constant =>
+            Put_Line (Tabbing(Level) & Item.N'Image);
+
+         when real_Constant =>
+            Put_Line (Tabbing(Level) & Item.X'Image);
+
+         when  Text_Constant  =>
+            Put_Line (Tabbing(Level) & """" & To_String (Item.S) & """");
+
+         when Identifier =>
+            Put_Line (Tabbing(Level) &  "<" & To_String (Item.ID_Value) & ">");
 
          when Selected =>
             Dump (Item.Record_Var, Level + 1);
@@ -630,6 +635,7 @@ package body Protypo.Code_Trees is
    procedure Dump (Code : Parsed_Code)
    is
    begin
+      Put_Line ("QQQ");
       Dump (Code.Pt, 0);
    end Dump;
 
