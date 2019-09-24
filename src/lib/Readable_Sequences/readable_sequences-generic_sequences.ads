@@ -40,6 +40,11 @@ package Readable_Sequences.Generic_Sequences is
      with
        Post => To.Length = To.Length'Old + 1;
 
+   procedure Append (To   : in out Sequence;
+                     What : Sequence)
+     with
+       Post => To.Length = To.Length'Old + What.Length;
+
    procedure Rewind (Seq : in out Sequence;
                      To  :        Cursor := Beginning);
 

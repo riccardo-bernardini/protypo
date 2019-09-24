@@ -4,14 +4,25 @@ with Protypo.Parsing;
 with Protypo.Code_Trees.Interpreter;
 with Protypo.API.Consumers.File_Writer;
 
+with Ada.Directories;
+
+
 package body Protypo.API.interpreter is
-use Ada.Finalization;
+   use Ada.Finalization;
+   use Ada;
+
    -------------
    -- Compile --
    -------------
 
-   function Compile (Program : String) return Compiled_Code is
-      Tokens : Scanning.Token_List := Scanning.Tokenize (Program);
+   function Compile (Program  : String;
+                     Base_Dir : String := "") return Compiled_Code is
+      Tokens : Scanning.Token_List :=
+                 Scanning.Tokenize (Template => Program,
+                                    Base_Dir => (if Base_Dir /= "" then
+                                                    Base_Dir
+                                                 else
+                                                    Directories.Current_Directory));
    begin
       return Compiled_Code'(Limited_Controlled with
                               Code => Parsing.Parse_Statement_Sequence (Tokens));

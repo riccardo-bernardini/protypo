@@ -2,7 +2,7 @@ project Protypo is
 
    for Source_Dirs use ("src", "src/lib/Generic_Symbol_Table", "src/lib/Generic_Symbol_Table/test", "src/lib/Readable_Sequences", "src/lib/Utilities", "src/API", "src/Internals");
    for Object_Dir use "obj";
-   for Main use ("main.adb", "symbol_tables-test.adb");
+   for Main use ("protypo-scanning-test.adb", "symbol_tables-test.adb");
 
    package Builder is
       for Switches ("ada") use ("-s");

@@ -8,7 +8,8 @@ private with Protypo.Code_Trees;
 package Protypo.API.Interpreter is
    type Compiled_Code is limited private;
 
-   function Compile (Program : String) return Compiled_Code;
+   function Compile (Program  : String;
+                     Base_Dir : String := "") return Compiled_Code;
 
    procedure Run (Program      : Compiled_Code;
                   Symbol_Table : Symbols.Table;
@@ -29,5 +30,5 @@ private
          Code : Code_Trees.Parsed_Code;
       end record;
 
-   overriding procedure Finalize(Object : in out Compiled_Code);
+   overriding procedure Finalize (Object : in out Compiled_Code);
 end Protypo.API.Interpreter;

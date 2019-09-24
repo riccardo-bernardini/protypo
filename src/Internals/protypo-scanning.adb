@@ -3,6 +3,11 @@ with Ada.Characters.Latin_9;         use Ada.Characters.Latin_9;
 with Ada.Text_IO;                    use Ada.Text_IO;
 with Ada.Strings.Unbounded;          use Ada.Strings.Unbounded;
 with Ada.Strings.Maps.Constants;     use Ada.Strings.Maps.Constants;
+with Ada.Strings.Fixed;
+with Ada.Characters.Handling;
+with Ada.Sequential_IO;
+with Ada.Directories;
+
 
 with Readable_Sequences.String_Sequences;
 use Readable_Sequences;
@@ -10,6 +15,32 @@ use Readable_Sequences;
 use Ada.Strings.Maps;
 
 package body Protypo.Scanning is
+
+
+   -----------
+   -- Slurp --
+   -----------
+
+   function Slurp (Filename : String) return String is
+
+      subtype Content is String (1 .. Integer (Ada.Directories.Size (Filename)));
+      Result : Content;
+
+      package Content_IO is new Ada.Sequential_IO (Content);
+      Input  : Content_IO.File_Type;
+
+   begin
+      Content_IO.Open (File     => Input,
+                       Mode     => Content_IO.In_File,
+                       Name     => Filename);
+
+      Content_IO.Read (File => Input,
+                       Item => Result);
+
+      Content_IO.Close (Input);
+
+      return Result;
+   end Slurp;
 
    Id_Charset : constant Character_Set := Alphanumeric_Set or To_Set ('_');
 
@@ -58,11 +89,15 @@ package body Protypo.Scanning is
    function "&" (X : String;  Y : Character_Set) return Set_String
    is (To_Set_String (X) & Set_String'(1 => Y));
 
-   Begin_Of_Code       : constant String := "#{";
-   Short_Code_Begin    : constant Set_String := "#" & Letter_Set;
-   Transparent_Comment : constant String := "%#";
-   Target_Comment      : constant String := "%";
-   Template_Comment    : constant String := "#--";
+   Begin_Of_Code          : constant String := "#{";
+   Short_Code_Begin       : constant Set_String := "#" & Letter_Set;
+   Transparent_Comment    : constant String := "%#";
+   Target_Comment         : constant String := "%";
+   Template_Comment       : constant String := "#--";
+   Directive_Begin_Marker : constant Character := '(';
+   Directive_End_Marker   : constant Character := ')';
+   Directive_Begin        : constant String := "#" & Directive_Begin_Marker;
+
 
    ----------
    -- Peek --
@@ -358,9 +393,12 @@ package body Protypo.Scanning is
 
       type Scanner_State is (In_ID, After_Dot);
 
-      State : Scanner_State := In_ID;
+      State   : Scanner_State := In_ID;
       ID_Name : String_Sequences.Sequence;
    begin
+
+      Result.Append (Make_Token (Open_Naked));
+
       while not Input.End_Of_Sequence loop
          case State is
             when In_ID =>
@@ -397,7 +435,9 @@ package body Protypo.Scanning is
       end if;
 
       pragma Assert (ID_Name.Length > 0);
+
       Result.Append (Make_Token (Identifier, ID_Name.Dump));
+      Result.Append (Make_Token (close_Naked));
       Result.Append (Make_Token (End_Of_Statement));
 
    end Small_Code_Scanner;
@@ -411,7 +451,7 @@ package body Protypo.Scanning is
      with
        Post =>
          Buffer.Length = 0
-         and Result.Length = Result.Length'Old + (if Buffer.Length'Old > 0 then 2 else 0);
+         and Result.Length = Result.Length'Old + (if Buffer.Length'Old > 0 then 4 else 0);
 
 
    procedure Dump_Buffer (Buffer : in out String_Sequences.Sequence;
@@ -420,7 +460,9 @@ package body Protypo.Scanning is
       use Tokens;
    begin
       if Buffer.Length > 0 then
+         Result.Append (Make_Token (Open_Naked));
          Result.Append (Make_Token (Text, Buffer.Dump));
+         Result.Append (Make_Token (Close_Naked));
          Result.Append (Make_Token (End_Of_Statement));
          Buffer.Clear;
       end if;
@@ -449,12 +491,81 @@ package body Protypo.Scanning is
       end loop;
    end Transparent_Comment_Scanner;
 
+   procedure Process_Directive (Input    : in out String_Sequences.Sequence;
+                                Result   : in out Token_List;
+                                Base_Dir : String)
+   is
+      Buffer            : String_Sequences.Sequence;
+      Parenthesis_Level : Natural := 1;
+
+   begin
+      while Parenthesis_Level > 0 loop
+         if Input.Read = Directive_Begin_Marker then
+            Parenthesis_Level := Parenthesis_Level + 1;
+
+            Buffer.Append (Input.Next);
+
+         elsif Input.Read = Directive_End_Marker then
+            if Input.Read (1) = Directive_End_Marker then
+               Buffer.Append (Directive_End_Marker);
+               Input.Next (2);
+
+            else
+               Parenthesis_Level := Parenthesis_Level - 1;
+
+               if Parenthesis_Level > 0 then
+                  Buffer.Append (Input.read);
+               end if;
+
+               Input.Next;
+            end if;
+
+         else
+            Buffer.Append (Input.Next);
+         end if;
+      end loop;
+
+      declare
+         use Ada.Strings.Fixed;
+         use Ada.Strings;
+         use Ada.Characters.Handling;
+
+         S : constant String := Trim (Buffer.Dump, Left);
+
+         End_Directive_Pos : constant Natural := Index (Source  => S,
+                                                        Pattern => " ");
+
+         Directive : constant String := To_Lower (if End_Directive_Pos = 0 then
+                                                     S
+                                                  else
+                                                     S (S'First .. End_Directive_Pos - 1));
+
+         Parameter : constant String := Trim ((if End_Directive_Pos < S'Last then
+                                                 S (End_Directive_Pos + 1 .. S'Last)
+                                              else
+                                                 ""), Left);
+      begin
+         if Directive = "include" then
+            declare
+               Included : constant Token_List :=
+                            Tokenize (Slurp (Parameter), Base_Dir);
+            begin
+               Result.Append (Included);
+            end;
+
+         else
+            Put_Line (Standard_Error, "Directive '" & Directive & "' unknown");
+         end if;
+      end;
+   end Process_Directive;
+
 
    --------------
    -- Tokenize --
    --------------
 
-   function Tokenize (Template : String) return Token_List is
+   function Tokenize (Template : String;
+                      Base_Dir : String) return Token_List is
       use Tokens;
 
       Result : Token_List := Token_Sequences.Create (Make_Token (End_Of_Text));
@@ -468,6 +579,12 @@ package body Protypo.Scanning is
             Input.Next (Begin_Of_Code'Length);
 
             Code_Scanner (Input, Result);
+
+         elsif Peek (Input, Directive_Begin) then
+            Dump_Buffer (Buffer, Result);
+            Input.Next (Directive_Begin'Length);
+
+            Process_Directive (Input, Result, Base_Dir);
 
          elsif Peek (Input, Short_Code_Begin)  then
             Dump_Buffer (Buffer, Result);

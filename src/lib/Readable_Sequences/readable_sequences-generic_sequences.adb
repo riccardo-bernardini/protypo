@@ -123,6 +123,17 @@ package body Readable_Sequences.Generic_Sequences is
    end Append;
 
    ------------
+   -- Append --
+   ------------
+
+   procedure Append (To   : in out Sequence;
+                     What : Sequence)
+   is
+   begin
+      To.Vector.Append (What.Vector);
+   end Append;
+
+   ------------
    -- Rewind --
    ------------
 

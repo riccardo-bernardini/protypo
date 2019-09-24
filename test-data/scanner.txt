@@ -10,6 +10,7 @@
 %# Questo invece #dovrebbe
 #--  Questa dovrebbe essere completamente ignorata
 \end{WPs}
+#(include test-data/incluso.txt)
 #-- #questo.dovrebbe.
 
 
