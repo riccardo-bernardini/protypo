@@ -28,9 +28,11 @@ if         = IF expression THEN sequence_of_statement
              [ELSE sequence_of_statement] 
              END IF ;
              
-loop       = LOOP sequence_of_statement END LOOP;
-for        = FOR ID IN expression loop
-while      = WHILE expression loop
+loop       = [ ID : ] LOOP sequence_of_statement END LOOP;
+for        = [ ID : ] FOR ID IN expression loop
+while      = [ ID : ] WHILE expression loop
+
+exit       = EXIT [ ID ] ;
 ```
 Note that a name in basic can denote both a variable access or a function call (they are undistinguishable at the syntax level). By analyzing the FIRST relation we see that
 ```
