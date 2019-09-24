@@ -52,7 +52,23 @@ for WP in project.wps loop
 end loop;
 "\end{wp}";
 ```
-
+## Directives
+When scanning the main text a string of the form
+```
+#(commmand parameter)
+```
+is a *directive* used to control the parser.  More precisely, a directive is processed as follows
+1. First, the whole *directive string* (that includes both `command` and `parameter`) is extracted.  This is done a-la Postscript, taking inside the directive string every matching pair of parenthesis. For example, with
+```
+#(foo (1) and (2 (a)))
+```
+the `command` is `foo` and `parameter` is `(1) and (2 (a))`.  If a single parenthesis is required, an escape Ada-like (i.e., by repeiting the parenthesis twice) is possible, e.g.,
+```
+#(foo  only one (( parenthesis)
+#(foo  only one )) parenthesis)
+```
+2. The directive string is trimmed by removing initial spaces.  The string until the first space is the command.
+3. The `parameter` is what remains, still left trimmed.
 ## Comments 
 
 We distinguish between three types of comments
