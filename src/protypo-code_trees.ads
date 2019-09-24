@@ -7,7 +7,6 @@ with Protypo.Engine_Values;
 package Protypo.Code_Trees is
    type Non_Terminal is
      (
-      Label,
       Statement_Sequence,
       Naked,
       Assignment,
@@ -30,9 +29,10 @@ package Protypo.Code_Trees is
       Identifier
      );
 
-   subtype Expression is Non_Terminal range Binary_Op .. Identifier;
-   subtype Name is Non_Terminal range Selected .. Identifier;
-
+   subtype Expression        is Non_Terminal range Binary_Op .. Identifier;
+   subtype Name              is Non_Terminal range Selected .. Identifier;
+   subtype Statement_Classes is Non_Terminal range Statement_Sequence .. While_Block;
+   
    type Parsed_Code is private;
 
    Empty_Tree : constant Parsed_Code;
@@ -186,9 +186,6 @@ private
    type Node (Class : Non_Terminal) is
       record
          case Class is
-            when Label =>
-               Label_Name : Label_Type;
-            
             when Statement_Sequence =>
                Statements : Node_Vectors.Vector;
             
