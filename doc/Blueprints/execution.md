@@ -26,3 +26,11 @@ Internally we have a type `Engine_Value` that represents all the possible intern
 * Iterators, used in `for` loops, represented by types implementing the `Iterator` interface
 
 Functions and field selects return values of type `Engine_Value`
+
+# Execution model 
+
+It is just a visit of the tree in depth-first order, but possibly with "lazy" evaluation.  For example, the execution of a conditional branch first evaluates the  condition, then decides which branch to follow.
+
+At every time there is an active symbol table, a new level is opened
+* In a `for` loop for the index variable (the new level is over the current environment)
+* In the call of a template-defined function (the new level is a children of the root table)
