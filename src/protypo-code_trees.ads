@@ -103,6 +103,12 @@ package Protypo.Code_Trees is
      with
        Post => Class (Function_Call'Result) = Call;
 
+   function Procedure_Call (Function_Ref : Parsed_Code)
+                           return Parsed_Code
+     with
+       Post => Class (Procedure_Call'Result) = Call,
+     Pre => Class (Function_Ref)in Name;
+
 
    function Selector (Ref   : Parsed_Code;
                       Field : String)
@@ -118,8 +124,12 @@ package Protypo.Code_Trees is
      with
        Post => Class (Conditional'Result) = If_Block;
 
+   function Loop_Exit (Label     : String)
+                       return Parsed_Code;
 
-   function Basic_Loop (Loop_Body : Parsed_Code)
+
+   function Basic_Loop (Loop_Body : Parsed_Code;
+                        Label     : String)
                         return Parsed_Code
      with
        Post => Class (Basic_Loop'Result) = Loop_Block;

@@ -424,16 +424,13 @@ package body Protypo.Parsing is
    -- Parse_Assign --
    ------------------
 
-   function Parse_Assign (Input : in out Scanning.Token_List)
+   function Parse_Assign (Input : in out Scanning.Token_List;
+                          Names : Statement_Sequences.Sequence)
                           return Code_Trees.Parsed_Code
    is
-      Names  : Statement_Sequences.Sequence;
       Values : Statement_Sequences.Sequence;
    begin
-      Names := Parse_Name_List (Input);
-
-      Expect (Input, Assign);
-      Input.Next;
+      Expect_And_Eat (Input, Assign);
 
       Values := Parse_Expression_List (Input, (others => True));
 
@@ -491,10 +488,33 @@ package body Protypo.Parsing is
 
 
    ----------------
+   -- Parse_Exit --
+   ----------------
+
+   function Parse_Exit (Input : in out Scanning.Token_List)
+                        return Code_Trees.Parsed_Code
+   is
+   begin
+      Expect_And_Eat (Input, Kw_Exit);
+
+      declare
+         Label : constant String := (if Class (Input.Read) = Identifier then
+                                        Value (Input.Next)
+                                     else
+                                        "");
+      begin
+         Expect_And_Eat (Input, End_Of_Statement);
+
+         return Code_Trees.Loop_Exit (Label);
+      end;
+   end Parse_Exit;
+
+   ----------------
    -- Parse_Loop --
    ----------------
 
-   function Parse_Loop (Input : in out Scanning.Token_List)
+   function Parse_Loop (Input : in out Scanning.Token_List;
+                        Label : String := "")
                         return Code_Trees.Parsed_Code
    is
       Loop_Body : Code_Trees.Parsed_Code;
@@ -507,14 +527,15 @@ package body Protypo.Parsing is
       Expect_And_Eat (Input, Kw_Loop);
       Expect_And_Eat (Input, End_Of_Statement);
 
-      return Code_Trees.Basic_Loop (Loop_Body);
+      return Code_Trees.Basic_Loop (Loop_Body, Label);
    end Parse_Loop;
 
    --------------------
    -- Parse_For_Loop --
    --------------------
 
-   function Parse_For_Loop (Input : in out Scanning.Token_List)
+   function Parse_For_Loop (Input : in out Scanning.Token_List;
+                            Label : String := "")
                             return Code_Trees.Parsed_Code
    is
       Variable  : Code_Trees.Parsed_Code;
@@ -534,7 +555,7 @@ package body Protypo.Parsing is
 
       Iterator := Parse_Expression (Input, (others => True));
 
-      Loop_Body := Parse_Loop (Input);
+      Loop_Body := Parse_Loop (Input, Label);
 
       return Code_Trees.For_Loop (Variable  => Variable,
                                   Iterator  => Iterator,
@@ -546,17 +567,18 @@ package body Protypo.Parsing is
    -- Parse_While_Loop --
    ----------------------
 
-   function Parse_While_Loop (Input : in out Scanning.Token_List)
-                            return Code_Trees.Parsed_Code
+   function Parse_While_Loop (Input : in out Scanning.Token_List;
+                              Label : String := "")
+                              return Code_Trees.Parsed_Code
    is
       Condition : Code_Trees.Parsed_Code;
       Loop_Body : Code_Trees.Parsed_Code;
    begin
-      Expect_And_Eat (Input, Kw_while);
+      Expect_And_Eat (Input, Kw_While);
 
       Condition := Parse_Expression (Input, (others => True));
 
-      Loop_Body := Parse_Loop (Input);
+      Loop_Body := Parse_Loop (Input, Label);
 
       return Code_Trees.While_Loop (Condition  => Condition,
                                     Loop_Body  => Loop_Body);
@@ -593,8 +615,63 @@ package body Protypo.Parsing is
      (Input      : in out Scanning.Token_List;
       Valid_End  : Token_Mask) return Code_Trees.Parsed_Code
    is
+      subtype Labeled_Construct is Unvalued_Token
+        with
+          Static_Predicate => Labeled_Construct in Kw_Loop | Kw_While | Kw_For;
+
+      function Parse_Labeled_Construct (Input : in out Scanning.Token_List)
+                                        return Code_Trees.Parsed_Code
+      is
+         Label : constant String := Value (Input.Next);
+      begin
+         Expect_And_Eat (Input, Label_Separator);
+
+         case Labeled_Construct (Class (Input.Read)) is
+            when Kw_Loop =>
+               return Parse_Loop (Input, Label);
+
+            when Kw_For =>
+               return Parse_For_Loop (Input, Label);
+
+            when Kw_While =>
+               return Parse_While_Loop (Input, Label);
+         end case;
+      end Parse_Labeled_Construct;
+
+      function Parse_Assign_Or_Call (Input : in out Scanning.Token_List)
+                                     return Code_Trees.Parsed_Code
+      is
+         subtype Name_List_Follower is Unvalued_Token
+           with
+             Static_Predicate =>
+               Name_List_Follower in End_Of_Statement | Assign;
+
+         Names : constant Statement_Sequences.Sequence :=
+                   Parse_Name_List (Input);
+      begin
+         if not (Class (Input.Read) in Name_List_Follower) then
+            raise Constraint_Error;
+         end if;
+
+         case Name_List_Follower (Class (Input.Read)) is
+            when End_Of_Statement =>
+
+               Expect_And_Eat (Input, End_Of_Statement);
+
+               if Names.Length /= 1 then
+                  raise Constraint_Error;
+               else
+                  return Code_Trees.Procedure_Call (Names.Read);
+               end if;
+
+            when Assign =>
+               return Parse_Assign (Input, Names);
+         end case;
+      end Parse_Assign_Or_Call;
 
       Result : Statement_Sequences.Sequence;
+
+
    begin
       loop
          exit when Valid_End (Class (Input.Read));
@@ -604,7 +681,15 @@ package body Protypo.Parsing is
                Result.Append (Parse_Naked (Input));
 
             when Identifier =>
-               Result.Append (Parse_Assign (Input));
+               if Class (Input.Read (1)) = Label_Separator then
+                  if not (Class (Input.Read (2)) in Labeled_Construct) then
+                     raise Constraint_Error;
+                  else
+                     Result.Append (Parse_Labeled_Construct (Input));
+                  end if;
+               else
+                  Result.Append (Parse_Assign_Or_Call (Input));
+               end if;
 
             when Kw_If =>
                Result.Append (Parse_Conditional (Input));
@@ -623,6 +708,8 @@ package body Protypo.Parsing is
             when Kw_Loop =>
                Result.Append (Parse_Loop (Input));
 
+            when Kw_Exit =>
+               Result.Append (Parse_Exit (Input));
 
             when Kw_Return =>
                Result.Append (Parse_Return (Input));
@@ -637,7 +724,8 @@ package body Protypo.Parsing is
                  Kw_End           | Kw_And           | Kw_Or               |
                  Open_Parenthesis | Close_Naked      | End_Of_Text         |
                  Kw_When          | Kw_In            | Kw_Of               |
-                 Real             | Kw_Xor           | Kw_Not
+                 Real             | Kw_Xor           | Kw_Not              |
+                 Label_Separator
                =>
 
                Unexpected_Token (Class (Input.Read), Valid_End);

@@ -182,6 +182,7 @@ package body Protypo.Scanning is
                          Open_Parenthesis  => +"(",
                          Close_Parenthesis => +")",
                          Tokens.Comma      => +",",
+                         Label_Separator   => +":",
                          End_Of_Statement  => +";",
                          Open_Naked        => +"[",
                          Close_Naked       => +"]"
@@ -196,10 +197,14 @@ package body Protypo.Scanning is
                     Kw_When   => +"when",
                     Kw_For    => +"for",
                     Kw_Loop   => +"loop",
+                    Kw_While  => +"while",
                     Kw_Return => +"return",
+                    Kw_Exit   => +"exit",
                     Kw_End    => +"end",
                     Kw_And    => +"and",
                     Kw_Or     => +"or",
+                    Kw_Xor    => +"xor",
+                    Kw_Not    => +"not",
                     Kw_In     => +"in",
                     Kw_Of     => +"of");
 
