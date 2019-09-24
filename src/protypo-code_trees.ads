@@ -1,28 +1,37 @@
+with Ada.Containers.Vectors;
+with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
+
 with Protypo.Tokens;
+with Protypo.Engine_Values;
 
 package Protypo.Code_Trees is
    type Non_Terminal is
      (
-      If_Block,
-      For_Block,
-      Loop_Block,
-      While_Block,
-      Return_Block,
-      Assignment,
-      Stat_Sequence,
-      List_Of_Expr,
-      List_Of_Names,
+      Label,
+      Statement_Sequence,
       Naked,
+      Assignment,
+      Return_Statement,
+      Procedure_Call,
+      Exit_Statement,
+      If_Block,
+      Loop_Block,
+      For_Block,
+      While_Block,
+      List_Of_Names,
+      List_Of_Expressions,
       Binary_Op,
       Unary_Op,
-      Cost,
-      Selector,
-      Call,
+      Int_Constant,
+      Real_Constant,
+      Text_Constant,
+      Selected,
+      Indexed,
       Identifier
      );
 
-   subtype Expr is Non_Terminal range Binary_Op .. Identifier;
-   subtype Name is Non_Terminal range Selector .. Identifier;
+   subtype Expression is Non_Terminal range Binary_Op .. Identifier;
+   subtype Name is Non_Terminal range Selected .. Identifier;
 
    type Parsed_Code is private;
 
@@ -42,24 +51,25 @@ package Protypo.Code_Trees is
      with
        Pre =>
          Condition'Length = Then_Branch'Length
-         and (for all Cond of Condition => Class (Cond) in Expr)
-         and (for all B of Then_Branch => Class (B) in Stat_Sequence),
+         and (for all Cond of Condition => Class (Cond) in Expression)
+         and (for all B of Then_Branch => Class (B) in Statement_Sequence),
          Post =>
            Class (If_Then_Else'Result) = If_Block;
 
-   function Assignment (LHS        : Tree_Array;
-                        Expression : Tree_Array)
+   function Assignment (LHS   : Tree_Array;
+                        Value : Tree_Array)
                         return Parsed_Code
      with
-       Pre => Lhs'Length = Expression'Length
-       and (for all Item of Lhs => Class (Item) in Name)
-       and (for all Item of Expression => Class (Item) in Expr),
-       Post => Class (Assignment'Result) = Assignment;
+       Pre =>
+         (for all Item of Lhs => Class (Item) in Name) and
+         (for all Item of Value => Class (Item) in Expression),
+         Post =>
+           Class (Assignment'Result) = Assignment;
 
    function Statement_Sequence (Statements : Tree_Array)
                                 return Parsed_Code
      with
-       Post => Class (Statement_Sequence'Result) = Stat_Sequence;
+       Post => Class (Statement_Sequence'Result) = Statement_Sequence;
 
    function Naked_Expression (Statements : Tree_Array)
                               return Parsed_Code
@@ -82,31 +92,31 @@ package Protypo.Code_Trees is
 
    function String_Constant (Val : String) return Parsed_Code
      with
-       Post => Class (String_Constant'Result) = Cost;
+       Post => Class (String_Constant'Result) = Text_Constant;
 
    function Integer_Constant (Val : String) return Parsed_Code
      with
-       Post => Class (Integer_Constant'Result) = Cost;
+       Post => Class (Integer_Constant'Result) = Int_Constant;
 
    function Float_Constant (Val : String) return Parsed_Code
      with
-       Post => Class (Float_Constant'Result) = Cost;
+       Post => Class (Float_Constant'Result) = Real_Constant;
 
 
    function Identifier (Id : String) return Parsed_Code
      with
        Post => Class (Identifier'Result) = Identifier;
 
-   function Function_Call (Function_Ref : Parsed_Code;
-                           Parameters   : Tree_Array)
-                           return Parsed_Code
+   function Indexed_Name (Function_Ref : Parsed_Code;
+                          Parameters   : Tree_Array)
+                          return Parsed_Code
      with
-       Post => Class (Function_Call'Result) = Call;
+       Post => Class (Indexed_Name'Result) = Indexed;
 
    function Procedure_Call (Function_Ref : Parsed_Code)
-                           return Parsed_Code
+                            return Parsed_Code
      with
-       Post => Class (Procedure_Call'Result) = Call,
+       Post => Class (Procedure_Call'Result) = Procedure_Call,
      Pre => Class (Function_Ref)in Name;
 
 
@@ -114,7 +124,7 @@ package Protypo.Code_Trees is
                       Field : String)
                       return Parsed_Code
      with
-       Post => Class (Selector'Result) = Selector;
+       Post => Class (Selector'Result) = Selected;
 
 
    function Conditional (Conditions  : Tree_Array;
@@ -151,7 +161,7 @@ package Protypo.Code_Trees is
                         Loop_Body : Parsed_Code)
                         return Parsed_Code
      with
-       Pre => Class (Loop_Body) = Loop_Block  and (Class (Condition) in Expr),
+       Pre => Class (Loop_Body) = Loop_Block  and (Class (Condition) in Expression),
      Post => Class (While_Loop'Result) = While_Block;
 
 
@@ -159,13 +169,111 @@ package Protypo.Code_Trees is
    function Return_To_Caller (Values : Tree_Array)
                               return Parsed_Code
      with
-       Pre => (for all V of Values => Class (V) in Expr),
-       Post => Class (Return_To_Caller'Result) = Return_Block;
+       Pre => (for all V of Values => Class (V) in Expression),
+       Post => Class (Return_To_Caller'Result) = Return_Statement;
 
 private
-   type Parsed_Code is new Integer;
+   subtype Label_Type is Unbounded_String;
+   subtype Loops is Non_Terminal range Loop_Block .. While_Block;
+   
+   type Node;
+   type Node_Access is access Node;
 
-   Empty_Tree : constant Parsed_Code := 0;
+   package Node_Vectors is
+     new Ada.Containers.Vectors (Index_Type   => Positive,
+                                 Element_Type => Node_Access);
+   
+   type Node (Class : Non_Terminal) is
+      record
+         case Class is
+            when Label =>
+               Label_Name : Label_Type;
+            
+            when Statement_Sequence =>
+               Statements : Node_Vectors.Vector;
+            
+            when Naked =>
+               Naked_Values : Node_Vectors.Vector;
+            
+            when Assignment =>
+               Lhs        : Node_Vectors.Vector;
+               Rvalues    : Node_Vectors.Vector;
+            
+            when Return_Statement =>
+               Return_Values : Node_Vectors.Vector;
+            
+            when Procedure_Call =>
+               Name       : Node_Access;
+               Parameters : Node_Vectors.Vector;
+            
+            when Exit_Statement =>
+               Loop_Label : Label_Type;
+            
+            when If_Block =>
+               Conditions : Node_Vectors.Vector;
+               Branches   : Node_Vectors.Vector;
+               Else_Branch : Node_Access;
+            
+            when List_Of_Names =>
+               Names      : Node_Vectors.Vector;
+            
+            when List_Of_Expressions =>
+               Exprs      : Node_Vectors.Vector;
+            
+            when Binary_Op =>
+               Operator   : Tokens.Binary_Operator;
+               Left       : Node_Access;
+               Right      : Node_Access;
+         
+            when Unary_Op =>
+               Uni_Op     : Tokens.Unary_Operator;
+               Operand    : Node_Access;
+            
+            when Int_Constant =>
+               N          : Integer;
+            
+            when Real_Constant =>
+               X          : Float;
+            
+            when Text_Constant =>
+               S          : Unbounded_String;
+            
+            when Selected =>
+               Selection_Handler : Engine_Values.Record_Interface_Access;
+            
+            when Indexed =>
+               Indexed_Handler : Engine_Values.Array_Interface_Access;
+            
+            when Identifier => 
+               ID_Value   : Unbounded_String;
+            
+            when Loop_Block | For_Block |  While_Block =>
+               Loop_Body  : Node_Vectors.Vector;
+               Labl       : Label_Type;
+            
+               case Class is 
+               when Loop_Block =>
+                  null;
+                  
+               when For_Block =>
+                  Variable : Node_Access;
+                  Iterator : Node_Access;
+                  
+               when While_Block =>
+                  Condition : Node_Access;
+                  
+               when others =>
+                  null;
+               end case;
+         end case;
+      end record;
+
+   type Parsed_Code is
+      record
+         Pt : Node_Access;
+      end record;
+
+   Empty_Tree : constant Parsed_Code := (Pt => null);
 
    Empty_Tree_Array : constant Tree_Array (2 .. 1) := (others => <>);
 
