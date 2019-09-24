@@ -169,6 +169,7 @@ package Protypo.Code_Trees is
    
    procedure Delete (Code : in out Parsed_Code);
 
+   procedure Dump (Code : Parsed_Code);
 private
    subtype Label_Type is Unbounded_String;
    subtype Loops is Non_Terminal range Loop_Block .. While_Block;

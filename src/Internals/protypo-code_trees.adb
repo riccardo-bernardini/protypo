@@ -1,4 +1,7 @@
 pragma Ada_2012;
+with Ada.Strings.Fixed;
+with Ada.Text_IO; use Ada.Text_IO;
+
 package body Protypo.Code_Trees is
 
    function To_Expression_Vector (X : Tree_Array)
@@ -26,13 +29,6 @@ package body Protypo.Code_Trees is
       return X.Pt.Class;
    end Class;
 
-   ------------------
-   -- If_Then_Else --
-   ------------------
-
-   ------------------
-   -- If_Then_Else --
-   ------------------
 
    ------------------
    -- If_Then_Else --
@@ -494,7 +490,7 @@ package body Protypo.Code_Trees is
          when Unary_Op =>
             Delete (Item.Operand);
 
-         when Int_Constant | Real_Constant|  Text_Constant | Identifier =>
+         when Int_Constant | Real_Constant |  Text_Constant | Identifier =>
             null;
 
          when Selected =>
@@ -521,5 +517,120 @@ package body Protypo.Code_Trees is
       Free (Item);
    end Delete;
 
+   procedure Dump (Item  : Node_Access;
+                   Level : Natural;
+                   Label : String := "");
+
+   ----------
+   -- Dump --
+   ----------
+
+   procedure Dump (Item  : Node_Vectors.Vector;
+                   Level : Natural;
+                   Label : String := "")
+   is
+   begin
+      for El of Item loop
+         Dump (Item, Level, Label);
+      end loop;
+   end Dump;
+
+
+   ----------
+   -- Dump --
+   ----------
+
+   procedure Dump (Item  : Node_Access;
+                   Level : Natural;
+                   Label : String := "")
+   is
+      use Ada.Strings.Fixed;
+
+      function Tabbing (N : Natural) return String
+      is ((N * 3) * " ");
+   begin
+      if Label /= "" then
+         Put_Line (Tabbing (Level) &  "[" & Label & "]");
+      end if;
+
+      Put_Line (Item.Class'Image);
+
+      case Item.Class is
+         when Statement_Sequence =>
+            Dump (Item.Statements, Level + 1);
+
+         when Naked =>
+            Dump (Item.Naked_Values, Level + 1);
+
+         when Assignment =>
+            Dump (Item.Lhs, Level + 1, "LHS");
+            Dump (Item.Rvalues, Level + 1, "RHS");
+
+         when Return_Statement =>
+            Dump (Item.Return_Values, Level + 1);
+
+         when Procedure_Call =>
+            Dump (Item.Name, Level + 1, "procedure");
+            Dump (Item.Parameters, Level + 1, "parameters");
+
+         when Exit_Statement =>
+            null;
+
+         when If_Block =>
+            Dump (Item.Conditions, Level + 1, "conditions");
+            Dump (Item.Branches, Level + 1, "branches");
+            Dump (Item.Else_Branch, Level + 1, "else branch");
+
+         when List_Of_Names =>
+            Dump (Item.Names, Level + 1);
+
+         when List_Of_Expressions =>
+            Dump (Item.Exprs, Level + 1);
+
+         when Binary_Op =>
+            Put_Line (Tabbing (Level) & Item.Operator'Image);
+            Dump (Item.Left, Level + 1, "left");
+            Dump (Item.Right, Level + 1, "right");
+
+         when Unary_Op =>
+            Put_Line (Tabbing (Level) & Item.Uni_Op'Image);
+            Dump (Item.Operand, Level + 1);
+
+         when Int_Constant | Real_Constant |  Text_Constant | Identifier =>
+            null;
+
+         when Selected =>
+            Dump (Item.Record_Var, Level + 1);
+            Put_Line (Tabbing (Level) & To_String (Item.Field_Name));
+
+         when Indexed =>
+            Dump (Item.Indexed_Var, Level + 1);
+            Dump (Item.Indexes, Level + 1, "index");
+
+
+         when Loop_Block =>
+            Dump (Item.Loop_Body, Level + 1);
+
+
+         when For_Block =>
+            Dump (Item.Loop_Body, Level + 1);
+            Dump (Item.Variable, Level + 1);
+            Dump (Item.Iterator, Level + 1);
+
+         when While_Block =>
+            Dump (Item.Loop_Body, Level + 1);
+            Dump (Item.Condition, Level + 1);
+      end case;
+
+      if Label /= "" then
+         Put_Line (Tabbing (Level) &  "[/" & Label & "]");
+      end if;
+   end Dump;
+
+   procedure Dump (Code : Parsed_Code)
+   is
+   begin
+      Dump (Code.Pt, 0);
+   end Dump;
 
 end Protypo.Code_Trees;
