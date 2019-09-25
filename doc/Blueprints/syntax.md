@@ -12,7 +12,7 @@ signature = mandatory ; optional | mandatory | optional
 mandatory = ID (; ID)*
 optional  = ID := expr (; ID := expr)*
 
-proc_call  = name ;
+proc_call  = ID [ '( expr_list ') ]  ;
 assignment = name_list := expr_list ;
 name_list  = name (, name)*
 name       = ID | name . ID | name '( expr_list ')
