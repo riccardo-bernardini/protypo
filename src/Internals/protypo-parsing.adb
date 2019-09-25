@@ -618,20 +618,25 @@ package body Protypo.Parsing is
 
       function Parse_Assign_Or_Call (Input : in out Scanning.Token_List)
                                      return Code_Trees.Parsed_Code
-      is
-         subtype Name_List_Follower is Unvalued_Token
-           with
-             Static_Predicate =>
-               Name_List_Follower in End_Of_Statement | Assign;
+            with
+                  Pre => Class (Input.Read) = Identifier;
 
-         Names : constant Statement_Sequences.Sequence :=
-                   Parse_Name_List (Input);
+      function Parse_Assign_Or_Call (Input : in out Scanning.Token_List)
+                                     return Code_Trees.Parsed_Code
+      is
+         subtype ID_Follower is Unvalued_Token
+               with
+                     Static_Predicate =>
+                           Name_List_Follower in End_Of_Statement | Assign | Open_Parenthesis;
+
+         Follower : constant Token_Class := Class (Input.Read (1));
       begin
-         if not (Class (Input.Read) in Name_List_Follower) then
+
+         if not (Follower in ID_Follower) then
             raise Constraint_Error;
          end if;
 
-         case Name_List_Follower (Class (Input.Read)) is
+         case ID_Follower (Follower) is
             when End_Of_Statement =>
 
                Expect_And_Eat (Input, End_Of_Statement);
@@ -639,11 +644,41 @@ package body Protypo.Parsing is
                if Names.Length /= 1 then
                   raise Constraint_Error;
                else
-                  return Code_Trees.Procedure_Call (Names.Read);
+                  return Code_Trees.Procedure_Call (Value(Input.Read));
                end if;
 
             when Assign =>
-               return Parse_Assign (Input, Names);
+               return Parse_Assign (Input);
+
+            when Open_Parenthesis =>
+               declare
+                  ID : constant String := Value(Input.Read);
+                  Parameters : Statement_Sequences.Sequence;
+               begin
+                  Input.Save_Position;
+                  Input.Next;
+                  Expect_And_Eat (Input, Open_Parenthesis);
+
+                  Parameters := Parse_Expression_List (Input);
+
+                  Expect_And_Eat (Input, Close_Parenthesis);
+
+                  case Class(Input.Read) is
+                     when End_Of_Statement =>
+                        Input.Clear_Position;
+
+                        return Code_Trees.Procedure_Call (ID, Parameters);
+
+                     when Assign =>
+                        Input.Restore_Position;
+
+                        return Parse_Assign (Input);
+
+                     when others =>
+                        raise Constraint_Error;
+                  end case;
+
+               end;
          end case;
       end Parse_Assign_Or_Call;
 
