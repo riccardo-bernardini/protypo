@@ -7,8 +7,10 @@ sequence_of_statement = statement*
 statement = simple | compound
 simple    = assignment | return | proc_call | exit  
 compound  = if | loop | while | for | defun
-defun     = (FUNCTION | PROCEDURE) ID [ '( id_list ') ] BEGIN sequence_of_statement END ID;
-id_list   = ID [:= expression] (; ID [:= expression])*
+defun     = (FUNCTION | PROCEDURE) ID [ '( signature ') ] BEGIN sequence_of_statement END ID;
+signature = mandatory ; optional | mandatory | optional 
+mandatory = ID (; ID)*
+optional  = ID := expr (; ID := expr)*
 
 proc_call  = name ;
 assignment = name_list := expr_list ;
