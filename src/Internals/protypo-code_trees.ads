@@ -143,11 +143,16 @@ package Protypo.Code_Trees is
      with
        Post => Class (Indexed_Name'Result) = Indexed;
 
-   function Procedure_Call (Procedure_Name : Parsed_Code)
+   function Procedure_Call (Procedure_Name : String;
+                            Parameters     : Tree_Array)
                             return Parsed_Code
      with
-       Post => Class (Procedure_Call'Result) = Procedure_Call,
-     Pre => Class (Procedure_Name) in Name;
+       Post => Class (Procedure_Call'Result) = Procedure_Call;
+
+   function Procedure_Call (Procedure_Name : String)
+                            return Parsed_Code
+     with
+       Post => Class (Procedure_Call'Result) = Procedure_Call;
 
 
    function Selector (Ref   : Parsed_Code;
@@ -241,7 +246,8 @@ private
                Return_Values   : Node_Vectors.Vector;
             
             when Procedure_Call =>
-               Name            : Node_Access;
+               Name            : Unbounded_String;
+               Params    : Node_Vectors.Vector;
             
             when Exit_Statement =>
                Loop_Label      : Label_Type;

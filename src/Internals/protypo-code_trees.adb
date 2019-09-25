@@ -4,25 +4,25 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Code_Trees is
 
---     ------------------
---     -- To_ID_Vector --
---     ------------------
---
---     function To_ID_Vector (X : Tree_Array)
---                            return Node_Vectors.Vector
---     is
---        Result : Node_Vectors.Vector;
---     begin
---        for Item of X loop
---           if not (Item.Pt.Class in Identifier) then
---              raise Program_Error;
---           end if;
---
---           Result.Append (Item.Pt);
---        end loop;
---
---        return Result;
---     end To_ID_Vector;
+   --     ------------------
+   --     -- To_ID_Vector --
+   --     ------------------
+   --
+   --     function To_ID_Vector (X : Tree_Array)
+   --                            return Node_Vectors.Vector
+   --     is
+   --        Result : Node_Vectors.Vector;
+   --     begin
+   --        for Item of X loop
+   --           if not (Item.Pt.Class in Identifier) then
+   --              raise Program_Error;
+   --           end if;
+   --
+   --           Result.Append (Item.Pt);
+   --        end loop;
+   --
+   --        return Result;
+   --     end To_ID_Vector;
 
    ----------------
    -- Definition --
@@ -39,7 +39,7 @@ package body Protypo.Code_Trees is
                            Is_Function     => Is_Function,
                            Definition_Name => To_Unbounded_String (Name),
                            Function_Body   => <>,
-                           Parameters => <>);
+                           Parameters      => <>);
    begin
       if Function_Body.Pt.Class /= Statement_Sequence then
          raise Program_Error;
@@ -70,7 +70,7 @@ package body Protypo.Code_Trees is
                raise Program_Error;
             end if;
          else
-             if not (Item.Pt.Class in Expression) then
+            if not (Item.Pt.Class in Expression) then
                raise Program_Error;
             end if;
          end if;
@@ -188,26 +188,26 @@ package body Protypo.Code_Trees is
       return (Pt => Result);
    end Statement_Sequence;
 
---     ----------------------
---     -- Naked_Expression --
---     ----------------------
---
---     function Naked_Expression
---       (Statements : Tree_Array)
---        return Parsed_Code
---     is
---        Result : constant Node_Access := new Node (Naked);
---     begin
---        for Statement of Statements loop
---           if not (Statement.Pt.Class in Expression) then
---              raise Program_Error;
---           end if;
---
---           Result.Naked_Values.Append (Statement.Pt);
---        end loop;
---
---        return (Pt => Result);
---     end Naked_Expression;
+   --     ----------------------
+   --     -- Naked_Expression --
+   --     ----------------------
+   --
+   --     function Naked_Expression
+   --       (Statements : Tree_Array)
+   --        return Parsed_Code
+   --     is
+   --        Result : constant Node_Access := new Node (Naked);
+   --     begin
+   --        for Statement of Statements loop
+   --           if not (Statement.Pt.Class in Expression) then
+   --              raise Program_Error;
+   --           end if;
+   --
+   --           Result.Naked_Values.Append (Statement.Pt);
+   --        end loop;
+   --
+   --        return (Pt => Result);
+   --     end Naked_Expression;
 
    ----------------------
    -- Binary_Operation --
@@ -332,20 +332,19 @@ package body Protypo.Code_Trees is
    -- Procedure_Call --
    --------------------
 
-   function Procedure_Call
-     (Procedure_Name : Parsed_Code)
-      return Parsed_Code
+   function Procedure_Call (Procedure_Name : String;
+                            Parameters     : Tree_Array)
+                            return Parsed_Code
    is
-      Result : constant Node_Access :=
-                 new Node'(Class       => Procedure_Call,
-                           Name        => Procedure_Name.Pt);
    begin
-      if not (Result.Name.Class in Name) then
-         raise Program_Error;
-      end if;
-
-      return (Pt => Result);
+      return (Pt => new Node'(Class       => Procedure_Call,
+                              Name        => To_Unbounded_String (Procedure_Name),
+                              Params      => To_Expression_Vector (Parameters)));
    end Procedure_Call;
+
+   function Procedure_Call (Procedure_Name : String)
+                            return Parsed_Code
+   is (Procedure_Call (Procedure_Name, Empty_Tree_Array));
 
    --------------
    -- Selector --
@@ -526,7 +525,7 @@ package body Protypo.Code_Trees is
 
    procedure Delete (Item : in out Parameter_Specs) is
    begin
-      Delete(Item.Default);
+      Delete (Item.Default);
    end Delete;
 
    ------------
@@ -551,8 +550,8 @@ package body Protypo.Code_Trees is
          when Statement_Sequence =>
             Delete (Item.Statements);
 
---           when Naked =>
---              Delete (Item.Naked_Values);
+            --           when Naked =>
+            --              Delete (Item.Naked_Values);
 
          when Assignment =>
             Delete (Item.Lhs);
@@ -562,7 +561,7 @@ package body Protypo.Code_Trees is
             Delete (Item.Return_Values);
 
          when Procedure_Call =>
-            Delete (Item.Name);
+            Delete (Item.Parameters);
 
          when Exit_Statement =>
             null;
@@ -647,7 +646,14 @@ package body Protypo.Code_Trees is
       function Tabbing (N : Natural) return String
       is ((N * 3) * " ");
 
-      procedure Dump (Item : Parameter_Specs;
+      procedure Dump (Item  : Unbounded_String;
+                      Level : Natural)
+      is
+      begin
+         Put_Line (Tabbing (Level)& To_String (Item));
+      end Dump;
+
+      procedure Dump (Item  : Parameter_Specs;
                       Level : Natural)
       is
       begin
@@ -684,8 +690,8 @@ package body Protypo.Code_Trees is
          when Statement_Sequence =>
             Dump (Item.Statements, Level + 1);
 
---           when Naked =>
---              Dump (Item.Naked_Values, Level + 1);
+            --           when Naked =>
+            --              Dump (Item.Naked_Values, Level + 1);
 
          when Assignment =>
             Dump (Item.Lhs, Level + 1, "LHS");
@@ -695,7 +701,8 @@ package body Protypo.Code_Trees is
             Dump (Item.Return_Values, Level + 1);
 
          when Procedure_Call =>
-            Dump (Item.Name, Level + 1, "procedure");
+            Dump (Item.Name, Level + 1);
+            Dump (Item.Params, Level + 1, "procedure");
 
          when Exit_Statement =>
             null;

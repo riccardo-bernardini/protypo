@@ -7,9 +7,11 @@ begin
     consume("Hello world!");
   end zorro;
   
-  while x < 4 loop
+  mano : while x < 4 loop
     consume(x);
     x := x+1;
+    x(3) := 99;
+    a.b(c).z := 42;
   end loop;
 end pippo;
 }#

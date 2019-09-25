@@ -1,4 +1,5 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
+
 package Protypo.API.Engine_Values is
    type Engine_Value_Class is
      (
@@ -13,6 +14,7 @@ package Protypo.API.Engine_Values is
      );
 
    type Engine_Value (Class : Engine_Value_Class := Void) is private;
+
    type Engine_Value_Array is array (Positive range <>) of Engine_Value;
 
    Void_Value : constant Engine_Value;

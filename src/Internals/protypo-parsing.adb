@@ -52,6 +52,7 @@ package body Protypo.Parsing is
    is
    begin
       Put_Line (Standard_Error, "Unexpected " & Found'Image & "instead of " & Expected'Image);
+      raise Constraint_Error;
    end Unexpected_Token;
 
 
@@ -355,23 +356,23 @@ package body Protypo.Parsing is
       return Result;
    end Parse_Expression_List;
 
---     -----------------
---     -- Parse_Naked --
---     -----------------
---
---     function Parse_Naked (Input : in out Scanning.Token_List)
---                           return Code_Trees.Parsed_Code
---     is
---        Result : Statement_Sequences.Sequence;
---     begin
---        Expect_And_Eat (Input, Open_Naked);
---
---        Result := Parse_Expression_List (Input);
---
---        Expect_And_Eat (Input, Close_Naked);
---
---        return Code_Trees.Naked_Expression (Result.Dump);
---     end Parse_Naked;
+   --     -----------------
+   --     -- Parse_Naked --
+   --     -----------------
+   --
+   --     function Parse_Naked (Input : in out Scanning.Token_List)
+   --                           return Code_Trees.Parsed_Code
+   --     is
+   --        Result : Statement_Sequences.Sequence;
+   --     begin
+   --        Expect_And_Eat (Input, Open_Naked);
+   --
+   --        Result := Parse_Expression_List (Input);
+   --
+   --        Expect_And_Eat (Input, Close_Naked);
+   --
+   --        return Code_Trees.Naked_Expression (Result.Dump);
+   --     end Parse_Naked;
 
    ---------------------
    -- Parse_name_List --
@@ -396,11 +397,11 @@ package body Protypo.Parsing is
    -- Parse_Assign --
    ------------------
 
-   function Parse_Assign (Input : in out Scanning.Token_List;
-                          Names : Statement_Sequences.Sequence)
+   function Parse_Assign (Input : in out Scanning.Token_List)
                           return Code_Trees.Parsed_Code
    is
       Values : Statement_Sequences.Sequence;
+      Names  : constant Statement_Sequences.Sequence := Parse_Name_List (Input);
    begin
       Expect_And_Eat (Input, Assign);
 
@@ -618,19 +619,36 @@ package body Protypo.Parsing is
 
       function Parse_Assign_Or_Call (Input : in out Scanning.Token_List)
                                      return Code_Trees.Parsed_Code
-            with
-                  Pre => Class (Input.Read) = Identifier;
+        with
+          Pre => Class (Input.Read) = Identifier;
 
       function Parse_Assign_Or_Call (Input : in out Scanning.Token_List)
                                      return Code_Trees.Parsed_Code
       is
          subtype ID_Follower is Unvalued_Token
-               with
-                     Static_Predicate =>
-                           Name_List_Follower in End_Of_Statement | Assign | Open_Parenthesis;
+           with
+             Static_Predicate =>
+               ID_Follower in End_Of_Statement | Assign | Open_Parenthesis | Dot;
 
          Follower : constant Token_Class := Class (Input.Read (1));
       begin
+         --
+         -- Here we are at the beginning of a statement and the current
+         -- token is an identifier.  We can have several cases
+         --
+         -- * A procedure call with parameter, e.g., foo(2);
+         -- * A procedure call without parameter, e.g., foo;
+         -- * An assignment to a vecto, e.g., foo(2) := 1.3;
+         -- * Other assignments, i.e., foo.bar := 4; bar := 0;
+         --
+         -- It follows that the identifier can be followed by
+         -- * A semicolon   (call, no parameters)
+         -- * A dot         (assignment)
+         -- * An assignment (assignment)
+         -- * A parenthesis (call or assignment?)
+         -- In the last case we need to look after the closed parenthesis
+         -- in order to decied
+         --
 
          if not (Follower in ID_Follower) then
             raise Constraint_Error;
@@ -641,21 +659,23 @@ package body Protypo.Parsing is
 
                Expect_And_Eat (Input, End_Of_Statement);
 
-               if Names.Length /= 1 then
-                  raise Constraint_Error;
-               else
-                  return Code_Trees.Procedure_Call (Value(Input.Read));
-               end if;
+               return Code_Trees.Procedure_Call (Value (Input.Read));
 
-            when Assign =>
+            when Assign | Dot =>
                return Parse_Assign (Input);
 
             when Open_Parenthesis =>
+               --
+               -- This is the ambigous case.  We use back-track, so we
+               -- first try the call alternative, if it does not work
+               -- we backtrack to current position and try assignment
+               --
+               Input.Save_Position;
+
                declare
-                  ID : constant String := Value(Input.Read);
+                  ID         : constant String := Value (Input.Read);
                   Parameters : Statement_Sequences.Sequence;
                begin
-                  Input.Save_Position;
                   Input.Next;
                   Expect_And_Eat (Input, Open_Parenthesis);
 
@@ -663,13 +683,15 @@ package body Protypo.Parsing is
 
                   Expect_And_Eat (Input, Close_Parenthesis);
 
-                  case Class(Input.Read) is
+                  case Class (Input.Read) is
                      when End_Of_Statement =>
                         Input.Clear_Position;
 
-                        return Code_Trees.Procedure_Call (ID, Parameters);
+                        Expect_And_Eat (Input, End_Of_Statement);
 
-                     when Assign =>
+                        return Code_Trees.Procedure_Call (ID, Parameters.Dump);
+
+                     when Assign | Dot =>
                         Input.Restore_Position;
 
                         return Parse_Assign (Input);
@@ -772,7 +794,7 @@ package body Protypo.Parsing is
          return Code_Trees.Definition (Name           => To_String (Name),
                                        Parameter_List => Parameter_Names,
                                        Function_Body  => Function_Body,
-                                       Is_Function    => is_Function);
+                                       Is_Function    => Is_Function);
       end Parse_Defun;
 
 
