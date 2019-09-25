@@ -188,26 +188,26 @@ package body Protypo.Code_Trees is
       return (Pt => Result);
    end Statement_Sequence;
 
-   ----------------------
-   -- Naked_Expression --
-   ----------------------
-
-   function Naked_Expression
-     (Statements : Tree_Array)
-      return Parsed_Code
-   is
-      Result : constant Node_Access := new Node (Naked);
-   begin
-      for Statement of Statements loop
-         if not (Statement.Pt.Class in Expression) then
-            raise Program_Error;
-         end if;
-
-         Result.Naked_Values.Append (Statement.Pt);
-      end loop;
-
-      return (Pt => Result);
-   end Naked_Expression;
+--     ----------------------
+--     -- Naked_Expression --
+--     ----------------------
+--
+--     function Naked_Expression
+--       (Statements : Tree_Array)
+--        return Parsed_Code
+--     is
+--        Result : constant Node_Access := new Node (Naked);
+--     begin
+--        for Statement of Statements loop
+--           if not (Statement.Pt.Class in Expression) then
+--              raise Program_Error;
+--           end if;
+--
+--           Result.Naked_Values.Append (Statement.Pt);
+--        end loop;
+--
+--        return (Pt => Result);
+--     end Naked_Expression;
 
    ----------------------
    -- Binary_Operation --
@@ -551,8 +551,8 @@ package body Protypo.Code_Trees is
          when Statement_Sequence =>
             Delete (Item.Statements);
 
-         when Naked =>
-            Delete (Item.Naked_Values);
+--           when Naked =>
+--              Delete (Item.Naked_Values);
 
          when Assignment =>
             Delete (Item.Lhs);
@@ -684,8 +684,8 @@ package body Protypo.Code_Trees is
          when Statement_Sequence =>
             Dump (Item.Statements, Level + 1);
 
-         when Naked =>
-            Dump (Item.Naked_Values, Level + 1);
+--           when Naked =>
+--              Dump (Item.Naked_Values, Level + 1);
 
          when Assignment =>
             Dump (Item.Lhs, Level + 1, "LHS");

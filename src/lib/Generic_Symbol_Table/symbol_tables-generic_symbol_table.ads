@@ -20,6 +20,8 @@ package Symbol_Tables.Generic_Symbol_Table is
    type Table_Block is private;
    No_Block : constant Table_Block;
 
+   function Copy_Globals (T : Symbol_Table) return Symbol_Table;
+
    function Root (T : Symbol_Table) return Table_Block;
 
    function Current_Block (T : Symbol_Table) return Table_Block;

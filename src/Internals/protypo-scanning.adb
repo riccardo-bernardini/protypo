@@ -218,9 +218,7 @@ package body Protypo.Scanning is
                          Close_Parenthesis => +")",
                          Tokens.Comma      => +",",
                          Label_Separator   => +":",
-                         End_Of_Statement  => +";",
-                         Open_Naked        => +"[",
-                         Close_Naked       => +"]"
+                         End_Of_Statement  => +";"
                         );
 
       Keywords : constant array (Keyword_Tokens) of Unbounded_String :=
@@ -396,7 +394,6 @@ package body Protypo.Scanning is
       ID_Name : String_Sequences.Sequence;
    begin
 
-      Result.Append (Make_Token (Open_Naked));
 
       while not Input.End_Of_Sequence loop
          case State is
@@ -435,9 +432,10 @@ package body Protypo.Scanning is
 
       pragma Assert (ID_Name.Length > 0);
 
+      Result.Append (Make_Token (Identifier, "consume"));
+      Result.Append (Make_Token (Open_Parenthesis));
       Result.Append (Make_Token (Identifier, ID_Name.Dump));
-      Result.Append (Make_Token (Close_Naked));
-      --        Result.Append (Make_Token (End_Of_Statement));
+      Result.Append (Make_Token (Close_Parenthesis));
 
    end Small_Code_Scanner;
 

@@ -16,7 +16,6 @@ package Protypo.Code_Trees is
    type Non_Terminal is
      (
       Statement_Sequence,
-      Naked,
       Defun,
       Assignment,
       Return_Statement,
@@ -26,9 +25,6 @@ package Protypo.Code_Trees is
       Loop_Block,
       For_Block,
       While_Block,
-      List_Of_Names,
-      List_Of_Expressions,
-      Parameter_Signature,
       Binary_Op,
       Unary_Op,
       Int_Constant,
@@ -36,7 +32,10 @@ package Protypo.Code_Trees is
       Text_Constant,
       Selected,
       Indexed,
-      Identifier
+      Identifier,
+      List_Of_Names,
+      List_Of_Expressions,
+      Parameter_Signature
      );
 
    subtype Expression        is Non_Terminal range Binary_Op .. Identifier;
@@ -102,10 +101,10 @@ package Protypo.Code_Trees is
      with
        Post => Class (Statement_Sequence'Result) = Statement_Sequence;
 
-   function Naked_Expression (Statements : Tree_Array)
-                              return Parsed_Code
-     with
-       Post => Class (Naked_Expression'Result) = Naked;
+--     function Naked_Expression (Statements : Tree_Array)
+--                                return Parsed_Code
+--       with
+--         Post => Class (Naked_Expression'Result) = Naked;
 
    function Binary_Operation (Left      : Parsed_Code;
                               Right     : Parsed_Code;
@@ -231,8 +230,8 @@ private
             when Statement_Sequence =>
                Statements      : Node_Vectors.Vector;
             
-            when Naked =>
-               Naked_Values    : Node_Vectors.Vector;
+--              when Naked =>
+--                 Naked_Values    : Node_Vectors.Vector;
             
             when Assignment =>
                Lhs             : Node_Vectors.Vector;

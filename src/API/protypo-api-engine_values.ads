@@ -15,6 +15,9 @@ package Protypo.API.Engine_Values is
    type Engine_Value (Class : Engine_Value_Class := Void) is private;
    type Engine_Value_Array is array (Positive range <>) of Engine_Value;
 
+   Void_Value : constant Engine_Value;
+   No_Value : constant Engine_Value_Array;
+
    subtype Integer_Value  is Engine_Value (Int);
    subtype Real_Value     is Engine_Value (Real);
    subtype String_Value   is Engine_Value (Text);
@@ -22,9 +25,6 @@ package Protypo.API.Engine_Values is
    subtype Record_Value   is Engine_Value (Record_Like);
    subtype Iterator_Value is Engine_Value (Iterator);
    subtype Function_Value is Engine_Value (Function_Handler);
-
-   Void_Value : constant Engine_Value;
-   No_Value : constant Engine_Value_Array;
 
    type Array_Interface is interface;
    type Array_Interface_Access is not null access all Array_Interface'Class;

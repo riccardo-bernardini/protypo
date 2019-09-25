@@ -355,23 +355,23 @@ package body Protypo.Parsing is
       return Result;
    end Parse_Expression_List;
 
-   -----------------
-   -- Parse_Naked --
-   -----------------
-
-   function Parse_Naked (Input : in out Scanning.Token_List)
-                         return Code_Trees.Parsed_Code
-   is
-      Result : Statement_Sequences.Sequence;
-   begin
-      Expect_And_Eat (Input, Open_Naked);
-
-      Result := Parse_Expression_List (Input);
-
-      Expect_And_Eat (Input, Close_Naked);
-
-      return Code_Trees.Naked_Expression (Result.Dump);
-   end Parse_Naked;
+--     -----------------
+--     -- Parse_Naked --
+--     -----------------
+--
+--     function Parse_Naked (Input : in out Scanning.Token_List)
+--                           return Code_Trees.Parsed_Code
+--     is
+--        Result : Statement_Sequences.Sequence;
+--     begin
+--        Expect_And_Eat (Input, Open_Naked);
+--
+--        Result := Parse_Expression_List (Input);
+--
+--        Expect_And_Eat (Input, Close_Naked);
+--
+--        return Code_Trees.Naked_Expression (Result.Dump);
+--     end Parse_Naked;
 
    ---------------------
    -- Parse_name_List --
@@ -747,9 +747,6 @@ package body Protypo.Parsing is
    begin
       loop
          case Class (Input.Read) is
-            when Open_Naked =>
-               Result.Append (Parse_Naked (Input));
-
             when Identifier =>
                if Class (Input.Read (1)) = Label_Separator then
                   if not (Class (Input.Read (2)) in Labeled_Construct) then
@@ -796,7 +793,7 @@ package body Protypo.Parsing is
                Greater_Or_Equal | Assign           | Dot                 |
                Comma            | End_Of_Statement | Close_Parenthesis   |
                Kw_Then          | Kw_And           | Kw_Or               |
-               Open_Parenthesis | Close_Naked      | Label_Separator     |
+               Open_Parenthesis | Label_Separator  |
                Kw_When          | Kw_In            | Kw_Of               |
                Real             | Kw_Xor           | Kw_Not              |
                Kw_Begin               =>

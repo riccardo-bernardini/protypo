@@ -4,9 +4,13 @@ with Ada.Unchecked_Deallocation;
 
 package body Symbol_Tables.Generic_Symbol_Table is
 
-
-
-
+   function Copy_Globals (T : Symbol_Table) return Symbol_Table
+   is
+   begin
+      return Result : Symbol_Table do
+         Result.Root.Map := T.Root.Map;
+      end return;
+   end Copy_Globals;
 
    ----------------
    -- Open_Block --

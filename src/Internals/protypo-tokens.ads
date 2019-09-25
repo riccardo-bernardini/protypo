@@ -18,8 +18,6 @@ package Protypo.Tokens is
       Comma,
       Label_Separator,
       End_Of_Statement,
-      Open_Naked,
-      Close_Naked,
       Kw_If,
       Kw_Then,
       Kw_Elsif,
@@ -46,7 +44,7 @@ package Protypo.Tokens is
 
    subtype Valued_Token     is Token_Class     range Int .. Identifier;
    subtype Unvalued_Token   is Token_Class     range Plus .. End_Of_Text;
-   subtype Not_Keyword      is Unvalued_Token  range Plus .. Close_Naked;
+   subtype Not_Keyword      is Unvalued_Token  range Plus .. End_Of_Statement;
    subtype Keyword_Tokens   is Unvalued_Token  range Kw_If .. Kw_Of;
    subtype Logical_Operator is Unvalued_Token  range Kw_And .. Kw_Xor;
    subtype Comp_Operator    is Unvalued_Token range Equal .. Greater_Or_Equal;
