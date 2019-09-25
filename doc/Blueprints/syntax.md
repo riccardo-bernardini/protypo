@@ -40,7 +40,6 @@ exit       = EXIT [ ID ] ;
 ```
 Note that a name in basic can denote both a variable access or a function call (they are undistinguishable at the syntax level). By analyzing the FIRST relation we see that
 ```
-naked_expr -> [
 proc_call  -> ID
 assignment -> name -> ID
 return     -> RETURN
@@ -48,19 +47,4 @@ if         -> IF
 loops      -> ID
 etc.
 ```
-Therefore, when we are at the beginning of parsing a `statement`, the next non terminal tells us what kind of statement we are going to parse.  The only ambiguity is when the next terminal is an ID that can begin both a `naked_expr` and an `assignment`.  Since if the first non-terminal is an ID, then what follows is a `name`, we can parse a `name` and the check what follows.
-
-# Semantic 
-We translate to a tree-based.  Every node has an "action" and sub-trees as parameters.  For example, IF-THEN-ELSE has three sub-tree: the condition, the THEN branch and (maybe) the ELSE one. 
-
-Node actions
-* IF  (expression, then, else)
-* FOR  (index, iterator, body)
-* WHILE (condition, body)
-* Operazioni matematiche
-* DOT (symbol reference, identifier)
-* CALL (reference, parameter list)
-* statement list (vector of nodes)
-* naked expression (expression)
-* assignment (name reference, expression)
-* return (expression optional)
+Therefore, when we are at the beginning of parsing a `statement`, the next non terminal tells us what kind of statement we are going to parse.  
