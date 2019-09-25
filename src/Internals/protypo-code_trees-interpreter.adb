@@ -4,7 +4,7 @@ with Protypo.Code_Trees.Interpreter.Consumer_Handlers;
 with Protypo.Code_Trees.Interpreter.Compiled_Functions;
 
 package body Protypo.Code_Trees.Interpreter is
-
+   use type Ada.Containers.Count_Type;
 
    ---------------
    -- To_Vector --
@@ -37,72 +37,161 @@ package body Protypo.Code_Trees.Interpreter is
       return Result;
    end To_Array;
 
+   function Eval (Expr   : not null Node_Access;
+                  Status : Status_Access)
+                  return Engine_Value_Vectors.Vector
+   is
+      function "+" (X : Engine_Value_Vectors.Vector)
+                    return Engine_Value
+        with
+          Pre => X.Length = 1;
+
+      function "+" (X : Engine_Value_Vectors.Vector)  return Engine_Value
+      is (X.First_Element);
+
+      function "+" (X : Engine_Value)  return Engine_Value_Vectors.Vector
+      is
+         Result : Engine_Value_Vectors.Vector;
+      begin
+         Result.Append (X);
+         return Result;
+      end "+";
+
+      function Apply (Op : Tokens.Binary_Operator;
+                      Left : Engine_Value;
+                      Right : Engine_Value)
+                      return Engine_Value
+      is
+         use Tokens;
+      begin
+         case Op is
+            when Plus =>
+               return Left + Right;
+
+            when Minus =>
+               return Left - Right;
+
+            when Mult =>
+               return Left * Right;
+
+            when Div =>
+               return Left / Right;
+
+            when Equal =>
+               return Left = Right;
+
+            when Different =>
+               return Left /= Right;
+
+            when Less_Than =>
+               return Left < Right;
+
+            when Greater_Than =>
+               return Left > Right;
+
+            when Less_Or_Equal =>
+               return Left <= Right;
+
+            when Greater_Or_Equal =>
+               return Left >= Right;
+
+            when Kw_And =>
+               return Left and Right;
+
+            when Kw_Or =>
+               return Left or Right;
+
+            when Kw_Xor =>
+               return Left xor Right;
+         end case;
+      end Apply;
+
+      Left, Right : Engine_Value;
+   begin
+      if not (Expr.Class in Code_Trees.Expression) then
+         raise Program_Error;
+      end if;
+
+      case Code_Trees.Expression (Expr.Class) is
+         when Binary_Op =>
+            Left := + Eval (Expr.Left, Status);
+            Right := + Eval (Expr.Right, Status);
+
+            return + Apply (Expr.Operator, Left, Right);
+
+         when Unary_Op =>
+            Right := + Eval (Expr.Operand, Status);
+
+            return Apply (Expr.Uni_Op, Right);
+
+         when Int_Constant =>
+            return + Create (Expr.N);
+
+         when Real_Constant =>
+            return + Create (Expr.X);
+
+         when Text_Constant =>
+            return + Create (To_String (Expr.S));
+
+         when Selected =>
+            raise Program_Error;
+
+         when Indexed =>
+            raise Program_Error;
+
+         when Identifier =>
+            raise Program_Error;
+
+      end case;
+   end Eval;
 
 
 
-   function Run
-     (Program      : Node_Vectors.Vector;
-      Symbol_Table : Symbol_Table_Access)
-      return Interpreter_Result
+   ---------
+   -- Run --
+   ---------
+
+   procedure Run (Program : Node_Vectors.Vector;
+                  Status  : Status_Access)
    is
 
    begin
       for Statement of Program loop
-         declare
-            Result : constant Interpreter_Result := Run (Statement, Symbol_Table);
-         begin
-            if Result.Reason /= End_Of_Code then
-               return Result;
-            end if;
-         end;
-      end loop;
+         Run (Statement, Status);
 
-      return No_Result;
+         if Status.Break.Breaking_Reason /= None then
+            return;
+         end if;
+      end loop;
    end Run;
 
 
---     type Compiled_Function is
---       new Api.Engine_Values.Function_Interface
---     with
---        record
---           Function_Body : Node_Vectors.Vector;
---           Parameters    : Parameter_Specs;
---           Symbol_Table  : Symbol_Table_Access;
---        end record;
+   ---------
+   -- Run --
+   ---------
 
-
-
-
-   function Run
-     (Program      : not null Node_Access;
-      Symbol_Table : Symbol_Table_Access)
-      return Interpreter_Result
+   procedure Run (Program : not null Node_Access;
+                  Status  : Status_Access)
    is
-      subtype Executable_Nodes is Non_Terminal
-        with
-          Static_Predicate => Executable_Nodes in Statement_Classes | Code_Trees.Expression;
-
       use Compiled_Functions;
    begin
-      if Program.Class not in Executable_Nodes then
+      if Program.Class not in Statement_Classes then
          raise Program_Error;
       end if;
 
 
-      case Executable_Nodes (Program.Class) is
+      case Statement_Classes (Program.Class) is
          when Statement_Sequence =>
-            return Run (Program.Statements, Symbol_Table);
+            Run (Program.Statements, Status);
 
          when Defun =>
-            Symbol_Table.Create
+            Status.Symbol_Table.Create
               (Name          =>
                   To_String (Program.Definition_Name),
                Initial_Value =>
                   Create (new Compiled_Function'(Function_Body => Program.Function_Body,
                                                  Parameters    => Program.Parameters,
-                                                 Symbol_Table  => Symbol_Table)));
-
-               return No_Result;
+                                                 Status        => Status)));
 
          when Assignment =>
             raise Program_Error;
@@ -128,29 +217,6 @@ package body Protypo.Code_Trees.Interpreter is
          when While_Block =>
             raise Program_Error;
 
-         when Binary_Op =>
-            raise Program_Error;
-
-         when Unary_Op =>
-            raise Program_Error;
-
-         when Int_Constant =>
-            raise Program_Error;
-
-         when Real_Constant =>
-            raise Program_Error;
-
-         when Text_Constant =>
-            raise Program_Error;
-
-         when Selected =>
-            raise Program_Error;
-
-         when Indexed =>
-            raise Program_Error;
-
-         when Identifier =>
-            raise Program_Error;
 
       end case;
 
@@ -174,15 +240,15 @@ package body Protypo.Code_Trees.Interpreter is
                        Initial_Value => Create (Consumer_Handlers.Create (Consumer)));
       end Add_Builtin_Values;
 
-      Ignored       : Interpreter_Result;
-      Private_Table : constant Symbol_Table_Access :=
-                        new Api.Symbols.Table'(Copy_Globals (Symbol_Table));
+      Interpreter : constant Status_Access :=
+                      new Interpreter_Status'(Break        => No_Break,
+                                              Symbol_Table => Copy_Globals (Symbol_Table));
    begin
-      Add_Builtin_Values (Private_Table.all);
+      Add_Builtin_Values (Interpreter.Symbol_Table);
 
-      Ignored := Run (Program.Pt, Private_Table);
+      Run (Program.Pt, Interpreter);
 
-      if Ignored.Reason /= End_Of_Code  then
+      if Interpreter.Break /= No_Break  then
          raise Program_Error;
       end if;
    end Run;

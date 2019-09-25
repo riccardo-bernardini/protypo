@@ -32,33 +32,66 @@ private
       Expression
      );
 
-   type Interpreter_Result (Reason : Termination_Reason := End_Of_Code) is
+   type Break_Type is (Exit_Statement, Return_Statement, None);
+
+   type Break_Status (Breaking_Reason : Break_Type := None) is
       record
-         case Reason is
-            when End_Of_Code =>
+         case Breaking_Reason is
+            when None =>
                null;
+
+            when Exit_Statement =>
+               Loop_Label : Label_Type;
 
             when Return_Statement =>
                Result : Engine_Value_Vectors.Vector;
-
-            when Exit_Statement =>
-               Label  : Label_Type;
-
-            when Expression =>
-               Value : Engine_Value;
          end case;
       end record;
 
-   No_Result : constant Interpreter_Result := (Reason => End_Of_Code);
+   No_Break : constant Break_Status := (Breaking_Reason => None);
+
+   type Interpreter_Status is limited
+      record
+         Break        : Break_Status;
+         Symbol_Table : Api.Symbols.Table;
+      end record;
+
+   type Status_Access is not null access Interpreter_Status;
+
+   --
+   --     type Interpreter_Result (Reason : Termination_Reason := End_Of_Code) is
+   --        record
+   --           case Reason is
+   --              when End_Of_Code =>
+   --                 null;
+   --
+   --              when Return_Statement =>
+   --                 Result : Engine_Value_Vectors.Vector;
+   --
+   --              when Exit_Statement =>
+   --                 Label  : Label_Type;
+   --
+   --              when Expression =>
+   --                 Value : Engine_Value;
+   --           end case;
+   --        end record;
+
+   --     No_Result : constant Interpreter_Result := (Reason => End_Of_Code);
 
 
-    function Run
-     (Program      : not null Node_Access;
-      Symbol_Table : Symbol_Table_Access)
-      return Interpreter_Result;
+   procedure Run (Program : not null Node_Access;
+                  Status  : Status_Access)
+     with
+       Pre => Program.Class in Statement_Classes;
 
-   function Run
-     (Program      : Node_Vectors.Vector;
-      Symbol_Table : Symbol_Table_Access)
-      return Interpreter_Result;
+   procedure Run (Program : Node_Vectors.Vector;
+                  Status  : Status_Access);
+
+   function Eval (Expr   : not null Node_Access;
+                  Status : Status_Access)
+                  return Engine_Value_Vectors.Vector
+     with
+       Pre => Expr.Class in Code_Trees.Expression,
+       Post => not Eval'Result.Is_Empty;
+
 end Protypo.Code_Trees.Interpreter;
