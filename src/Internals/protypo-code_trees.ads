@@ -1,15 +1,23 @@
 with Ada.Unchecked_Deallocation;
 with Ada.Containers.Vectors;
+with Ada.Containers.Indefinite_Vectors;
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 
 with Protypo.Tokens;
 
 private
 package Protypo.Code_Trees is
+   package ID_Lists is 
+     new Ada.Containers.Indefinite_Vectors (Index_Type   => Positive,
+                                            Element_Type => String);
+   
+   subtype Id_List is ID_Lists.Vector;
+   
    type Non_Terminal is
      (
       Statement_Sequence,
       Naked,
+      Defun,
       Assignment,
       Return_Statement,
       Procedure_Call,
@@ -20,7 +28,7 @@ package Protypo.Code_Trees is
       While_Block,
       List_Of_Names,
       List_Of_Expressions,
-      Defun,
+      Parameter_Signature,
       Binary_Op,
       Unary_Op,
       Int_Constant,
@@ -39,6 +47,8 @@ package Protypo.Code_Trees is
 
    Empty_Tree : constant Parsed_Code;
 
+   function Is_Empty (X : Parsed_Code) return Boolean;
+   
    type Tree_Array is array (Positive range <>) of Parsed_Code;
 
 
@@ -67,15 +77,25 @@ package Protypo.Code_Trees is
          (for all Item of Value => Class (Item) in Expression),
          Post =>
            Class (Assignment'Result) = Assignment;
+   
+   function Parameter_List (Names   : Id_List;
+                            Default : Tree_Array)
+                            return Parsed_Code
+     with 
+       Pre => (for all Val of Default => Is_Empty (Val) or else (Class (Val) in Expression)),
+     Post => Class (Parameter_List'Result) = Parameter_Signature;
 
    function Definition (Name           : String;
-                        Parameter_List : Tree_Array;
+                        Parameter_List : Parsed_Code;
                         Function_Body  : Parsed_Code;
                         Is_Function    : Boolean)
                         return Parsed_Code
      with 
-       Pre => Class (Function_Body) = Statement_Sequence,
-     Post => Class (Definition'Result) = Defun;
+       Pre => 
+         Class (Function_Body) = Statement_Sequence
+     and Class (Parameter_List) = Parameter_Signature,
+     Post => 
+       Class (Definition'Result) = Defun;
    
    function Statement_Sequence (Statements : Tree_Array)
                                 return Parsed_Code
@@ -190,14 +210,23 @@ private
      new Ada.Containers.Vectors (Index_Type   => Positive,
                                  Element_Type => Node_Access);
    
+   type Parameter_Specs is
+      record
+         Names   : Id_List;
+         Default : Node_Vectors.Vector;
+      end record;
+   
    type Node (Class : Non_Terminal) is
       record
          case Class is
+            when Parameter_Signature =>
+               Signature : Parameter_Specs;
+               
             when Defun => 
                Is_Function     : Boolean;
                Definition_Name : Unbounded_String;
                Function_Body   : Node_Vectors.Vector;
-               Parameter_Names : Node_Vectors.Vector;
+               Parameters      : Parameter_Specs;
                
             when Statement_Sequence =>
                Statements      : Node_Vectors.Vector;
@@ -295,4 +324,7 @@ private
 
    Empty_Tree_Array : constant Tree_Array (2 .. 1) := (others => <>);
 
+   function Is_Empty (X : Parsed_Code) return Boolean
+   is (X.Pt = null);
+   
 end Protypo.Code_Trees;

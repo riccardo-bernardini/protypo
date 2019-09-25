@@ -647,19 +647,56 @@ package body Protypo.Parsing is
          end case;
       end Parse_Assign_Or_Call;
 
+      function Parse_ID_List (Input : in out Scanning.Token_List)
+                              return Code_Trees.Parsed_Code
+      is
+         In_Optional_Section : Boolean := False;
+         Default             : Statement_Sequences.Sequence;
+         Parameter_Names     : Code_Trees.ID_List;
+      begin
+         loop
+            if Class (Input.Read) /= Identifier then
+               Put_Line (">>>" & Class (Input.Read)'Image);
+               raise Constraint_Error;
+            end if;
+
+            Parameter_Names.Append (Value (Input.Next));
+
+            if Class (Input.Read) = Assign then
+               Input.Next;
+               Default.Append (Parse_Expression (Input));
+               In_Optional_Section := True;
+            else
+               Default.Append (Code_Trees.Empty_Tree);
+
+               if In_Optional_Section then
+                  raise Constraint_Error with "optional parameter";
+               end if;
+            end if;
+
+            exit when Class (Input.Read) /= End_Of_Statement;
+
+            Input.Next;
+         end loop;
+
+         return Code_Trees.Parameter_List (Parameter_Names, Default.Dump);
+      end Parse_ID_List;
+
       function Parse_Defun (Input : in out Scanning.Token_List)
                             return Code_Trees.Parsed_Code;
---          with Post => Code_Trees.Class (Parse_Defun'Result) = Code_Trees.Defun;
+      --          with Post => Code_Trees.Class (Parse_Defun'Result) = Code_Trees.Defun;
 
       function Parse_Defun (Input : in out Scanning.Token_List)
                             return Code_Trees.Parsed_Code
       is
-         Def_Function : Boolean := (case Class (Input.Read) is
-                                       when Kw_Procedure => False,
-                                       when Kw_Function  => True,
-                                       when others       => raise Program_Error);
-         Name         : Unbounded_String;
-         Parameter_names : Statement_Sequences.Sequence;
+         Is_Function    : constant Boolean :=
+                            (case Class (Input.Read) is
+                                when Kw_Procedure => False,
+                                when Kw_Function  => True,
+                                when others       => raise Program_Error);
+
+         Name            : Unbounded_String;
+         Parameter_Names : Code_Trees.Parsed_Code;
          Function_Body   : Code_Trees.Parsed_Code;
       begin
          Input.Next;
@@ -684,7 +721,12 @@ package body Protypo.Parsing is
 
          Expect_And_Eat (Input, Kw_End);
 
-         if not (Class (Input.Read) /= Identifier and then Value (Input.Read) = To_String (Name)) then
+         if not (Class (Input.Read) = Identifier
+                 and then
+                 Value (Input.Read) = To_String (Name))
+         then
+            Put_Line (">> " & Class (Input.Read)'Image);
+            Put_Line (">> [" & Value (Input.Read)  & "][" & To_String (Name) & "]");
             raise Constraint_Error;
          else
             Input.Next;
@@ -692,10 +734,10 @@ package body Protypo.Parsing is
 
          Expect_And_Eat (Input, End_Of_Statement);
 
-         return Code_Trees.Definition (Name           => To_String(Name),
-                                       Parameter_List => Parameter_Names.Dump,
+         return Code_Trees.Definition (Name           => To_String (Name),
+                                       Parameter_List => Parameter_Names,
                                        Function_Body  => Function_Body,
-                                       Is_Function    => Def_Function);
+                                       Is_Function    => is_Function);
       end Parse_Defun;
 
 

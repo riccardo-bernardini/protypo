@@ -4,14 +4,75 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Code_Trees is
 
-   function To_Expression_Vector (X : Tree_Array)
+--     ------------------
+--     -- To_ID_Vector --
+--     ------------------
+--
+--     function To_ID_Vector (X : Tree_Array)
+--                            return Node_Vectors.Vector
+--     is
+--        Result : Node_Vectors.Vector;
+--     begin
+--        for Item of X loop
+--           if not (Item.Pt.Class in Identifier) then
+--              raise Program_Error;
+--           end if;
+--
+--           Result.Append (Item.Pt);
+--        end loop;
+--
+--        return Result;
+--     end To_ID_Vector;
+
+   ----------------
+   -- Definition --
+   ----------------
+
+   function Definition (Name           : String;
+                        Parameter_List : Parsed_Code;
+                        Function_Body  : Parsed_Code;
+                        Is_Function    : Boolean)
+                        return Parsed_Code
+   is
+      Result : constant Node_Access :=
+                 new Node'(Class           => Defun,
+                           Is_Function     => Is_Function,
+                           Definition_Name => To_Unbounded_String (Name),
+                           Function_Body   => <>,
+                           Parameters => <>);
+   begin
+      if Function_Body.Pt.Class /= Statement_Sequence then
+         raise Program_Error;
+      end if;
+
+      if Parameter_List.Pt.Class /= Parameter_Signature then
+         raise Program_Error;
+      end if;
+
+      Result.Function_Body := Function_Body.Pt.Statements;
+      Result.Parameters := Parameter_List.Pt.Signature;
+      return (Pt => Result);
+   end Definition;
+
+   --------------------------
+   -- To_Expression_Vector --
+   --------------------------
+
+   function To_Expression_Vector (X             : Tree_Array;
+                                  Void_Accepted : Boolean := False)
                                   return Node_Vectors.Vector
    is
       Result : Node_Vectors.Vector;
    begin
       for Item of X loop
-         if not (Item.Pt.Class in Expression) then
-            raise Program_Error;
+         if Is_Empty (Item) then
+            if not Void_Accepted then
+               raise Program_Error;
+            end if;
+         else
+             if not (Item.Pt.Class in Expression) then
+               raise Program_Error;
+            end if;
          end if;
 
          Result.Append (Item.Pt);
@@ -20,6 +81,22 @@ package body Protypo.Code_Trees is
       return Result;
    end To_Expression_Vector;
 
+
+   --------------------
+   -- Parameter_List --
+   --------------------
+
+   function Parameter_List (Names   : Id_List;
+                            Default : Tree_Array)
+                            return Parsed_Code
+   is
+   begin
+      return (Pt =>
+                 new Node'(Class     => Parameter_Signature,
+                           Signature => Parameter_Specs'
+                             (Names   => Names,
+                              Default => To_Expression_Vector (Default, True))));
+   end Parameter_List;
    -----------
    -- Class --
    -----------
@@ -101,6 +178,7 @@ package body Protypo.Code_Trees is
    begin
       for Statement of Statements loop
          if not (Statement.Pt.Class in Statement_Classes) then
+            Put_Line ("(A) " & Statement.Pt.Class'Image);
             raise Program_Error;
          end if;
 
@@ -446,10 +524,30 @@ package body Protypo.Code_Trees is
    -- Delete --
    ------------
 
+   procedure Delete (Item : in out Parameter_Specs) is
+   begin
+      Delete(Item.Default);
+   end Delete;
+
+   ------------
+   -- Delete --
+   ------------
+
    procedure Delete (Item : in out Node_Access)
    is
    begin
+      if Item = null then
+         return;
+      end if;
+
       case Item.Class is
+         when Parameter_Signature =>
+            Delete (Item.Signature);
+
+         when Defun =>
+            Delete (Item.Function_Body);
+            Delete (Item.Parameters);
+
          when Statement_Sequence =>
             Delete (Item.Statements);
 
@@ -549,16 +647,40 @@ package body Protypo.Code_Trees is
       function Tabbing (N : Natural) return String
       is ((N * 3) * " ");
 
-      Full_Label : constant String := Item.Class'Image & (if Label = ""
-                                                          then
-                                                             ""
-                                                          else
-                                                             " (" & Label & ")");
+      procedure Dump (Item : Parameter_Specs;
+                      Level : Natural)
+      is
+      begin
+         for Name of Item.Names loop
+            Put_Line (Tabbing (Level + 1) & Name);
+         end loop;
+         Dump (Item.Default, Level + 1);
+      end Dump;
+
+      function Full_Label return String
+      is (Item.Class'Image
+          & (if Label = "" then "" else " (" & Label & ")"));
    begin
+
+
+      if Item = null then
+         Put_Line (Tabbing (Level) &  "(void)");
+         return;
+      end if;
+
       Put_Line (Tabbing (Level) &  "[" & Full_Label & "]");
 
 
       case Item.Class is
+         when Parameter_Signature =>
+            Dump (Item.Signature, Level);
+
+         when Defun =>
+            Put_Line (Tabbing (Level) & (if Item.Is_Function then "FUNCTION" else "PROCEDURE"));
+            Put_Line (Tabbing (Level) & "Name = '" & To_String (Item.Definition_Name) & "'");
+            Dump (Item.Parameters, Level);
+            Dump (Item.Function_Body, Level + 1);
+
          when Statement_Sequence =>
             Dump (Item.Statements, Level + 1);
 

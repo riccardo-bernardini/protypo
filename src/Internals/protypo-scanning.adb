@@ -450,19 +450,22 @@ package body Protypo.Scanning is
      with
        Post =>
          Buffer.Length = 0
-         and Result.Length = Result.Length'Old + (if Buffer.Length'Old > 0 then 3 else 0);
+         and Result.Length = Result.Length'Old + (if Buffer.Length'Old > 0 then 5 else 0);
 
 
    procedure Dump_Buffer (Buffer : in out String_Sequences.Sequence;
                           Result : in out Token_List)
    is
       use Tokens;
+      To_Consumer : constant String := "consume";
+
    begin
       if Buffer.Length > 0 then
-         Result.Append (Make_Token (Open_Naked));
+         Result.Append (Make_Token (Identifier, To_Consumer));
+         Result.Append (Make_Token (Open_Parenthesis));
          Result.Append (Make_Token (Text, Buffer.Dump));
-         Result.Append (Make_Token (Close_Naked));
-         --           Result.Append (Make_Token (End_Of_Statement));
+         Result.Append (Make_Token (Close_Parenthesis));
+         Result.Append (Make_Token (End_Of_Statement));
          Buffer.Clear;
       end if;
    end Dump_Buffer;
