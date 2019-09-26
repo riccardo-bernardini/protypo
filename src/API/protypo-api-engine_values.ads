@@ -9,27 +9,87 @@ package Protypo.API.Engine_Values is
           Text,
           Array_Handler,
           Record_Handler,
-          Iterator,
           Function_Handler,
-          Reference_Handler
+          Reference_Handler,
+          Iterator
          );
+
+   subtype Scalar_Classes is Engine_Value_Class  range Int .. Text;
+   subtype Numeric_Classes is Scalar_Classes     range Int .. Real;
+   subtype Handler_Classes is Engine_Value_Class range Array_Handler .. Reference_Handler;
 
    type Engine_Value (Class : Engine_Value_Class := Void) is private;
 
-   function "-" (X : Engine_Value) return Engine_Value;
-   function "not" (X : Engine_Value) return Engine_Value;
+   function Is_Scalar (X : Engine_Value) return Boolean
+   is (X.Class in Scalar_Classes);
 
-   function "+" (Left, Right : Engine_Value) return Engine_Value;
-   function "-" (Left, Right : Engine_Value) return Engine_Value;
-   function "*" (Left, Right : Engine_Value) return Engine_Value;
-   function "/" (Left, Right : Engine_Value) return Engine_Value;
 
-   function "=" (Left, Right : Engine_Value) return Engine_Value;
-   function "/=" (Left, Right : Engine_Value) return Engine_Value;
-   function "<" (Left, Right : Engine_Value) return Engine_Value;
-   function "<=" (Left, Right : Engine_Value) return Engine_Value;
-   function ">" (Left, Right : Engine_Value) return Engine_Value;
-   function ">=" (Left, Right : Engine_Value) return Engine_Value;
+   function Is_Numeric (X : Engine_Value) return Boolean
+   is (X.Class in Numeric_Classes);
+
+   function Is_Handler (X : Engine_Value) return Boolean
+   is (X.Class in Handler_Classes);
+
+   function "-" (X : Engine_Value) return Engine_Value
+         with Pre => Is_Numeric (X),
+         Post => X.Class = "-"'Result.Class;
+
+   function "not" (X : Engine_Value) return Engine_Value
+         with Pre => Is_Numeric (X),
+         Post => "not"'Result.Class = Int;
+
+   function Mixed_Numeric (X, Y : Numeric_Classes) return Numeric_Classes
+   is (if X = Y then X else Real);
+
+   function Compatible_Scalars (X, Y : Engine_Value) return Boolean
+   is ((X.Class = Text and Y.Class = Text) or (Is_Numeric (X) and Is_Numeric (Y)))
+         with Pre => Is_Scalar (X) and Is_Scalar (Y);
+
+   function "+" (Left, Right : Engine_Value) return Engine_Value
+         with Pre => (Left.Class = Text and Right.Class= Text)
+         or (Is_Numeric (Left) and Is_Numeric (Right)),
+         Post =>
+               "+"'Result.Class = (if Is_Numeric (Left)
+                                                     then
+                                                           Mixed_Numeric (Left.Class, Right.Class)
+                                                     else
+                                                           Text);
+
+   function "-" (Left, Right : Engine_Value) return Engine_Value
+         with Pre => Is_Numeric (Left) and Is_Numeric (Right),
+         Post => "-"'result.Class = Mixed_Numeric (Left.Class, Right.Class);
+
+   function "*" (Left, Right : Engine_Value) return Engine_Value
+         with Pre => Is_Numeric (Left) and Is_Numeric (Right),
+         Post => "*"'Result.Class = Mixed_Numeric (Left.Class, Right.Class);
+
+   function "/" (Left, Right : Engine_Value) return Engine_Value
+         with Pre => Is_Numeric (Left) and Is_Numeric (Right),
+         Post => "/"'result.Class = Mixed_Numeric (Left.Class, Right.Class);
+
+
+   function "=" (Left, Right : Engine_Value) return Engine_Value
+         with Pre => Compatible_Scalars (Left, Right),
+         Post => "="'Result.Class = Int;
+
+   function "/=" (Left, Right : Engine_Value) return Engine_Value
+         with Pre => Compatible_Scalars (Left, Right),
+         Post => "/="'Result.Class = Int;
+
+   function "<" (Left, Right : Engine_Value) return Engine_Value
+         with Pre => Compatible_Scalars (Left, Right),
+         Post => "<"'Result.Class = Int;
+   function "<=" (Left, Right : Engine_Value) return Engine_Value
+         with Pre => Compatible_Scalars (Left, Right),
+         Post => "<="'Result.Class = Int;
+
+   function ">" (Left, Right : Engine_Value) return Engine_Value
+         with Pre => Compatible_Scalars (Left, Right),
+         Post => ">"'Result.Class = Int;
+
+   function ">=" (Left, Right : Engine_Value) return Engine_Value
+         with Pre => Compatible_Scalars (Left, Right),
+         Post => ">="'Result.Class = Int;
 
    function "and" (Left, Right : Engine_Value) return Engine_Value;
    function "or"  (Left, Right : Engine_Value) return Engine_Value;
