@@ -16,6 +16,25 @@ package Protypo.API.Engine_Values is
 
    type Engine_Value (Class : Engine_Value_Class := Void) is private;
 
+   function "-" (X : Engine_Value) return Engine_Value;
+   function "not" (X : Engine_Value) return Engine_Value;
+
+   function "+" (Left, Right : Engine_Value) return Engine_Value;
+   function "-" (Left, Right : Engine_Value) return Engine_Value;
+   function "*" (Left, Right : Engine_Value) return Engine_Value;
+   function "/" (Left, Right : Engine_Value) return Engine_Value;
+
+   function "=" (Left, Right : Engine_Value) return Engine_Value;
+   function "/=" (Left, Right : Engine_Value) return Engine_Value;
+   function "<" (Left, Right : Engine_Value) return Engine_Value;
+   function "<=" (Left, Right : Engine_Value) return Engine_Value;
+   function ">" (Left, Right : Engine_Value) return Engine_Value;
+   function ">=" (Left, Right : Engine_Value) return Engine_Value;
+
+   function "and" (Left, Right : Engine_Value) return Engine_Value;
+   function "or"  (Left, Right : Engine_Value) return Engine_Value;
+   function "xor" (Left, Right : Engine_Value) return Engine_Value;
+
    type Engine_Value_Array is array (Positive range <>) of Engine_Value;
 
    Void_Value : constant Engine_Value;
@@ -233,4 +252,20 @@ private
 
    function Get_Reference (Val : Reference_Value) return Reference_Interface_Access
    is (Val.Reference_Object);
+
+   function "-" (Left, Right : Engine_Value) return Engine_Value
+   is (Left + (-Right));
+
+   function "/=" (Left, Right : Engine_Value) return Engine_Value
+   is (not (Left = Right));
+
+   function ">" (Left, Right : Engine_Value) return Engine_Value
+   is (Right < Left);
+
+   function "<=" (Left, Right : Engine_Value) return Engine_Value
+   is (Right >= Left);
+
+   function ">=" (Left, Right : Engine_Value) return Engine_Value
+   is (not (Left < Right));
+
 end Protypo.API.Engine_Values;

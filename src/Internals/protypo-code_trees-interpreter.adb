@@ -37,14 +37,43 @@ package body Protypo.Code_Trees.Interpreter is
       return Result;
    end To_Array;
 
+   function Eval_Name (Expr : not null Node_Access)
+                       return Engine_Value
+         with
+               Pre => Expr.Class in Name;
+
+   function Eval_Name (Expr : not null Node_Access)
+                       return Engine_Value
+   is
+   begin
+      if not (Expr.Class in Name) then
+         raise Program_Error;
+      end if;
+
+      case Name (Expr.Class) is
+         when Selected =>
+            pragma Compile_Time_Warning (True, "unimplemented");
+            raise Program_Error;
+
+         when Indexed =>
+            pragma Compile_Time_Warning (True, "unimplemented");
+            raise Program_Error;
+
+         when Identifier =>
+            pragma Compile_Time_Warning (True, "unimplemented");
+            raise Program_Error;
+
+      end case;
+   end Eval_Name;
+
    function Eval (Expr   : not null Node_Access;
                   Status : Status_Access)
                   return Engine_Value_Vectors.Vector
    is
       function "+" (X : Engine_Value_Vectors.Vector)
                     return Engine_Value
-        with
-          Pre => X.Length = 1;
+            with
+                  Pre => X.Length = 1;
 
       function "+" (X : Engine_Value_Vectors.Vector)  return Engine_Value
       is (X.First_Element);
@@ -57,8 +86,30 @@ package body Protypo.Code_Trees.Interpreter is
          return Result;
       end "+";
 
-      function Apply (Op : Tokens.Binary_Operator;
-                      Left : Engine_Value;
+      -----------
+      -- Apply --
+      -----------
+
+      function Apply (Op : Tokens.Unary_Operator;
+                      X  : Engine_Value)
+                      return Engine_Value
+      is
+         use Tokens;
+      begin
+         case Op is
+            when Plus =>
+               return X;
+
+            when Minus =>
+               return -X;
+
+            when Kw_Not =>
+               return not X;
+         end case;
+      end Apply;
+
+      function Apply (Op    : Tokens.Binary_Operator;
+                      Left  : Engine_Value;
                       Right : Engine_Value)
                       return Engine_Value
       is
@@ -122,7 +173,7 @@ package body Protypo.Code_Trees.Interpreter is
          when Unary_Op =>
             Right := + Eval (Expr.Operand, Status);
 
-            return Apply (Expr.Uni_Op, Right);
+            return + Apply (Expr.Uni_Op, Right);
 
          when Int_Constant =>
             return + Create (Expr.N);
@@ -186,12 +237,12 @@ package body Protypo.Code_Trees.Interpreter is
 
          when Defun =>
             Status.Symbol_Table.Create
-              (Name          =>
-                  To_String (Program.Definition_Name),
-               Initial_Value =>
-                  Create (new Compiled_Function'(Function_Body => Program.Function_Body,
-                                                 Parameters    => Program.Parameters,
-                                                 Status        => Status)));
+                  (Name          =>
+                      To_String (Program.Definition_Name),
+                   Initial_Value =>
+                      Create (new Compiled_Function'(Function_Body => Program.Function_Body,
+                                                     Parameters    => Program.Parameters,
+                                                     Status        => Status)));
 
          when Assignment =>
             raise Program_Error;
@@ -227,9 +278,9 @@ package body Protypo.Code_Trees.Interpreter is
    ---------
 
    procedure Run
-     (Program      : Parsed_Code;
-      Symbol_Table : Api.Symbols.Table;
-      Consumer     : Api.Consumers.Consumer_Access)
+         (Program      : Parsed_Code;
+          Symbol_Table : Api.Symbols.Table;
+          Consumer     : Api.Consumers.Consumer_Access)
    is
       use Api.Symbols;
 
