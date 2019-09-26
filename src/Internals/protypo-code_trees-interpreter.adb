@@ -37,12 +37,18 @@ package body Protypo.Code_Trees.Interpreter is
       return Result;
    end To_Array;
 
-   function Eval_Name (Expr : not null Node_Access)
+   function eval (expr   : Node_Vectors.Vector;
+                  status : Status_Access)
+               return Engine_Value_Vectors.Vector;
+
+   function Eval_Name (Expr   : not null Node_Access;
+                       status : Status_Access)
                        return Engine_Value
          with
                Pre => Expr.Class in Name;
 
-   function Eval_Name (Expr : not null Node_Access)
+   function Eval_Name (Expr   : not null Node_Access;
+                       status : Status_Access)
                        return Engine_Value
    is
    begin
@@ -52,19 +58,49 @@ package body Protypo.Code_Trees.Interpreter is
 
       case Name (Expr.Class) is
          when Selected =>
-            pragma Compile_Time_Warning (True, "unimplemented");
-            raise Program_Error;
+            declare
+               head : constant Engine_Value := Eval_Name (expr.Record_Var, status);
+            begin
+               if head.Class /= Record_Handler then
+                  raise Constraint_Error;
+               end if;
 
+               return Get_Record (head).get (To_String (expr.Field_Name));
+            end;
          when Indexed =>
-            pragma Compile_Time_Warning (True, "unimplemented");
-            raise Program_Error;
+            declare
+               head    : constant Engine_Value := Eval_Name (expr.Indexed_Var, status);
+               indexes : Engine_Value_Vectors.Vector := Eval (expr.Indexes, status);
+            begin
+               if head.Class = Array_Handler then
+                  return get_array (Get_Array (head), indexes);
 
+               elsif head.Class = Function_Handler then
+                  return call_function (Get_Function (head), indexes);
+
+               else
+                  raise Constraint_Error;
+               end if;
+            end;
          when Identifier =>
             pragma Compile_Time_Warning (True, "unimplemented");
             raise Program_Error;
 
       end case;
    end Eval_Name;
+
+   function eval (expr   : Node_Vectors.Vector;
+                  status : Status_Access)
+                  return Engine_Value_Vectors.Vector
+   is
+      result : Engine_Value_Vectors.Vector;
+   begin
+      for ex of expr loop
+         result.append (eval (ex, status));
+      end loop;
+
+      return result;
+   end eval;
 
    function Eval (Expr   : not null Node_Access;
                   Status : Status_Access)

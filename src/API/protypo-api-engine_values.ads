@@ -125,7 +125,7 @@ package Protypo.API.Engine_Values is
    type Record_Interface is interface;
    type Record_Interface_Access is not null access all Record_Interface'Class;
 
-   function Get (X     : Array_Interface;
+   function Get (X     : record_Interface;
                  Field : String)
                  return Engine_Value
                  is abstract;
