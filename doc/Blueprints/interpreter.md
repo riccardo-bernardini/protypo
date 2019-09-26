@@ -75,17 +75,18 @@ There are at least three different types of "evaluation" of trees
 * Name evaluation.  This gives a "pointer" to the symbol table that be queried for values and/or writing it.
 
 More precisely, a name can evaluate to
-* An array handler that exports a method that accepts a list of parameters and returns an `Engine_Value`
+* An array handler that exports a method that accepts a list of parameters and returns an `Engine_Value` 
 * A record handler that exports a method that accepts an ID  returns an `Engine_Value`
-* A function handler that exports a callback method
+* A function handler that exports a callback method that returns a scalar
 * A simple handler that allows to read/write the value
+* A scalar
 
-Every handler has both versions read-only and read-write.
+Every handler is read-only (i.e., it can be queried, but does not allow for modification). The only read-write handler is the simple one.
 
 The evaluation of a name (the result of a concatenation of dot and indexing operator) works as follows
 * The DOT operator accepts as parameters a name and an ID.  The name must evaluate to a record handler.  The record handler is queried with the ID and the result must be a handler of the above
 * The INDEX operator accepts as left parameter a name (that must evaluate to a record or a function handler) and a list of expressions.  Every expression is evaluated and the callback of the handler called.  If the handler is an array handler, it accepts a fixed number of arguments, without any optional parameter handling, in the case of functions optional parameters are allowed. In the case of the record the outcome is a handler, for a function it is a scalar.
-* An identifier evaluates to its entry in the symbol table. If the stored value is a scalar, a simple handler is wrapped around it.
+* An identifier evaluates to its entry in the symbol table. If the stored value is a scalar and it is not read-only, a simple handler is wrapped around it; otherwise the stored value is returned as it is.
 
 For example, suppose the following name is evaluated
 ```
@@ -94,7 +95,7 @@ foo.bar(2).zip
 * First `foo` is searched in the ST.  The value stored is a record handler that is the result of the evaluation of `foo`
 * Next, the handler above is queried with the string `bar`.  The query returns an array handler.
 * The returned array handler is queried with the expression list `(2)`, the result is a record handler
-* Finally, the record handler is queried with `zip`.  The final result is a simple handler
+* Finally, the record handler is queried with `zip`.  The final result is a simple handler or a scalar
 
 Now, suppose the name above is used as
 ```
@@ -103,5 +104,5 @@ foo.bar(2).zip := 42;
 ```
 In the first case the simple handler obtained by evaluating the name `foo.bar(2).zip` is queried for a value; in the second case the handler is used to write a value in `foo.bar(2).zip` (assuming that the simple handler is read-write).
    
-
+Actually, we can make that the evaluation of a name can be both a handler or a scalar.  This means that in case of read-only *scalar* value we do not need a read-only handler since we can return directly the value.  Of course, a scalar (nor a simple handler) cannot be used further in name evaluations, nor as LHS of an assignment.
     
