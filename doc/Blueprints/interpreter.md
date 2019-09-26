@@ -66,4 +66,13 @@ The *breaking flag* is handled as follows
     * If the break was a RETURN, get the result list, reset the flag and return to the caller
     * If it was a EXIT, this is an error
 * If the interpreter returns to the top-level call in a breaking state it is an error
+
+## Different evaluation types
+
+There are at least three different types of "evaluation" of trees
+* Pure statements (including composite ones). No value is returned
+* Expression evaluation.  A list of values may be returned (because of RETURN)
+* Name evaluation.  This gives a "pointer" to the symbol table that be queried for values and/or writing it.
+   
+
     
