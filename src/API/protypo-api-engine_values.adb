@@ -1,5 +1,16 @@
 pragma Ada_2012;
 package body Protypo.API.Engine_Values is
+   function bool (x : integer) return Integer
+   is (if x /= 0 then 1 else 0);
+
+   function bool (x : float) return Integer
+   is (if x /= 0.0 then 1 else 0);
+
+   function bool (x : Engine_Value) return Integer
+   is (case x.Class is
+          when Int => bool (Get_Integer (x)),
+          when real => bool (Get_Float (x)),
+          when others => raise Constraint_Error);
 
    ---------
    -- "-" --
@@ -7,6 +18,16 @@ package body Protypo.API.Engine_Values is
 
    function "-" (X : Engine_Value) return Engine_Value is
    begin
+      if not Is_Numeric(x) then
+         raise Constraint_Error with "Non-numeric value";
+      end if;
+
+      case Numeric_Classes(x.Class) is
+         when Int =>
+            return create (-Get_Integer (x));
+         when Real =>
+            return create (-Get_Float (x));
+      end case;
    end "-";
 
    -----------
@@ -15,8 +36,11 @@ package body Protypo.API.Engine_Values is
 
    function "not" (X : Engine_Value) return Engine_Value is
    begin
-      pragma Compile_Time_Warning (Standard.True, """not"" unimplemented");
-      return raise Program_Error with "Unimplemented function ""not""";
+      if not Is_Numeric(x) then
+         raise Constraint_Error with "Non-numeric value";
+      end if;
+
+      return create (1 - bool (x));
    end "not";
 
    ---------
@@ -29,15 +53,6 @@ package body Protypo.API.Engine_Values is
       return raise Program_Error with "Unimplemented function ""+""";
    end "+";
 
-   ---------
-   -- "-" --
-   ---------
-
-   function "-" (Left, Right : Engine_Value) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, """-"" unimplemented");
-      return raise Program_Error with "Unimplemented function ""-""";
-   end "-";
 
    ---------
    -- "*" --
@@ -69,15 +84,6 @@ package body Protypo.API.Engine_Values is
       return raise Program_Error with "Unimplemented function ""=""";
    end "=";
 
-   ----------
-   -- "/=" --
-   ----------
-
-   function "/=" (Left, Right : Engine_Value) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, """/="" unimplemented");
-      return raise Program_Error with "Unimplemented function ""/=""";
-   end "/=";
 
    ---------
    -- "<" --
@@ -89,35 +95,6 @@ package body Protypo.API.Engine_Values is
       return raise Program_Error with "Unimplemented function ""<""";
    end "<";
 
-   ----------
-   -- "<=" --
-   ----------
-
-   function "<=" (Left, Right : Engine_Value) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, """<="" unimplemented");
-      return raise Program_Error with "Unimplemented function ""<=""";
-   end "<=";
-
-   ---------
-   -- ">" --
-   ---------
-
-   function ">" (Left, Right : Engine_Value) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, """>"" unimplemented");
-      return raise Program_Error with "Unimplemented function "">""";
-   end ">";
-
-   ----------
-   -- ">=" --
-   ----------
-
-   function ">=" (Left, Right : Engine_Value) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, """>="" unimplemented");
-      return raise Program_Error with "Unimplemented function "">=""";
-   end ">=";
 
    -----------
    -- "and" --
@@ -125,8 +102,7 @@ package body Protypo.API.Engine_Values is
 
    function "and" (Left, Right : Engine_Value) return Engine_Value is
    begin
-      pragma Compile_Time_Warning (Standard.True, """and"" unimplemented");
-      return raise Program_Error with "Unimplemented function ""and""";
+      return Create (bool (left) * bool (right));
    end "and";
 
    ----------
@@ -135,8 +111,7 @@ package body Protypo.API.Engine_Values is
 
    function "or" (Left, Right : Engine_Value) return Engine_Value is
    begin
-      pragma Compile_Time_Warning (Standard.True, """or"" unimplemented");
-      return raise Program_Error with "Unimplemented function ""or""";
+      return Create (bool (left) + bool (right));
    end "or";
 
    -----------
@@ -145,187 +120,7 @@ package body Protypo.API.Engine_Values is
 
    function "xor" (Left, Right : Engine_Value) return Engine_Value is
    begin
-      pragma Compile_Time_Warning (Standard.True, """xor"" unimplemented");
-      return raise Program_Error with "Unimplemented function ""xor""";
+      return Create ((bool (left) + bool (right)) mod 2);
    end "xor";
-
-   ------------
-   -- Create --
-   ------------
-
-   function Create (Val : Integer) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Create unimplemented");
-      return raise Program_Error with "Unimplemented function Create";
-   end Create;
-
-   ------------
-   -- Create --
-   ------------
-
-   function Create (Val : Float) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Create unimplemented");
-      return raise Program_Error with "Unimplemented function Create";
-   end Create;
-
-   ------------
-   -- Create --
-   ------------
-
-   function Create (Val : String) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Create unimplemented");
-      return raise Program_Error with "Unimplemented function Create";
-   end Create;
-
-   ------------
-   -- Create --
-   ------------
-
-   function Create (Val : Array_Interface_Access) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Create unimplemented");
-      return raise Program_Error with "Unimplemented function Create";
-   end Create;
-
-   ------------
-   -- Create --
-   ------------
-
-   function Create (Val : Record_Interface_Access) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Create unimplemented");
-      return raise Program_Error with "Unimplemented function Create";
-   end Create;
-
-   ------------
-   -- Create --
-   ------------
-
-   function Create (Val : Iterator_Interface_Access) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Create unimplemented");
-      return raise Program_Error with "Unimplemented function Create";
-   end Create;
-
-   ------------
-   -- Create --
-   ------------
-
-   function Create (Val : Function_Interface_Access) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Create unimplemented");
-      return raise Program_Error with "Unimplemented function Create";
-   end Create;
-
-   ------------
-   -- Create --
-   ------------
-
-   function Create (Val : Callback_Function_Access) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Create unimplemented");
-      return raise Program_Error with "Unimplemented function Create";
-   end Create;
-
-   ------------
-   -- Create --
-   ------------
-
-   function Create (Val : Reference_Interface_Access) return Engine_Value is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Create unimplemented");
-      return raise Program_Error with "Unimplemented function Create";
-   end Create;
-
-   -----------------
-   -- Get_Integer --
-   -----------------
-
-   function Get_Integer (Val : Integer_Value) return Integer is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Get_Integer unimplemented");
-      return raise Program_Error with "Unimplemented function Get_Integer";
-   end Get_Integer;
-
-   ---------------
-   -- Get_Float --
-   ---------------
-
-   function Get_Float (Val : Real_Value) return Float is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Get_Float unimplemented");
-      return raise Program_Error with "Unimplemented function Get_Float";
-   end Get_Float;
-
-   ----------------
-   -- Get_String --
-   ----------------
-
-   function Get_String (Val : String_Value) return String is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Get_String unimplemented");
-      return raise Program_Error with "Unimplemented function Get_String";
-   end Get_String;
-
-   ---------------
-   -- Get_Array --
-   ---------------
-
-   function Get_Array (Val : Array_Value) return Array_Interface_Access is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Get_Array unimplemented");
-      return raise Program_Error with "Unimplemented function Get_Array";
-   end Get_Array;
-
-   ----------------
-   -- Get_Record --
-   ----------------
-
-   function Get_Record (Val : Record_Value) return Record_Interface_Access is
-   begin
-      pragma Compile_Time_Warning (Standard.True, "Get_Record unimplemented");
-      return raise Program_Error with "Unimplemented function Get_Record";
-   end Get_Record;
-
-   ------------------
-   -- Get_Iterator --
-   ------------------
-
-   function Get_Iterator
-     (Val : Iterator_Value) return Iterator_Interface_Access
-   is
-   begin
-      pragma Compile_Time_Warning (Standard.True,
-         "Get_Iterator unimplemented");
-      return raise Program_Error with "Unimplemented function Get_Iterator";
-   end Get_Iterator;
-
-   ------------------
-   -- Get_Function --
-   ------------------
-
-   function Get_Function
-     (Val : Function_Value) return Function_Interface_Access
-   is
-   begin
-      pragma Compile_Time_Warning (Standard.True,
-         "Get_Function unimplemented");
-      return raise Program_Error with "Unimplemented function Get_Function";
-   end Get_Function;
-
-   -------------------
-   -- Get_Reference --
-   -------------------
-
-   function Get_Reference
-     (Val : Reference_Value) return Reference_Interface_Access
-   is
-   begin
-      pragma Compile_Time_Warning (Standard.True,
-         "Get_Reference unimplemented");
-      return raise Program_Error with "Unimplemented function Get_Reference";
-   end Get_Reference;
 
 end Protypo.API.Engine_Values;
