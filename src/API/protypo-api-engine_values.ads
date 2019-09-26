@@ -164,6 +164,9 @@ package Protypo.API.Engine_Values is
                      Parameter : Engine_Value_Array)
                      return Engine_Value_Array is abstract;
 
+   function Default_Parameters (Fun : Function_Interface)
+                                return Engine_Value_Array is abstract;
+
    type Callback_Function_Access is
    not null access function (Parameters : Engine_Value_Array) return Engine_Value_Array;
 

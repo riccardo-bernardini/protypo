@@ -37,20 +37,29 @@ package body Protypo.Code_Trees.Interpreter is
       return Result;
    end To_Array;
 
-   function eval (expr   : Node_Vectors.Vector;
-                  status : Status_Access)
-               return Engine_Value_Vectors.Vector;
+   function Eval (Expr   : Node_Vectors.Vector;
+                  Status : Status_Access)
+                  return Engine_Value_Vectors.Vector;
 
    function Eval_Name (Expr   : not null Node_Access;
-                       status : Status_Access)
+                       Status : Status_Access)
                        return Engine_Value
          with
                Pre => Expr.Class in Name;
 
    function Eval_Name (Expr   : not null Node_Access;
-                       status : Status_Access)
+                       Status : Status_Access)
                        return Engine_Value
    is
+      function Get_Array (Head : Array_Interface_Access;
+                          Indexes : Engine_Value_Vectors.Vector)
+                          return Engine_Value
+      is (Head.Get (To_Array (Indexes)));
+
+      function Call_Function (Handler    : Function_Interface_Access;
+                              Parameters : Engine_Value_Vectors.Vector)
+                              return Engine_Value_Array
+      is (Handler.Process (Fai_Default ());
    begin
       if not (Expr.Class in Name) then
          raise Program_Error;
@@ -59,24 +68,24 @@ package body Protypo.Code_Trees.Interpreter is
       case Name (Expr.Class) is
          when Selected =>
             declare
-               head : constant Engine_Value := Eval_Name (expr.Record_Var, status);
+               Head : constant Engine_Value := Eval_Name (Expr.Record_Var, Status);
             begin
-               if head.Class /= Record_Handler then
+               if Head.Class /= Record_Handler then
                   raise Constraint_Error;
                end if;
 
-               return Get_Record (head).get (To_String (expr.Field_Name));
+               return Get_Record (Head).Get (To_String (Expr.Field_Name));
             end;
          when Indexed =>
             declare
-               head    : constant Engine_Value := Eval_Name (expr.Indexed_Var, status);
-               indexes : Engine_Value_Vectors.Vector := Eval (expr.Indexes, status);
+               Head    : constant Engine_Value := Eval_Name (Expr.Indexed_Var, Status);
+               Indexes : Engine_Value_Vectors.Vector := Eval (Expr.Indexes, Status);
             begin
-               if head.Class = Array_Handler then
-                  return get_array (Get_Array (head), indexes);
+               if Head.Class = Array_Handler then
+                  return Get_Array (Get_Array (Head), Indexes);
 
-               elsif head.Class = Function_Handler then
-                  return call_function (Get_Function (head), indexes);
+               elsif Head.Class = Function_Handler then
+                  return Call_Function (Get_Function (Head), Indexes);
 
                else
                   raise Constraint_Error;
@@ -89,18 +98,18 @@ package body Protypo.Code_Trees.Interpreter is
       end case;
    end Eval_Name;
 
-   function eval (expr   : Node_Vectors.Vector;
-                  status : Status_Access)
+   function Eval (Expr   : Node_Vectors.Vector;
+                  Status : Status_Access)
                   return Engine_Value_Vectors.Vector
    is
-      result : Engine_Value_Vectors.Vector;
+      Result : Engine_Value_Vectors.Vector;
    begin
-      for ex of expr loop
-         result.append (eval (ex, status));
+      for Ex of Expr loop
+         Result.Append (Eval (Ex, Status));
       end loop;
 
-      return result;
-   end eval;
+      return Result;
+   end Eval;
 
    function Eval (Expr   : not null Node_Access;
                   Status : Status_Access)
