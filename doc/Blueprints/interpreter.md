@@ -71,8 +71,37 @@ The *breaking flag* is handled as follows
 
 There are at least three different types of "evaluation" of trees
 * Pure statements (including composite ones). No value is returned
-* Expression evaluation.  A list of values may be returned (because of RETURN)
+* Expression evaluation.  A list of scalar may be returned (because of RETURN).  A scalar is an integer, a float or a string.
 * Name evaluation.  This gives a "pointer" to the symbol table that be queried for values and/or writing it.
+
+More precisely, a name can evaluate to
+* An array handler that exports a method that accepts a list of parameters and returns an `Engine_Value`
+* A record handler that exports a method that accepts an ID  returns an `Engine_Value`
+* A function handler that exports a callback method
+* A simple handler that allows to read/write the value
+
+Every handler has both versions read-only and read-write.
+
+The evaluation of a name (the result of a concatenation of dot and indexing operator) works as follows
+* The DOT operator accepts as parameters a name and an ID.  The name must evaluate to a record handler.  The record handler is queried with the ID and the result must be a handler of the above
+* The INDEX operator accepts as left parameter a name (that must evaluate to a record or a function handler) and a list of expressions.  Every expression is evaluated and the callback of the handler called.  If the handler is an array handler, it accepts a fixed number of arguments, without any optional parameter handling, in the case of functions optional parameters are allowed. In the case of the record the outcome is a handler, for a function it is a scalar.
+* An identifier evaluates to its entry in the symbol table. If the stored value is a scalar, a simple handler is wrapped around it.
+
+For example, suppose the following name is evaluated
+```
+foo.bar(2).zip
+```
+* First `foo` is searched in the ST.  The value stored is a record handler that is the result of the evaluation of `foo`
+* Next, the handler above is queried with the string `bar`.  The query returns an array handler.
+* The returned array handler is queried with the expression list `(2)`, the result is a record handler
+* Finally, the record handler is queried with `zip`.  The final result is a simple handler
+
+Now, suppose the name above is used as
+```
+print(foo.bar(2).zip);
+foo.bar(2).zip := 42;
+```
+In the first case the simple handler obtained by evaluating the name `foo.bar(2).zip` is queried for a value; in the second case the handler is used to write a value in `foo.bar(2).zip` (assuming that the simple handler is read-write).
    
 
     
