@@ -2,31 +2,33 @@ with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 
 package Protypo.API.Engine_Values is
    type Engine_Value_Class is
-     (
-      Void,
-      Int,
-      Real,
-      Text,
-      Array_Like,
-      Record_Like,
-      Iterator,
-      Function_Handler
-     );
+         (
+          Void,
+          Int,
+          Real,
+          Text,
+          Array_Handler,
+          Record_Handler,
+          Iterator,
+          Function_Handler,
+          Reference_Handler
+         );
 
    type Engine_Value (Class : Engine_Value_Class := Void) is private;
 
    type Engine_Value_Array is array (Positive range <>) of Engine_Value;
 
    Void_Value : constant Engine_Value;
-   No_Value : constant Engine_Value_Array;
+   No_Value   : constant Engine_Value_Array;
 
    subtype Integer_Value  is Engine_Value (Int);
    subtype Real_Value     is Engine_Value (Real);
    subtype String_Value   is Engine_Value (Text);
-   subtype Array_Value    is Engine_Value (Array_Like);
-   subtype Record_Value   is Engine_Value (Record_Like);
+   subtype Array_Value    is Engine_Value (Array_Handler);
+   subtype Record_Value   is Engine_Value (Record_Handler);
    subtype Iterator_Value is Engine_Value (Iterator);
    subtype Function_Value is Engine_Value (Function_Handler);
+   subtype Reference_Value is Engine_Value (Reference_Handler);
 
    type Array_Interface is interface;
    type Array_Interface_Access is not null access all Array_Interface'Class;
@@ -36,10 +38,10 @@ package Protypo.API.Engine_Values is
                  return Engine_Value
                  is abstract;
 
-   procedure Set (X     : in out Array_Interface;
-                  Index : Engine_Value_Array;
-                  Value : Engine_Value)
-   is abstract;
+   --     procedure Set (X     : in out Array_Interface;
+   --                    Index : Engine_Value_Array;
+   --                    Value : Engine_Value)
+   --     is abstract;
 
    type Record_Interface is interface;
    type Record_Interface_Access is not null access all Record_Interface'Class;
@@ -49,10 +51,19 @@ package Protypo.API.Engine_Values is
                  return Engine_Value
                  is abstract;
 
-   procedure Set (X     : in out Array_Interface;
-                  Field : String;
-                  Value : Engine_Value)
+   type Reference_Interface is interface;
+   type Reference_Interface_Access is not null access all Reference_Interface'Class;
+
+   function Read (X : Reference_Interface) return Engine_Value is abstract;
+
+   procedure Write (What  : Reference_Interface;
+                    Value : Engine_Value)
    is abstract;
+
+   --     procedure Set (X     : in out Array_Interface;
+   --                    Field : String;
+   --                    Value : Engine_Value)
+   --     is abstract;
 
    type Iterator_Interface is interface;
    type Iterator_Interface_Access is not null access all Iterator_Interface'Class;
@@ -79,29 +90,31 @@ package Protypo.API.Engine_Values is
 
 
    function Create (Val : Integer) return Engine_Value
-     with Post => Create'Result.Class = Int;
+         with Post => Create'Result.Class = Int;
 
    function Create (Val : Float) return Engine_Value
-     with Post => Create'Result.Class = Real;
+         with Post => Create'Result.Class = Real;
 
    function Create (Val : String) return Engine_Value
-     with Post => Create'Result.Class = Text;
+         with Post => Create'Result.Class = Text;
 
    function Create (Val : Array_Interface_Access) return Engine_Value
-     with Post => Create'Result.Class = Array_Like;
+         with Post => Create'Result.Class = Array_Handler;
 
    function Create (Val : Record_Interface_Access) return Engine_Value
-     with Post => Create'Result.Class = Record_Like;
+         with Post => Create'Result.Class = Record_Handler;
 
    function Create (Val : Iterator_Interface_Access) return Engine_Value
-     with Post => Create'Result.Class = Iterator;
+         with Post => Create'Result.Class = Iterator;
 
    function Create (Val : Function_Interface_Access) return Engine_Value
-     with Post => Create'Result.Class = Function_Handler;
+         with Post => Create'Result.Class = Function_Handler;
 
    function Create (Val : Callback_Function_Access) return Engine_Value
-     with Post => Create'Result.Class = Function_Handler;
+         with Post => Create'Result.Class = Function_Handler;
 
+   function Create (Val : Reference_Interface_Access) return Engine_Value
+         with Post => Create'Result.Class = Reference_Handler;
 
 
    function Get_Integer (Val : Integer_Value) return Integer;
@@ -111,7 +124,7 @@ package Protypo.API.Engine_Values is
    function Get_Record (Val : Record_Value) return Record_Interface_Access;
    function Get_Iterator (Val : Iterator_Value) return Iterator_Interface_Access;
    function Get_Function (Val : Function_Value) return Function_Interface_Access;
-
+   function Get_Reference (Val : Reference_Value) return Reference_Interface_Access;
 private
    type Engine_Value (Class : Engine_Value_Class := Void) is
       record
@@ -128,10 +141,10 @@ private
          when Text =>
             Text_Val : Unbounded_String;
 
-         when Array_Like =>
+         when Array_Handler =>
             Array_Object : Array_Interface_Access;
 
-         when Record_Like =>
+         when Record_Handler =>
             Record_Object : Record_Interface_Access;
 
          when Iterator =>
@@ -140,6 +153,8 @@ private
          when Function_Handler =>
             Function_Object : Function_Interface_Access;
 
+            when Reference_Handler =>
+               Reference_Object : Reference_Interface_Access;
          end case;
       end record;
 
@@ -147,7 +162,7 @@ private
    No_Value   : constant Engine_Value_Array (2 .. 1) := (others => Void_Value);
 
    type Callback_Based_Handler is
-     new Function_Interface
+         new Function_Interface
    with
       record
          Callback : Callback_Function_Access;
@@ -173,11 +188,11 @@ private
                      Text_Val         => To_Unbounded_String (Val)));
 
    function Create (Val : Array_Interface_Access) return Engine_Value
-   is (Engine_Value'(Class            => Array_Like,
+   is (Engine_Value'(Class            => Array_Handler,
                      Array_Object     => Val));
 
    function Create (Val : Record_Interface_Access) return Engine_Value
-   is (Engine_Value'(Class            => Record_Like,
+   is (Engine_Value'(Class            => Record_Handler,
                      Record_Object    => Val));
 
    function Create (Val : Iterator_Interface_Access) return Engine_Value
@@ -190,6 +205,10 @@ private
 
    function Create (Val : Callback_Function_Access) return Engine_Value
    is (Create (new Callback_Based_Handler'(Callback => Val)));
+
+   function Create (Val : Reference_Interface_Access) return Engine_Value
+   is (Engine_Value'(Class            => Reference_Handler,
+                     Reference_Object => Val));
 
    function Get_Integer (Val : Integer_Value) return Integer
    is (Val.Int_Val);
@@ -211,4 +230,7 @@ private
 
    function Get_Function (Val : Function_Value) return Function_Interface_Access
    is (Val.Function_Object);
+
+   function Get_Reference (Val : Reference_Value) return Reference_Interface_Access
+   is (Val.Reference_Object);
 end Protypo.API.Engine_Values;
