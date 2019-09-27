@@ -37,21 +37,73 @@ package body Protypo.Code_Trees.Interpreter is
       return Result;
    end To_Array;
 
+   function "+" (X : Engine_Value_Vectors.Vector)
+              return Engine_Value
+         with
+               Pre => X.Length = 1;
+
+   function "+" (X : Engine_Value_Vectors.Vector)  return Engine_Value
+   is (X.First_Element);
+
+   function "+" (X : Engine_Value)  return Engine_Value_Vectors.Vector
+   is
+      Result : Engine_Value_Vectors.Vector;
+   begin
+      Result.Append (X);
+      return Result;
+   end "+";
+
+   function "+" (X : Engine_Value)  return Engine_Value_Array
+   is (To_Array (+X));
+
+   function "+" (X : Engine_Value_Array)  return Engine_Value
+   is (if X'Length = 1 Then
+          X(X'First)
+       else
+          raise Constraint_Error);
+
    function Eval (Expr   : Node_Vectors.Vector;
                   Status : Status_Access)
                   return Engine_Value_Vectors.Vector;
 
    function Eval_Name (Expr   : not null Node_Access;
                        Status : Status_Access)
-                       return Engine_Value
+                       return Engine_Value_Array
          with
                Pre => Expr.Class in Name;
 
    function Eval_Name (Expr   : not null Node_Access;
                        Status : Status_Access)
-                       return Engine_Value
+                       return Engine_Value_Array
    is
-      function Get_Array (Head : Array_Interface_Access;
+      function Apply_Default (Specs      : Engine_Value_Array;
+                              Parameters : Engine_Value_Array)
+                              return Engine_Value_Array
+      is
+         Result : Engine_Value_Array (Specs'Range);
+      begin
+         if Parameters'Length > Specs'Length then
+            raise Constraint_Error;
+         end if;
+
+         declare
+            Shift : Natural := Parameters'First-Result'First;
+         begin
+            for Idx in Result'Range loop
+               if Idx + Shift <= Parameters'Last then
+                  Result (Idx) := Parameters (Idx + Shift);
+
+               elsif Specs (Idx) /= Void_Value then
+                  Result (Idx) := Specs (Idx);
+
+               else
+                  raise Constraint_Error;
+               end if;
+            end loop;
+         end;
+      end Apply_Default;
+
+      function Get_Array (Head    : Array_Interface_Access;
                           Indexes : Engine_Value_Vectors.Vector)
                           return Engine_Value
       is (Head.Get (To_Array (Indexes)));
@@ -59,7 +111,7 @@ package body Protypo.Code_Trees.Interpreter is
       function Call_Function (Handler    : Function_Interface_Access;
                               Parameters : Engine_Value_Vectors.Vector)
                               return Engine_Value_Array
-      is (Handler.Process (Fai_Default ());
+      is (Handler.Process (Apply_Default (Handler.Default_Parameters, Parameters)));
    begin
       if not (Expr.Class in Name) then
          raise Program_Error;
@@ -68,21 +120,21 @@ package body Protypo.Code_Trees.Interpreter is
       case Name (Expr.Class) is
          when Selected =>
             declare
-               Head : constant Engine_Value := Eval_Name (Expr.Record_Var, Status);
+               Head : constant Engine_Value := + Eval_Name (Expr.Record_Var, Status);
             begin
                if Head.Class /= Record_Handler then
                   raise Constraint_Error;
                end if;
 
-               return Get_Record (Head).Get (To_String (Expr.Field_Name));
+               return + Get_Record (Head).Get (To_String (Expr.Field_Name));
             end;
          when Indexed =>
             declare
-               Head    : constant Engine_Value := Eval_Name (Expr.Indexed_Var, Status);
+               Head    : constant Engine_Value := + Eval_Name (Expr.Indexed_Var, Status);
                Indexes : Engine_Value_Vectors.Vector := Eval (Expr.Indexes, Status);
             begin
                if Head.Class = Array_Handler then
-                  return Get_Array (Get_Array (Head), Indexes);
+                  return + Get_Array (Get_Array (Head), Indexes);
 
                elsif Head.Class = Function_Handler then
                   return Call_Function (Get_Function (Head), Indexes);
@@ -115,21 +167,6 @@ package body Protypo.Code_Trees.Interpreter is
                   Status : Status_Access)
                   return Engine_Value_Vectors.Vector
    is
-      function "+" (X : Engine_Value_Vectors.Vector)
-                    return Engine_Value
-            with
-                  Pre => X.Length = 1;
-
-      function "+" (X : Engine_Value_Vectors.Vector)  return Engine_Value
-      is (X.First_Element);
-
-      function "+" (X : Engine_Value)  return Engine_Value_Vectors.Vector
-      is
-         Result : Engine_Value_Vectors.Vector;
-      begin
-         Result.Append (X);
-         return Result;
-      end "+";
 
       -----------
       -- Apply --

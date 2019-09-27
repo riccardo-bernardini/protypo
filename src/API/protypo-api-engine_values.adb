@@ -1,24 +1,37 @@
 pragma Ada_2012;
 package body Protypo.API.Engine_Values is
-   function bool (x : integer) return Integer
-   is (if x /= 0 then 1 else 0);
+   ------------------------
+   -- Default_Parameters --
+   ------------------------
 
-   function bool (x : float) return Integer
-   is (if x /= 0.0 then 1 else 0);
+   function Default_Parameters (Fun : Callback_Based_Handler)
+                                return Engine_Value_Array
+   is
+      Result : constant Engine_Value_Array (2 .. Fun.N_Parameters + 1) :=
+                 (others => Void_Value);
+   begin
+      return Result;
+   end Default_Parameters;
 
-   function create (x : Boolean) return Engine_Value
-   is (create (integer'(if x then 1 else 0)));
+   function Bool (X : Integer) return Integer
+   is (if X /= 0 then 1 else 0);
 
-   function bool (x : Engine_Value) return Integer
-   is (case x.Class is
-          when Int    => bool (Get_Integer (x)),
-          when real   => bool (Get_Float (x)),
+   function Bool (X : Float) return Integer
+   is (if X /= 0.0 then 1 else 0);
+
+   function Create (X : Boolean) return Engine_Value
+   is (Create (Integer'(if X then 1 else 0)));
+
+   function Bool (X : Engine_Value) return Integer
+   is (case X.Class is
+          when Int    => Bool (Get_Integer (X)),
+          when Real   => Bool (Get_Float (X)),
           when others => raise Constraint_Error);
 
-   function real (x : Engine_Value) return float
-   is (case x.Class is
-          when Int    => float (Get_Integer (x)),
-          when real   => Get_Float (x),
+   function Real (X : Engine_Value) return Float
+   is (case X.Class is
+          when Int    => Float (Get_Integer (X)),
+          when Real   => Get_Float (X),
           when others => raise Constraint_Error);
 
 
@@ -28,15 +41,15 @@ package body Protypo.API.Engine_Values is
 
    function "-" (X : Engine_Value) return Engine_Value is
    begin
-      if not Is_Numeric (x) then
+      if not Is_Numeric (X) then
          raise Constraint_Error with "Non-numeric value";
       end if;
 
-      case Numeric_Classes (x.Class) is
+      case Numeric_Classes (X.Class) is
          when Int =>
-            return create (-Get_Integer (x));
+            return Create (-Get_Integer (X));
          when Real =>
-            return create (-Get_Float (x));
+            return Create (-Get_Float (X));
       end case;
    end "-";
 
@@ -46,11 +59,11 @@ package body Protypo.API.Engine_Values is
 
    function "not" (X : Engine_Value) return Engine_Value is
    begin
-      if not Is_Numeric (x) then
+      if not Is_Numeric (X) then
          raise Constraint_Error with "Non-numeric value";
       end if;
 
-      return create (1 - bool (x));
+      return Create (1 - Bool (X));
    end "not";
 
    ---------
@@ -59,22 +72,22 @@ package body Protypo.API.Engine_Values is
 
    function "+" (Left, Right : Engine_Value) return Engine_Value is
    begin
-      if not (Is_Scalar (left) and Is_Scalar (right)) then
+      if not (Is_Scalar (Left) and Is_Scalar (Right)) then
          raise Constraint_Error;
       end if;
 
-      if Is_Numeric (left) xor Is_Numeric (right) then
+      if Is_Numeric (Left) xor Is_Numeric (Right) then
          raise Constraint_Error;
       end if;
 
-      if left.Class = text and Right.Class = text then
-         return create (Get_String (left) & Get_String (Right));
+      if Left.Class = Text and Right.Class = Text then
+         return Create (Get_String (Left) & Get_String (Right));
 
-      elsif left.Class = int and Right.Class = int then
-         return create (Get_Integer (Left) + Get_Integer (right));
+      elsif Left.Class = Int and Right.Class = Int then
+         return Create (Get_Integer (Left) + Get_Integer (Right));
 
       else
-         return create (real (left) + real (Right));
+         return Create (Real (Left) + Real (Right));
       end if;
    end "+";
 
@@ -89,11 +102,11 @@ package body Protypo.API.Engine_Values is
          raise Constraint_Error;
       end if;
 
-      if left.Class = int and Right.Class = int then
-         return create (Get_Integer (Left) * Get_Integer (right));
+      if Left.Class = Int and Right.Class = Int then
+         return Create (Get_Integer (Left) * Get_Integer (Right));
 
       else
-         return create (real (left) * real (Right));
+         return Create (Real (Left) * Real (Right));
       end if;
    end "*";
 
@@ -107,11 +120,11 @@ package body Protypo.API.Engine_Values is
          raise Constraint_Error;
       end if;
 
-      if left.Class = int and Right.Class = int then
-         return create (Get_Integer (Left) / Get_Integer (right));
+      if Left.Class = Int and Right.Class = Int then
+         return Create (Get_Integer (Left) / Get_Integer (Right));
 
       else
-         return create (real (left) / real (Right));
+         return Create (Real (Left) / Real (Right));
       end if;
    end "/";
 
@@ -121,22 +134,22 @@ package body Protypo.API.Engine_Values is
 
    function "=" (Left, Right : Engine_Value) return Engine_Value is
    begin
-      if not (Is_Scalar (left) and Is_Scalar (right)) then
+      if not (Is_Scalar (Left) and Is_Scalar (Right)) then
          raise Constraint_Error;
       end if;
 
-      if Is_Numeric (left) xor Is_Numeric (right) then
+      if Is_Numeric (Left) xor Is_Numeric (Right) then
          raise Constraint_Error;
       end if;
 
-      if left.Class = text and Right.Class = text then
-         return create (Get_String (left) = Get_String (Right));
+      if Left.Class = Text and Right.Class = Text then
+         return Create (Get_String (Left) = Get_String (Right));
 
-      elsif left.Class = int and Right.Class = int then
-         return create (Get_Integer (Left) = Get_Integer (right));
+      elsif Left.Class = Int and Right.Class = Int then
+         return Create (Get_Integer (Left) = Get_Integer (Right));
 
       else
-         return create (real (left) = real (Right));
+         return Create (Real (Left) = Real (Right));
       end if;
    end "=";
 
@@ -147,22 +160,22 @@ package body Protypo.API.Engine_Values is
 
    function "<" (Left, Right : Engine_Value) return Engine_Value is
    begin
-      if not (Is_Scalar (left) and Is_Scalar (right)) then
+      if not (Is_Scalar (Left) and Is_Scalar (Right)) then
          raise Constraint_Error;
       end if;
 
-      if Is_Numeric (left) xor Is_Numeric (right) then
+      if Is_Numeric (Left) xor Is_Numeric (Right) then
          raise Constraint_Error;
       end if;
 
-      if left.Class = text and Right.Class = text then
-         return create (Get_String (left) < Get_String (Right));
+      if Left.Class = Text and Right.Class = Text then
+         return Create (Get_String (Left) < Get_String (Right));
 
-      elsif left.Class = int and Right.Class = int then
-         return create (Get_Integer (Left) < Get_Integer (right));
+      elsif Left.Class = Int and Right.Class = Int then
+         return Create (Get_Integer (Left) < Get_Integer (Right));
 
       else
-         return create (real (left) < real (Right));
+         return Create (Real (Left) < Real (Right));
       end if;
    end "<";
 
@@ -173,7 +186,7 @@ package body Protypo.API.Engine_Values is
 
    function "and" (Left, Right : Engine_Value) return Engine_Value is
    begin
-      return Create (bool (left) * bool (right));
+      return Create (Bool (Left) * Bool (Right));
    end "and";
 
    ----------
@@ -182,7 +195,7 @@ package body Protypo.API.Engine_Values is
 
    function "or" (Left, Right : Engine_Value) return Engine_Value is
    begin
-      return Create (bool (left) + bool (right));
+      return Create (Bool (Left) + Bool (Right));
    end "or";
 
    -----------
@@ -191,7 +204,7 @@ package body Protypo.API.Engine_Values is
 
    function "xor" (Left, Right : Engine_Value) return Engine_Value is
    begin
-      return Create ((bool (left) + bool (right)) mod 2);
+      return Create ((Bool (Left) + Bool (Right)) mod 2);
    end "xor";
 
 end Protypo.API.Engine_Values;

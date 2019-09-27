@@ -46,7 +46,7 @@ package Protypo.API.Engine_Values is
          with Pre => Is_Scalar (X) and Is_Scalar (Y);
 
    function "+" (Left, Right : Engine_Value) return Engine_Value
-         with Pre => (Left.Class = Text and Right.Class= Text)
+         with Pre => (Left.Class = Text and Right.Class = Text)
          or (Is_Numeric (Left) and Is_Numeric (Right)),
          Post =>
                "+"'Result.Class = (if Is_Numeric (Left)
@@ -57,7 +57,7 @@ package Protypo.API.Engine_Values is
 
    function "-" (Left, Right : Engine_Value) return Engine_Value
          with Pre => Is_Numeric (Left) and Is_Numeric (Right),
-         Post => "-"'result.Class = Mixed_Numeric (Left.Class, Right.Class);
+         Post => "-"'Result.Class = Mixed_Numeric (Left.Class, Right.Class);
 
    function "*" (Left, Right : Engine_Value) return Engine_Value
          with Pre => Is_Numeric (Left) and Is_Numeric (Right),
@@ -65,7 +65,7 @@ package Protypo.API.Engine_Values is
 
    function "/" (Left, Right : Engine_Value) return Engine_Value
          with Pre => Is_Numeric (Left) and Is_Numeric (Right),
-         Post => "/"'result.Class = Mixed_Numeric (Left.Class, Right.Class);
+         Post => "/"'Result.Class = Mixed_Numeric (Left.Class, Right.Class);
 
 
    function "=" (Left, Right : Engine_Value) return Engine_Value
@@ -125,7 +125,7 @@ package Protypo.API.Engine_Values is
    type Record_Interface is interface;
    type Record_Interface_Access is not null access all Record_Interface'Class;
 
-   function Get (X     : record_Interface;
+   function Get (X     : Record_Interface;
                  Field : String)
                  return Engine_Value
                  is abstract;
@@ -192,7 +192,8 @@ package Protypo.API.Engine_Values is
    function Create (Val : Function_Interface_Access) return Engine_Value
          with Post => Create'Result.Class = Function_Handler;
 
-   function Create (Val : Callback_Function_Access) return Engine_Value
+   function Create (Val          : Callback_Function_Access;
+                    N_Parameters : Natural := 1) return Engine_Value
          with Post => Create'Result.Class = Function_Handler;
 
    function Create (Val : Reference_Interface_Access) return Engine_Value
@@ -247,13 +248,18 @@ private
          new Function_Interface
    with
       record
-         Callback : Callback_Function_Access;
+         Callback     : Callback_Function_Access;
+         N_Parameters : Natural;
       end record;
 
    function Process (Fun       : Callback_Based_Handler;
                      Parameter : Engine_Value_Array)
                      return Engine_Value_Array
    is (Fun.Callback (Parameter));
+
+   function Default_Parameters (Fun : Callback_Based_Handler)
+                                return Engine_Value_Array;
+   --     is (Engine_Value_Array(2..Fun.N_Parameters+1)'(others => Void_Value));
 
 
    function Create (Val : Integer) return Engine_Value
@@ -285,8 +291,11 @@ private
    is (Engine_Value'(Class            => Function_Handler,
                      Function_Object  => Val));
 
-   function Create (Val : Callback_Function_Access) return Engine_Value
-   is (Create (new Callback_Based_Handler'(Callback => Val)));
+   function Create (Val          : Callback_Function_Access;
+                    N_Parameters : Natural := 1)
+                    return Engine_Value
+   is (Create (new Callback_Based_Handler'(Callback => Val,
+                                           N_Parameters => N_Parameters)));
 
    function Create (Val : Reference_Interface_Access) return Engine_Value
    is (Engine_Value'(Class            => Reference_Handler,
