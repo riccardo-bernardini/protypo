@@ -73,20 +73,24 @@ There are at least three different types of "evaluation" of trees
 * Pure statements (including composite ones). No value is returned
 * Expression evaluation.  A list of scalar may be returned (because of RETURN).  A scalar is an integer, a float or a string.
 * Name evaluation.  This gives a "pointer" to the symbol table that be queried for values and/or writing it.
-
+ 
+### Name evaluation
 More precisely, a name can evaluate to
 * An array handler that exports a method that accepts a list of parameters and returns an `Engine_Value` 
 * A record handler that exports a method that accepts an ID  returns an `Engine_Value`
 * A function handler that exports a callback method that returns a scalar
 * A simple handler that allows to read/write the value
-* A scalar
 
 Every handler is read-only (i.e., it can be queried, but does not allow for modification). The only read-write handler is the simple one.
 
 The evaluation of a name (the result of a concatenation of dot and indexing operator) works as follows
-* The DOT operator accepts as parameters a name and an ID.  The name must evaluate to a record handler.  The record handler is queried with the ID and the result must be a handler of the above
-* The INDEX operator accepts as left parameter a name (that must evaluate to a record or a function handler) and a list of expressions.  Every expression is evaluated and the callback of the handler called.  If the handler is an array handler, it accepts a fixed number of arguments, without any optional parameter handling, in the case of functions optional parameters are allowed. In the case of the record the outcome is a handler, for a function it is a scalar.
+* The DOT operator accepts as parameters a name and an ID.  The name must evaluate to a record handler.  The record handler is queried with the ID and the result must be a handler of the above 
+* The INDEX operator accepts as left parameter a name (that must evaluate to a record or a function handler) and a list of expressions.  Every expression is evaluated, successively  
+    * If the handler is an *array handler*, it accepts a fixed number of arguments, without any optional parameter handling, the *Get* method of the handler is called.
+    * In the case of a *function handler*, default parameters are handled and the function is called.
 * An identifier evaluates to its entry in the symbol table. If the stored value is a scalar and it is not read-only, a simple handler is wrapped around it; otherwise the stored value is returned as it is.
+
+If during the evaluation a constant is obtained, the result is wrapped around the constant
 
 For example, suppose the following name is evaluated
 ```
