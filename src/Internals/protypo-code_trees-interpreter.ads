@@ -78,9 +78,35 @@ private
                   Expr   : Node_Vectors.Vector)
                   return Engine_Value_Vectors.Vector;
 
+
+   type Value_Name_Class is
+         (
+          Array_Reference,
+          Record_Reference,
+          Variable_Reference,
+          Constant_Reference,
+          Function_Call
+         );
+
+
+   type Name_Value(Class : Name_Value_Class) is
+      record
+         when Array_Reference =>
+               Array_Handler : Array_Interface_Access;
+
+         when Record_Reference =>
+               Record_Handler : Record_Interface_Access;
+
+         when Variable_Reference =>
+               Variable_Handler : Reference_Interface_Access;
+
+         when Constant_Reference =>
+         when Function_Call =>
+      end record;
+
    function Eval_Name (Expr   : not null Node_Access;
                        Status : Interpreter_Access)
-                     return Engine_Value_Array
+                     return Name_Reference
          with
                Pre => Expr.Class in Name;
 end Protypo.Code_Trees.Interpreter;

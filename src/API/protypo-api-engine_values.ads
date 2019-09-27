@@ -11,12 +11,13 @@ package Protypo.API.Engine_Values is
           Record_Handler,
           Function_Handler,
           Reference_Handler,
+          Constant_Handler,
           Iterator
          );
 
    subtype Scalar_Classes is Engine_Value_Class  range Int .. Text;
    subtype Numeric_Classes is Scalar_Classes     range Int .. Real;
-   subtype Handler_Classes is Engine_Value_Class range Array_Handler .. Reference_Handler;
+   subtype Handler_Classes is Engine_Value_Class range Array_Handler .. Constant_Handler;
 
    type Engine_Value (Class : Engine_Value_Class := Void) is private;
 
@@ -100,14 +101,15 @@ package Protypo.API.Engine_Values is
    Void_Value : constant Engine_Value;
    No_Value   : constant Engine_Value_Array;
 
-   subtype Integer_Value  is Engine_Value (Int);
-   subtype Real_Value     is Engine_Value (Real);
-   subtype String_Value   is Engine_Value (Text);
-   subtype Array_Value    is Engine_Value (Array_Handler);
-   subtype Record_Value   is Engine_Value (Record_Handler);
-   subtype Iterator_Value is Engine_Value (Iterator);
-   subtype Function_Value is Engine_Value (Function_Handler);
+   subtype Integer_Value   is Engine_Value (Int);
+   subtype Real_Value      is Engine_Value (Real);
+   subtype String_Value    is Engine_Value (Text);
+   subtype Array_Value     is Engine_Value (Array_Handler);
+   subtype Record_Value    is Engine_Value (Record_Handler);
+   subtype Iterator_Value  is Engine_Value (Iterator);
+   subtype Function_Value  is Engine_Value (Function_Handler);
    subtype Reference_Value is Engine_Value (Reference_Handler);
+   subtype Constant_Value  is Engine_Value (Constant_Handler);
 
    type Array_Interface is interface;
    type Array_Interface_Access is not null access all Array_Interface'Class;
@@ -130,10 +132,13 @@ package Protypo.API.Engine_Values is
                  return Engine_Value
                  is abstract;
 
-   type Reference_Interface is interface;
-   type Reference_Interface_Access is not null access all Reference_Interface'Class;
+   type Constant_Interface is interface;
+   type Constant_Interface_Access  is not null access all Constant_Interface'Class;
 
-   function Read (X : Reference_Interface) return Engine_Value is abstract;
+   function Read (X : Constant_Interface) return Engine_Value is abstract;
+
+   type Reference_Interface is interface and Constant_Interface;
+   type Reference_Interface_Access is not null access all Reference_Interface'Class;
 
    procedure Write (What  : Reference_Interface;
                     Value : Engine_Value)
@@ -199,6 +204,9 @@ package Protypo.API.Engine_Values is
    function Create (Val : Reference_Interface_Access) return Engine_Value
          with Post => Create'Result.Class = Reference_Handler;
 
+   function Create (Val : Constant_Interface_Access) return Engine_Value
+         with Post => Create'Result.Class = Constant_Handler;
+
 
    function Get_Integer (Val : Integer_Value) return Integer;
    function Get_Float (Val : Real_Value) return Float;
@@ -208,6 +216,8 @@ package Protypo.API.Engine_Values is
    function Get_Iterator (Val : Iterator_Value) return Iterator_Interface_Access;
    function Get_Function (Val : Function_Value) return Function_Interface_Access;
    function Get_Reference (Val : Reference_Value) return Reference_Interface_Access;
+   function Get_Constant (Val : Constant_Value) return Constant_Interface_Access;
+
 private
    type Engine_Value (Class : Engine_Value_Class := Void) is
       record
@@ -236,8 +246,11 @@ private
          when Function_Handler =>
             Function_Object : Function_Interface_Access;
 
-            when Reference_Handler =>
-               Reference_Object : Reference_Interface_Access;
+         when Reference_Handler =>
+            Reference_Object : Reference_Interface_Access;
+
+         when Constant_Handler =>
+            Constant_Object  : Constant_Interface_Access;
          end case;
       end record;
 
