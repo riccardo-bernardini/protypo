@@ -38,7 +38,7 @@ package body Protypo.Code_Trees.Interpreter is
    end To_Array;
 
    function "+" (X : Engine_Value_Vectors.Vector)
-              return Engine_Value
+                 return Engine_Value
          with
                Pre => X.Length = 1;
 
@@ -57,40 +57,33 @@ package body Protypo.Code_Trees.Interpreter is
    is (To_Array (+X));
 
    function "+" (X : Engine_Value_Array)  return Engine_Value
-   is (if X'Length = 1 Then
-          X(X'First)
+   is (if X'Length = 1 then
+          X (X'First)
        else
           raise Constraint_Error);
 
-   function Eval (Expr   : Node_Vectors.Vector;
-                  Status : Status_Access)
-                  return Engine_Value_Vectors.Vector;
+
+
 
    function Eval_Name (Expr   : not null Node_Access;
-                       Status : Status_Access)
-                       return Engine_Value_Array
-         with
-               Pre => Expr.Class in Name;
-
-   function Eval_Name (Expr   : not null Node_Access;
-                       Status : Status_Access)
+                       Status : Interpreter_Access)
                        return Engine_Value_Array
    is
       function Apply_Default (Specs      : Engine_Value_Array;
-                              Parameters : Engine_Value_Array)
+                              Parameters : Engine_Value_Vectors.Vector)
                               return Engine_Value_Array
       is
          Result : Engine_Value_Array (Specs'Range);
       begin
-         if Parameters'Length > Specs'Length then
+         if Natural (Parameters.Length) > Specs'Length then
             raise Constraint_Error;
          end if;
 
          declare
-            Shift : Natural := Parameters'First-Result'First;
+            Shift : constant Natural := Parameters.First_Index - Result'First;
          begin
             for Idx in Result'Range loop
-               if Idx + Shift <= Parameters'Last then
+               if Idx + Shift <= Parameters.Last_Index then
                   Result (Idx) := Parameters (Idx + Shift);
 
                elsif Specs (Idx) /= Void_Value then
@@ -101,6 +94,8 @@ package body Protypo.Code_Trees.Interpreter is
                end if;
             end loop;
          end;
+
+         return Result;
       end Apply_Default;
 
       function Get_Array (Head    : Array_Interface_Access;
@@ -131,7 +126,7 @@ package body Protypo.Code_Trees.Interpreter is
          when Indexed =>
             declare
                Head    : constant Engine_Value := + Eval_Name (Expr.Indexed_Var, Status);
-               Indexes : Engine_Value_Vectors.Vector := Eval (Expr.Indexes, Status);
+               Indexes : constant Engine_Value_Vectors.Vector := Eval (Status, Expr.Indexes);
             begin
                if Head.Class = Array_Handler then
                   return + Get_Array (Get_Array (Head), Indexes);
@@ -143,6 +138,7 @@ package body Protypo.Code_Trees.Interpreter is
                   raise Constraint_Error;
                end if;
             end;
+
          when Identifier =>
             pragma Compile_Time_Warning (True, "unimplemented");
             raise Program_Error;
@@ -150,21 +146,25 @@ package body Protypo.Code_Trees.Interpreter is
       end case;
    end Eval_Name;
 
-   function Eval (Expr   : Node_Vectors.Vector;
-                  Status : Status_Access)
+   ----------
+   -- Eval --
+   ----------
+
+   function Eval (Status : Interpreter_Access;
+                  Expr   : Node_Vectors.Vector)
                   return Engine_Value_Vectors.Vector
    is
       Result : Engine_Value_Vectors.Vector;
    begin
       for Ex of Expr loop
-         Result.Append (Eval (Ex, Status));
+         Result.Append (Eval (Status, Ex));
       end loop;
 
       return Result;
    end Eval;
 
-   function Eval (Expr   : not null Node_Access;
-                  Status : Status_Access)
+   function Eval (Status : Interpreter_Access;
+                  Expr   : not null Node_Access)
                   return Engine_Value_Vectors.Vector
    is
 
@@ -247,13 +247,13 @@ package body Protypo.Code_Trees.Interpreter is
 
       case Code_Trees.Expression (Expr.Class) is
          when Binary_Op =>
-            Left := + Eval (Expr.Left, Status);
-            Right := + Eval (Expr.Right, Status);
+            Left := + Eval (Status, Expr.Left);
+            Right := + Eval (Status, Expr.Right);
 
             return + Apply (Expr.Operator, Left, Right);
 
          when Unary_Op =>
-            Right := + Eval (Expr.Operand, Status);
+            Right := + Eval (Status, Expr.Operand);
 
             return + Apply (Expr.Uni_Op, Right);
 
@@ -284,13 +284,13 @@ package body Protypo.Code_Trees.Interpreter is
    -- Run --
    ---------
 
-   procedure Run (Program : Node_Vectors.Vector;
-                  Status  : Status_Access)
+   procedure Run (Status  : Interpreter_Access;
+                  Program : Node_Vectors.Vector)
    is
 
    begin
       for Statement of Program loop
-         Run (Statement, Status);
+         Run (Status, Statement);
 
          if Status.Break.Breaking_Reason /= None then
             return;
@@ -303,8 +303,8 @@ package body Protypo.Code_Trees.Interpreter is
    -- Run --
    ---------
 
-   procedure Run (Program : not null Node_Access;
-                  Status  : Status_Access)
+   procedure Run (Status  : Interpreter_Access;
+                  Program : not null Node_Access)
    is
       use Compiled_Functions;
    begin
@@ -315,7 +315,7 @@ package body Protypo.Code_Trees.Interpreter is
 
       case Statement_Classes (Program.Class) is
          when Statement_Sequence =>
-            Run (Program.Statements, Status);
+            Run (Status, Program.Statements);
 
          when Defun =>
             Status.Symbol_Table.Create
@@ -373,13 +373,13 @@ package body Protypo.Code_Trees.Interpreter is
                        Initial_Value => Create (Consumer_Handlers.Create (Consumer)));
       end Add_Builtin_Values;
 
-      Interpreter : constant Status_Access :=
-                      new Interpreter_Status'(Break        => No_Break,
-                                              Symbol_Table => Copy_Globals (Symbol_Table));
+      Interpreter : constant Interpreter_Access :=
+                      new Interpreter_Type'(Break        => No_Break,
+                                            Symbol_Table => Copy_Globals (Symbol_Table));
    begin
       Add_Builtin_Values (Interpreter.Symbol_Table);
 
-      Run (Program.Pt, Interpreter);
+      Run (Interpreter, Program.Pt);
 
       if Interpreter.Break /= No_Break  then
          raise Program_Error;

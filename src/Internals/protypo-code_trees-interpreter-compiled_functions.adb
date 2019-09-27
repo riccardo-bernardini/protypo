@@ -5,47 +5,33 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
    -- Process --
    -------------
 
-   overriding function Process (Fun       : Compiled_Function;
+   overriding function Process (Handler   : Compiled_Function;
                                 Parameter : Engine_Value_Array)
                                 return Engine_Value_Array
    is
-      D : constant Integer := Parameter'First - Fun.Parameters.Names.First_Index;
-      E : constant Integer := Fun.Parameters.Default.First_Index - Fun.Parameters.Names.First_Index;
    begin
-      if Parameter'Length > Integer (Fun.Parameters.Names.Length) then
-         raise Constraint_Error;
+      if Parameter'Length /= Integer (Fun.Parameters.Names.Length) then
+         raise Program_Error;
       end if;
 
       Fun.Symbol_Table.Open_External_Block;
 
-      for K in Fun.Parameters.Names.First_Index .. Fun.Parameters.Names.Last_Index loop
-         if D + K <= Parameter'Last then
-            Fun.Symbol_Table.Create (Name          => Fun.Parameters.Names (K),
-                                     Initial_Value => Parameter (D + K));
+      declare
+         Name_To_Param : constant Integer :=
+                           Parameter'First - Fun.Parameters.Names.First_Index;
+      begin
+         for Name_Index in Handler.Parameters.Names.First_Index .. Handler.Parameters.Names.Last_Index loop
+            Handler.Symbol_Table.Create
+                  (Name          => Handler.Parameters.Names (Name_Index),
+                   Initial_Value => Parameter (Name_Index + Name_To_Param));
+         end loop;
+      end;
 
-         elsif E + K <= Fun.Parameters.Default.Last_Index then
-            declare
-               Default : constant Interpreter_Result :=
-                           Run (Fun.Parameters.Default (E + K),
-                                Fun.Symbol_Table);
-            begin
-               if Default.Reason /= Expression then
-                  raise Program_Error;
-               end if;
-
-
-               Fun.Symbol_Table.Create (Name          => Fun.Parameters.Names (K),
-                                        Initial_Value => Default.Value);
-            end;
-
-         else
-            raise Constraint_Error;
-         end if;
-      end loop;
 
       declare
-         Result : constant Interpreter_Result := Run (Program      => Fun.Function_Body,
-                                                      Symbol_Table => Fun.Symbol_Table);
+         Result : constant Interpreter_Result :=
+                    Run (Program      => Handler.Function_Body,
+                         Symbol_Table => Handler.Symbol_Table);
       begin
          Fun.Symbol_Table.Close_Block;
 

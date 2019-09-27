@@ -11,7 +11,7 @@ private package Protypo.Code_Trees.Interpreter.Compiled_Functions is
       record
          Function_Body : Node_Vectors.Vector;
          Parameters    : Parameter_Specs;
-         Status        : Status_Access;
+         Status        : Interpreter_Access;
       end record;
 
    overriding function Process (Fun       : Compiled_Function;

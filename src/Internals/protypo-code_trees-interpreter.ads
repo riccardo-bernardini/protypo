@@ -14,8 +14,8 @@ private
    type Symbol_Table_Access is not null access Api.Symbols.Table;
 
    package Engine_Value_Vectors is
-     new Ada.Containers.Vectors (Index_Type   => Positive,
-                                 Element_Type => Engine_Value);
+         new Ada.Containers.Vectors (Index_Type   => Positive,
+                                     Element_Type => Engine_Value);
 
 
    function To_Vector (X : Engine_Value_Array)
@@ -25,12 +25,12 @@ private
                       return Engine_Value_Array;
 
    type Termination_Reason is
-     (
-      End_Of_Code,
-      Return_Statement,
-      Exit_Statement,
-      Expression
-     );
+         (
+          End_Of_Code,
+          Return_Statement,
+          Exit_Statement,
+          Expression
+         );
 
    type Break_Type is (Exit_Statement, Return_Statement, None);
 
@@ -50,48 +50,37 @@ private
 
    No_Break : constant Break_Status := (Breaking_Reason => None);
 
-   type Interpreter_Status is limited
+   type Interpreter_Type is tagged limited
       record
          Break        : Break_Status;
          Symbol_Table : Api.Symbols.Table;
       end record;
 
-   type Status_Access is not null access Interpreter_Status;
-
-   --
-   --     type Interpreter_Result (Reason : Termination_Reason := End_Of_Code) is
-   --        record
-   --           case Reason is
-   --              when End_Of_Code =>
-   --                 null;
-   --
-   --              when Return_Statement =>
-   --                 Result : Engine_Value_Vectors.Vector;
-   --
-   --              when Exit_Statement =>
-   --                 Label  : Label_Type;
-   --
-   --              when Expression =>
-   --                 Value : Engine_Value;
-   --           end case;
-   --        end record;
-
-   --     No_Result : constant Interpreter_Result := (Reason => End_Of_Code);
+   type Interpreter_Access is not null access Interpreter_Type;
 
 
-   procedure Run (Program : not null Node_Access;
-                  Status  : Status_Access)
-     with
-       Pre => Program.Class in Statement_Classes;
+   procedure Run (Status  : Interpreter_Access;
+                  Program : not null Node_Access)
+         with
+               Pre => Program.Class in Statement_Classes;
 
-   procedure Run (Program : Node_Vectors.Vector;
-                  Status  : Status_Access);
+   procedure Run (Status  : Interpreter_Access;
+                  Program : Node_Vectors.Vector);
 
-   function Eval (Expr   : not null Node_Access;
-                  Status : Status_Access)
+   function Eval (Status : Interpreter_Access;
+                  Expr   : not null Node_Access)
                   return Engine_Value_Vectors.Vector
-     with
-       Pre => Expr.Class in Code_Trees.Expression,
-       Post => not Eval'Result.Is_Empty;
+         with
+               Pre => Expr.Class in Code_Trees.Expression,
+               Post => not Eval'Result.Is_Empty;
 
+   function Eval (Status : Interpreter_Access;
+                  Expr   : Node_Vectors.Vector)
+                  return Engine_Value_Vectors.Vector;
+
+   function Eval_Name (Expr   : not null Node_Access;
+                       Status : Interpreter_Access)
+                     return Engine_Value_Array
+         with
+               Pre => Expr.Class in Name;
 end Protypo.Code_Trees.Interpreter;
