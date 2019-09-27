@@ -89,24 +89,30 @@ private
          );
 
 
-   type Name_Value(Class : Name_Value_Class) is
+   type Name_Value (Class : Value_Name_Class) is
       record
+         case Class is
          when Array_Reference =>
-               Array_Handler : Array_Interface_Access;
+            Array_Handler : Array_Interface_Access;
 
          when Record_Reference =>
-               Record_Handler : Record_Interface_Access;
+            Record_Handler : Record_Interface_Access;
 
          when Variable_Reference =>
-               Variable_Handler : Reference_Interface_Access;
+            Variable_Handler : Reference_Interface_Access;
 
          when Constant_Reference =>
+            Costant_Handler : Constant_Interface_Access;
+
          when Function_Call =>
+            Function_Handler : Function_Interface_Access;
+            Parameters       : Engine_Value_Vectors.Vector;
+         end case;
       end record;
 
    function Eval_Name (Expr   : not null Node_Access;
                        Status : Interpreter_Access)
-                     return Name_Reference
+                       return Value_Name_Class
          with
                Pre => Expr.Class in Name;
 end Protypo.Code_Trees.Interpreter;
