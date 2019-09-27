@@ -14,8 +14,8 @@ private
    type Symbol_Table_Access is not null access Api.Symbols.Table;
 
    package Engine_Value_Vectors is
-         new Ada.Containers.Vectors (Index_Type   => Positive,
-                                     Element_Type => Engine_Value);
+     new Ada.Containers.Vectors (Index_Type   => Positive,
+                                 Element_Type => Engine_Value);
 
 
    function To_Vector (X : Engine_Value_Array)
@@ -25,12 +25,12 @@ private
                       return Engine_Value_Array;
 
    type Termination_Reason is
-         (
-          End_Of_Code,
-          Return_Statement,
-          Exit_Statement,
-          Expression
-         );
+     (
+      End_Of_Code,
+      Return_Statement,
+      Exit_Statement,
+      Expression
+     );
 
    type Break_Type is (Exit_Statement, Return_Statement, None);
 
@@ -61,8 +61,8 @@ private
 
    procedure Run (Status  : Interpreter_Access;
                   Program : not null Node_Access)
-         with
-               Pre => Program.Class in Statement_Classes;
+     with
+       Pre => Program.Class in Statement_Classes;
 
    procedure Run (Status  : Interpreter_Access;
                   Program : Node_Vectors.Vector);
@@ -70,26 +70,29 @@ private
    function Eval (Status : Interpreter_Access;
                   Expr   : not null Node_Access)
                   return Engine_Value_Vectors.Vector
-         with
-               Pre => Expr.Class in Code_Trees.Expression,
-               Post => not Eval'Result.Is_Empty;
+     with
+       Pre => Expr.Class in Code_Trees.Expression,
+       Post => not Eval'Result.Is_Empty;
 
-   function Eval (Status : Interpreter_Access;
-                  Expr   : Node_Vectors.Vector)
-                  return Engine_Value_Vectors.Vector;
+   function Eval_Vector (Status : Interpreter_Access;
+                         Expr   : Node_Vectors.Vector)
+                         return Engine_Value_Vectors.Vector;
 
 
    type Value_Name_Class is
-         (
-          Array_Reference,
-          Record_Reference,
-          Variable_Reference,
-          Constant_Reference,
-          Function_Call
-         );
+     (
+      Array_Reference,
+      Record_Reference,
+      Variable_Reference,
+      Constant_Reference,
+      Function_Reference,
+      Function_Call
+     );
 
+   subtype Function_Classes is
+     Value_Name_Class range Function_Reference .. Function_Call;
 
-   type Name_Value (Class : Value_Name_Class) is
+   type Name_Reference (Class : Value_Name_Class) is
       record
          case Class is
          when Array_Reference =>
@@ -104,15 +107,34 @@ private
          when Constant_Reference =>
             Costant_Handler : Constant_Interface_Access;
 
-         when Function_Call =>
+         when Function_Reference | Function_Call =>
             Function_Handler : Function_Interface_Access;
             Parameters       : Engine_Value_Vectors.Vector;
+
          end case;
-      end record;
+      end record
+     with
+       Dynamic_Predicate =>
+         (if Name_Reference.Class = Function_Reference then Name_Reference.Parameters.Is_Empty);
+
+
+   subtype Evaluable_Classes is Value_Name_Class
+     with
+       Static_Predicate => Evaluable_Classes in Function_Call | Constant_Reference | Variable_Reference;
+
+   subtype Function_Call_Reference is Name_Reference (Function_Call);
 
    function Eval_Name (Expr   : not null Node_Access;
                        Status : Interpreter_Access)
-                       return Value_Name_Class
-         with
-               Pre => Expr.Class in Name;
+                       return Name_Reference
+     with
+       Pre => Expr.Class in Name;
+
+
+   function Call_Function (Reference : Function_Call_Reference)
+                           return Engine_Value_Array;
+
+   function To_Value (Ref : Name_Reference) return Engine_Value_Array
+     with Pre => Ref.Class in Evaluable_Classes;
+
 end Protypo.Code_Trees.Interpreter;
