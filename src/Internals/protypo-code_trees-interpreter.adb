@@ -397,6 +397,14 @@ package body Protypo.Code_Trees.Interpreter is
       end loop;
    end Run;
 
+   function Is_True (X : Engine_Value) return Boolean
+   is (if X.Class in Numeric_Classes then
+         (case Numeric_Classes (X.Class) is
+             when Int => Get_Integer (X) /= 0,
+             when Real => Get_Float (X) /= 0.0)
+       else
+          raise Constraint_Error);
+
 
    ---------
    -- Run --
@@ -430,21 +438,31 @@ package body Protypo.Code_Trees.Interpreter is
             raise Program_Error;
 
          when Return_Statement =>
-            pragma Compile_Time_Warning(True, "unimplemented");
-            raise Program_Error;
+            Status.Break :=
+              Break_Status'(Breaking_Reason => Return_Statement,
+                            Result          => Eval_Vector (Status, Program.Return_Values));
+            return;
 
          when Procedure_Call =>
-            pragma Compile_Time_Warning(True, "unimplemented");
+            pragma Compile_Time_Warning (True, "unimplemented");
             raise Program_Error;
 
          when Exit_Statement =>
-            pragma Compile_Time_Warning(True, "unimplemented");
-            raise Program_Error;
+            Status.Break :=
+              Break_Status'(Breaking_Reason => Exit_Statement,
+                            Loop_Label      => Program.Loop_Label);
+            return;
 
          when If_Block    =>
-            pragma Compile_Time_Warning(True, "unimplemented");
-            raise Program_Error;
+            for Branch of Program.Branches loop
+               if Is_True (Eval (Status, Branch.Condition)) then
+                  Run (Status, Branch.Code);
+               end if;
+            end loop;
 
+            if Program.Else_Branch /= null then
+               Run (Status, Program.Else_Branch);
+            end if;
          when Loop_Block  =>
             pragma Compile_Time_Warning(True, "unimplemented");
             raise Program_Error;

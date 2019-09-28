@@ -220,6 +220,16 @@ private
          Default : Node_Vectors.Vector;
       end record;
    
+   type Conditional_Branch is 
+      record
+         Condition : Node_Access;
+         Code      : Node_Access;
+      end record;
+   
+   package Conditional_Branch_Vectors is 
+     new Ada.Containers.Vectors (Index_Type   => Positive,
+                                 Element_Type => Conditional_Branch);
+   
    type Node (Class : Non_Terminal) is
       record
          case Class is
@@ -253,8 +263,7 @@ private
                Loop_Label      : Label_Type;
             
             when If_Block =>
-               Conditions      : Node_Vectors.Vector;
-               Branches        : Node_Vectors.Vector;
+               Branches        : Conditional_Branch_Vectors.Vector;
                Else_Branch     : Node_Access;
             
             when List_Of_Names =>
