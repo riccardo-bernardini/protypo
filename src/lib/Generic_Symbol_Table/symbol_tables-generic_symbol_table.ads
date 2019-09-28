@@ -37,7 +37,7 @@ package Symbol_Tables.Generic_Symbol_Table is
        Pre => Parent /= No_Block,
        Post => Parent_Of (Table, Table.Current_Block) = Parent;
 
-   procedure Open_internal_Block (Table : in out Symbol_Table);
+   procedure Open_Internal_Block (Table : in out Symbol_Table);
    -- Syntactic sugar: Parent defaults to Table.Current_Block
 
    procedure Open_External_Block (Table : in out Symbol_Table);
@@ -73,6 +73,20 @@ package Symbol_Tables.Generic_Symbol_Table is
        Contains (Table.Current_Block, Name)
      and
        Table.Current_Block = Table.Current_Block'Old;
+
+   procedure Create (Table         : in out Symbol_Table;
+                     Name          : Symbol_Name;
+                     Initial_Value : Symbol_Value;
+                     Position      : out Cursor)
+     with
+       Pre =>
+         not Contains (Table.Current_Block, Name),
+     Post =>
+       Contains (Table.Current_Block, Name)
+     and
+       Table.Current_Block = Table.Current_Block'Old
+       and
+         Table.Find (Name) = Position;
 
    procedure Update (Pos       : Cursor;
                      New_Value : Symbol_Value)
@@ -135,7 +149,7 @@ private
    is (Block.Map.Contains (Name));
 
 
-   function Value (Pos : Cursor) return Symbol_value
+   function Value (Pos : Cursor) return Symbol_Value
    is (Symbol_Maps.Element (Pos.Internal_Cursor));
 
 end Symbol_Tables.Generic_Symbol_Table;

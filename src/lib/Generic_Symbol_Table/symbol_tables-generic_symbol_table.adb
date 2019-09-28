@@ -100,9 +100,31 @@ package body Symbol_Tables.Generic_Symbol_Table is
       Name          : Symbol_Name;
       Initial_Value : Symbol_Value)
    is
+      Ignored : Cursor;
    begin
+      Table.Create (Name          => Name,
+                    Initial_Value => Initial_Value,
+                    Position      => Ignored);
+   end Create;
+
+   ------------
+   -- Create --
+   ------------
+
+   procedure Create
+     (Table         : in out Symbol_Table;
+      Name          : Symbol_Name;
+      Initial_Value : Symbol_Value;
+      Position      : out Cursor)
+   is
+      Ignored : Boolean;
+   begin
+      Position.Block := Table.Current;
+
       Table.Current.Map.Insert (Key      => Name,
-                                New_Item => Initial_Value);
+                                New_Item => Initial_Value,
+                                Position => Position.Internal_Cursor,
+                                Inserted => Ignored);
    end Create;
 
    ------------

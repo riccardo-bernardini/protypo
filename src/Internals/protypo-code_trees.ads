@@ -310,7 +310,7 @@ private
                   null;
                   
                when For_Block =>
-                  Variable : Node_Access;
+                  Variable : Unbounded_String;
                   Iterator : Node_Access;
                   
                when While_Block =>

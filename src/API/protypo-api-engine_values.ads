@@ -154,13 +154,15 @@ package Protypo.API.Engine_Values is
 
 
    procedure Reset (Iter : in out Iterator_Interface) is abstract;
-   procedure Next (Iter : in out Iterator_Interface) is abstract;
+   procedure Next (Iter : in out Iterator_Interface) is abstract
+     with Pre'Class => not Iter.End_Of_Iteration;
 
    function End_Of_Iteration (Iter : Iterator_Interface)
                               return Boolean is abstract;
 
    function Element (Iter : Iterator_Interface)
-                     return Engine_Value is abstract;
+                     return Engine_Value is abstract
+     with Pre'Class => not Iter.End_Of_Iteration;
 
    type Function_Interface is interface;
    type Function_Interface_Access is not null access all Function_Interface'Class;

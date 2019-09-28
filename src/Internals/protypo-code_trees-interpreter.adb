@@ -270,15 +270,50 @@ package body Protypo.Code_Trees.Interpreter is
                          Expr   : not null Node_Access)
                          return Engine_Value
    is
-
-      Result : constant Engine_Value_Vectors.Vector := Eval_Expression (Status, Expr);
+      Tmp : constant Engine_Value_Vectors.Vector := Eval_Expression (Status, Expr);
+      Result : Engine_Value;
    begin
-      if Result.Length /= 1 then
+      if Tmp.Length /= 1 then
          raise Constraint_Error;
       end if;
 
-      return Result.First_Element;
+      Result := Tmp.First_Element;
+
+      if not (Result.Class in Scalar_Classes) then
+         raise Constraint_Error;
+      end if;
+
+      return Result;
    end Eval_Scalar;
+
+   -----------------
+   -- Eval_Scalar --
+   -----------------
+
+   -------------------
+   -- Eval_Iterator --
+   -------------------
+
+   function Eval_Iterator (Status : Interpreter_Access;
+                           Expr   : not null Node_Access)
+                           return Iterator_Interface_Access
+   is
+      Tmp : constant Engine_Value_Vectors.Vector := Eval_Expression (Status, Expr);
+      Result : Engine_Value;
+   begin
+      if Tmp.Length /= 1 then
+         raise Constraint_Error;
+      end if;
+
+      Result := Tmp.First_Element;
+
+      if Result.Class /= Iterator then
+         raise Constraint_Error;
+      end if;
+
+      return Get_Iterator (Result);
+   end Eval_Iterator;
+
 
    function Eval_Expression (Status : Interpreter_Access;
                              Expr   : not null Node_Access)
@@ -314,6 +349,10 @@ package body Protypo.Code_Trees.Interpreter is
                return Embed (not X);
          end case;
       end Apply;
+
+      -----------
+      -- Apply --
+      -----------
 
       function Apply (Op    : Tokens.Binary_Operator;
                       Left  : Engine_Value;
@@ -523,14 +562,44 @@ package body Protypo.Code_Trees.Interpreter is
             if Program.Else_Branch /= null then
                Run (Status, Program.Else_Branch);
             end if;
+
          when Loop_Block  =>
             loop
                exit when Run_Loop_Body (Status, Program) = Stop;
             end loop;
 
          when For_Block   =>
-            pragma Compile_Time_Warning (True, "unimplemented");
-            raise Program_Error;
+            declare
+               use Api.Symbols;
+
+               Iterator_Ref : constant Iterator_Interface_Access :=
+                                Eval_Iterator (Status, Program.Iterator);
+
+               Variable : constant String := To_String (Program.Variable);
+
+               Position : Protypo_Tables.Cursor;
+            begin
+               Iterator_Ref.Reset;
+
+               Status.Symbol_Table.Open_Internal_Block;
+
+               Status.Symbol_Table.Create
+                 (Name          => Variable,
+                  Initial_Value => Void_Value);
+
+               loop
+                  exit when Iterator_Ref.End_Of_Iteration;
+
+                  Protypo_Tables.Update (Pos       => Position,
+                                         New_Value => Iterator_Ref.Element);
+
+                  exit when Run_Loop_Body (Status, Program) = Stop;
+
+                  Iterator_Ref.Next;
+               end loop;
+
+               Status.Symbol_Table.Close_Block;
+            end;
 
          when While_Block =>
             loop
