@@ -533,9 +533,54 @@ package body Protypo.Code_Trees.Interpreter is
                                                      Status        => Status)));
 
          when Assignment  =>
-            pragma Compile_Time_Warning (True, "unimplemented");
-            raise Program_Error;
+            declare
+               Names : array (Program.Lhs.First_Index .. Program.Lhs.Last_Index) of Name_Reference;
 
+               Values : constant Engine_Value_Vectors.Vector := Eval_Vector (Status, Program.Rvalues);
+            begin
+               if Program.Lhs.Length /= Values.Length then
+                  raise Constraint_Error;
+               end if;
+
+               for K in Names'Range loop
+                  --
+                  -- We first evaluate all the names and only after we do all
+                  -- the assignment because we could have something like
+                  --
+                  --  n := 3;
+                  --  n, x(n) := 4, 7;
+                  --
+                  -- In this case, with the separation of name evaluation and
+                  -- assignment, 7 is assigned to x(3), while if we did not
+                  -- do this, 7 would be assigned to x(4).
+                  --
+                  -- To be honest, there is not anything deeply wrong with
+                  -- second option (that assigns to x(4)), as long as
+                  -- we know it.  However, I think that the first one is
+                  -- more intuitive: first all the left hand names are
+                  -- evaluated, then the RHS expressions are computed
+                  -- (with the variable values still unchanged) and finally
+                  -- the assigment is done-
+                  --
+                  Names (K) := Eval_Name (Status, Program.Lhs (K));
+
+                  if Names (K).Class /= Variable_Reference then
+                     --
+                     -- Only reference handlers (that allow for both reading
+                     -- and writing) can be on the LHS
+                     --
+                     raise Constraint_Error;
+                  end if;
+               end loop;
+
+               declare
+                  Shift : constant Integer := Values.First_Index - Names'First;
+               begin
+                  for K in Names'Range loop
+                     Names (K).Variable_Handler.Write (Values (K + Shift));
+                  end loop;
+               end;
+            end;
          when Return_Statement =>
             Status.Break :=
                   Break_Status'(Breaking_Reason => Return_Statement,

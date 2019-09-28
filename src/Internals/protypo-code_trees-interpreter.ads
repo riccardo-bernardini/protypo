@@ -92,7 +92,7 @@ private
    subtype Function_Classes is
          Value_Name_Class range Function_Reference .. Function_Call;
 
-   type Name_Reference (Class : Value_Name_Class) is
+   type Name_Reference (Class : Value_Name_Class := Constant_Reference) is
       record
          case Class is
          when Array_Reference =>
