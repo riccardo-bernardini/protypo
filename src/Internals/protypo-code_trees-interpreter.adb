@@ -477,6 +477,10 @@ package body Protypo.Code_Trees.Interpreter is
    -- Run --
    ---------
 
+   ---------
+   -- Run --
+   ---------
+
    procedure Run (Status  : Interpreter_Access;
                   Program : not null Node_Access)
    is
@@ -588,8 +592,38 @@ package body Protypo.Code_Trees.Interpreter is
             return;
 
          when Procedure_Call =>
-            pragma Compile_Time_Warning (True, "unimplemented");
-            raise Program_Error;
+            declare
+               use Api.Symbols.Protypo_Tables;
+
+               Position : constant Cursor :=
+                            Status.Symbol_Table.Find (To_String (Program.Name));
+
+               Proc_Handler : Engine_Value;
+               Result : Engine_Value;
+            begin
+               if Position = No_Element then
+                  raise Constraint_Error;
+               end if;
+
+               Proc_Handler :=  Value (Position);
+               if Proc_Handler.Class /= Function_Handler then
+                  raise Constraint_Error;
+               end if;
+
+               declare
+                  Call_Ref : constant Name_Reference :=
+                               (Name_Reference'(Class            => Function_Call,
+                                                Function_Handler => Get_Function (Proc_Handler),
+                                                Parameters       => Program.Parameters));
+
+                  Result   : Constant Engine_Value_Array := Call_Function (Call_Ref);
+               begin
+                  if Result'Length /= 0 then
+                     raise Constraint_Error;
+                  end if;
+               end;
+
+            end;
 
          when Exit_Statement =>
             Status.Break :=

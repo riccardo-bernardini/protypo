@@ -101,10 +101,10 @@ package Protypo.Code_Trees is
      with
        Post => Class (Statement_Sequence'Result) = Statement_Sequence;
 
---     function Naked_Expression (Statements : Tree_Array)
---                                return Parsed_Code
---       with
---         Post => Class (Naked_Expression'Result) = Naked;
+   --     function Naked_Expression (Statements : Tree_Array)
+   --                                return Parsed_Code
+   --       with
+   --         Post => Class (Naked_Expression'Result) = Naked;
 
    function Binary_Operation (Left      : Parsed_Code;
                               Right     : Parsed_Code;
@@ -245,8 +245,8 @@ private
             when Statement_Sequence =>
                Statements      : Node_Vectors.Vector;
             
---              when Naked =>
---                 Naked_Values    : Node_Vectors.Vector;
+               --              when Naked =>
+               --                 Naked_Values    : Node_Vectors.Vector;
             
             when Assignment =>
                Lhs             : Node_Vectors.Vector;
@@ -257,7 +257,7 @@ private
             
             when Procedure_Call =>
                Name            : Unbounded_String;
-               Params    : Node_Vectors.Vector;
+               Params          : Node_Vectors.Vector;
             
             when Exit_Statement =>
                Loop_Label      : Label_Type;
