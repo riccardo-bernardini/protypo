@@ -14,8 +14,8 @@ private
    type Symbol_Table_Access is not null access Api.Symbols.Table;
 
    package Engine_Value_Vectors is
-     new Ada.Containers.Vectors (Index_Type   => Positive,
-                                 Element_Type => Engine_Value);
+         new Ada.Containers.Vectors (Index_Type   => Positive,
+                                     Element_Type => Engine_Value);
 
 
    function To_Vector (X : Engine_Value_Array)
@@ -24,13 +24,13 @@ private
    function To_Array (X : Engine_Value_Vectors.Vector)
                       return Engine_Value_Array;
 
-   type Termination_Reason is
-     (
-      End_Of_Code,
-      Return_Statement,
-      Exit_Statement,
-      Expression
-     );
+--     type Termination_Reason is
+--           (
+--            End_Of_Code,
+--            Return_Statement,
+--            Exit_Statement,
+--            Expression
+--           );
 
    type Break_Type is (Exit_Statement, Return_Statement, None);
 
@@ -61,18 +61,18 @@ private
 
    procedure Run (Status  : Interpreter_Access;
                   Program : not null Node_Access)
-     with
-       Pre => Program.Class in Statement_Classes;
+         with
+               Pre => Program.Class in Statement_Classes;
 
    procedure Run (Status  : Interpreter_Access;
                   Program : Node_Vectors.Vector);
 
-   function Eval (Status : Interpreter_Access;
-                  Expr   : not null Node_Access)
-                  return Engine_Value_Vectors.Vector
-     with
-       Pre => Expr.Class in Code_Trees.Expression,
-       Post => not Eval'Result.Is_Empty;
+   function Eval_Expression (Status : Interpreter_Access;
+                             Expr   : not null Node_Access)
+                             return Engine_Value_Vectors.Vector
+         with
+               Pre => Expr.Class in Code_Trees.Expression,
+               Post => not Eval_Expression'Result.Is_Empty;
 
    function Eval_Vector (Status : Interpreter_Access;
                          Expr   : Node_Vectors.Vector)
@@ -80,17 +80,17 @@ private
 
 
    type Value_Name_Class is
-     (
-      Array_Reference,
-      Record_Reference,
-      Variable_Reference,
-      Constant_Reference,
-      Function_Reference,
-      Function_Call
-     );
+         (
+          Array_Reference,
+          Record_Reference,
+          Variable_Reference,
+          Constant_Reference,
+          Function_Reference,
+          Function_Call
+         );
 
    subtype Function_Classes is
-     Value_Name_Class range Function_Reference .. Function_Call;
+         Value_Name_Class range Function_Reference .. Function_Call;
 
    type Name_Reference (Class : Value_Name_Class) is
       record
@@ -113,28 +113,28 @@ private
 
          end case;
       end record
-     with
-       Dynamic_Predicate =>
-         (if Name_Reference.Class = Function_Reference then Name_Reference.Parameters.Is_Empty);
+         with
+               Dynamic_Predicate =>
+                     (if Name_Reference.Class = Function_Reference then Name_Reference.Parameters.Is_Empty);
 
 
    subtype Evaluable_Classes is Value_Name_Class
-     with
-       Static_Predicate => Evaluable_Classes in Function_Call | Constant_Reference | Variable_Reference;
+         with
+               Static_Predicate => Evaluable_Classes in Function_Call | Constant_Reference | Variable_Reference;
 
    subtype Function_Call_Reference is Name_Reference (Function_Call);
 
-   function Eval_Name (Expr   : not null Node_Access;
-                       Status : Interpreter_Access)
+   function Eval_Name (Status : Interpreter_Access;
+                       Expr   : not null Node_Access)
                        return Name_Reference
-     with
-       Pre => Expr.Class in Name;
+         with
+               Pre => Expr.Class in Name;
 
 
    function Call_Function (Reference : Function_Call_Reference)
                            return Engine_Value_Array;
 
    function To_Value (Ref : Name_Reference) return Engine_Value_Array
-     with Pre => Ref.Class in Evaluable_Classes;
+         with Pre => Ref.Class in Evaluable_Classes;
 
 end Protypo.Code_Trees.Interpreter;

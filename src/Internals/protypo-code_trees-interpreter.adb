@@ -37,21 +37,21 @@ package body Protypo.Code_Trees.Interpreter is
       return Result;
    end To_Array;
 
-   function "+" (X : Engine_Value_Vectors.Vector)
-                 return Engine_Value
-     with
-       Pre => X.Length = 1;
+   --     function "+" (X : Engine_Value_Vectors.Vector)
+   --                   return Engine_Value
+   --           with
+   --                 Pre => X.Length = 1;
 
-   function "+" (X : Engine_Value_Vectors.Vector)  return Engine_Value
-   is (X.First_Element);
+   --     function "+" (X : Engine_Value_Vectors.Vector)  return Engine_Value
+   --     is (X.First_Element);
 
-   function "+" (X : Engine_Value)  return Engine_Value_Vectors.Vector
-   is
-      Result : Engine_Value_Vectors.Vector;
-   begin
-      Result.Append (X);
-      return Result;
-   end "+";
+   --     function "+" (X : Engine_Value)  return Engine_Value_Vectors.Vector
+   --     is
+   --        Result : Engine_Value_Vectors.Vector;
+   --     begin
+   --        Result.Append (X);
+   --        return Result;
+   --     end "+";
 
    --     function "+" (X : Engine_Value)  return Engine_Value_Array
    --     is (To_Array (+X));
@@ -131,8 +131,8 @@ package body Protypo.Code_Trees.Interpreter is
    -- Eval_Name --
    ---------------
 
-   function Eval_Name (Expr   : not null Node_Access;
-                       Status : Interpreter_Access)
+   function Eval_Name (Status : Interpreter_Access;
+                       Expr   : not null Node_Access)
                        return Name_Reference
    is
 
@@ -141,8 +141,8 @@ package body Protypo.Code_Trees.Interpreter is
       ---------
 
       function "+" (X : Engine_Value) return Name_Reference
-        with
-          Pre => X.Class in Handler_Classes;
+            with
+                  Pre => X.Class in Handler_Classes;
 
       function "+" (X : Engine_Value) return Name_Reference
       is
@@ -154,24 +154,24 @@ package body Protypo.Code_Trees.Interpreter is
          case Handler_Classes (X.Class) is
             when Array_Handler =>
                return Name_Reference'(Class            => Array_Reference,
-                                  Array_Handler    => Get_Array (X));
+                                      Array_Handler    => Get_Array (X));
 
             when Record_Handler =>
                return Name_Reference'(Class             => Record_Reference,
-                                  Record_Handler    => Get_Record (X));
+                                      Record_Handler    => Get_Record (X));
 
             when Function_Handler =>
                return Name_Reference'(Class            => Function_Call,
-                                  Function_Handler => Get_Function (X),
-                                  Parameters       => <>);
+                                      Function_Handler => Get_Function (X),
+                                      Parameters       => <>);
 
             when Reference_Handler =>
                return Name_Reference'(Class            => Variable_Reference,
-                                  Variable_Handler => Get_Reference (X));
+                                      Variable_Handler => Get_Reference (X));
 
             when Constant_Handler =>
                return Name_Reference'(Class             => Constant_Reference,
-                                  Costant_Handler   => Get_Constant (X));
+                                      Costant_Handler   => Get_Constant (X));
          end case;
       end "+";
 
@@ -184,7 +184,7 @@ package body Protypo.Code_Trees.Interpreter is
       case Name (Expr.Class) is
          when Selected    =>
             declare
-               Head : constant Name_Reference := Eval_Name (Expr.Record_Var, Status);
+               Head : constant Name_Reference := Eval_Name (Status, Expr.Record_Var);
             begin
                if Head.Class /= Record_Reference then
                   raise Constraint_Error;
@@ -195,9 +195,9 @@ package body Protypo.Code_Trees.Interpreter is
          when Indexed     =>
             declare
                subtype Indexed_References is Value_Name_Class
-                 with Static_Predicate => Indexed_References in Array_Reference | Function_Reference;
+                     with Static_Predicate => Indexed_References in Array_Reference | Function_Reference;
 
-               Head    : constant Name_Reference := Eval_Name (Expr.Indexed_Var, Status);
+               Head    : constant Name_Reference := Eval_Name (Status, Expr.Indexed_Var);
                Indexes : constant Engine_Value_Vectors.Vector := Eval_Vector (Status, Expr.Indexes);
             begin
                if not (Head.Class in Indexed_References) then
@@ -212,8 +212,8 @@ package body Protypo.Code_Trees.Interpreter is
                   when Function_Reference =>
 
                      return Name_Reference'(Class            => Function_Call,
-                                        Function_Handler => Head.Function_Handler,
-                                        Parameters       => Indexes);
+                                            Function_Handler => Head.Function_Handler,
+                                            Parameters       => Indexes);
                end case;
             end;
 
@@ -222,9 +222,9 @@ package body Protypo.Code_Trees.Interpreter is
                use Api.Symbols.Protypo_Tables;
                use Protypo.Code_Trees.Interpreter.Symbol_Table_References;
 
-               ID : constant String := To_String (Expr.ID_Value);
+               ID       : constant String := To_String (Expr.ID_Value);
                Position : constant Cursor := Status.Symbol_Table.Find (ID);
-               Val : Engine_Value;
+               Val      : Engine_Value;
             begin
                if Position = No_Element then
                   raise Constraint_Error;
@@ -237,8 +237,8 @@ package body Protypo.Code_Trees.Interpreter is
 
                else
                   return Name_Reference'
-                    (Class            => Variable_Reference,
-                     Variable_Handler => Symbol_Table_Reference (Position));
+                        (Class            => Variable_Reference,
+                         Variable_Handler => Symbol_Table_Reference (Position));
 
                end if;
             end;
@@ -256,16 +256,42 @@ package body Protypo.Code_Trees.Interpreter is
       Result : Engine_Value_Vectors.Vector;
    begin
       for Ex of Expr loop
-         Result.Append (Eval (Status, Ex));
+         Result.Append (Eval_Expression (Status, Ex));
       end loop;
 
       return Result;
    end Eval_Vector;
 
-   function Eval (Status : Interpreter_Access;
-                  Expr   : not null Node_Access)
-                  return Engine_Value_Vectors.Vector
+   -----------------
+   -- Eval_Scalar --
+   -----------------
+
+   function Eval_Scalar (Status : Interpreter_Access;
+                         Expr   : not null Node_Access)
+                         return Engine_Value
    is
+
+      Result : constant Engine_Value_Vectors.Vector := Eval_Expression (Status, Expr);
+   begin
+      if Result.Length /= 1 then
+         raise Constraint_Error;
+      end if;
+
+      return Result.First_Element;
+   end Eval_Scalar;
+
+   function Eval_Expression (Status : Interpreter_Access;
+                             Expr   : not null Node_Access)
+                             return Engine_Value_Vectors.Vector
+   is
+
+      function Embed (X : Engine_Value) return Engine_Value_Vectors.Vector
+      is
+         Result : Engine_Value_Vectors.Vector;
+      begin
+         Result.Append (X);
+         return Result;
+      end Embed;
 
       -----------
       -- Apply --
@@ -273,68 +299,69 @@ package body Protypo.Code_Trees.Interpreter is
 
       function Apply (Op : Tokens.Unary_Operator;
                       X  : Engine_Value)
-                      return Engine_Value
+                      return Engine_Value_Vectors.Vector
       is
          use Tokens;
       begin
          case Op is
             when Plus        =>
-               return X;
+               return Embed (X);
 
             when Minus       =>
-               return -X;
+               return Embed (-X);
 
             when Kw_Not      =>
-               return not X;
+               return Embed (not X);
          end case;
       end Apply;
 
       function Apply (Op    : Tokens.Binary_Operator;
                       Left  : Engine_Value;
                       Right : Engine_Value)
-                      return Engine_Value
+                      return Engine_Value_Vectors.Vector
       is
          use Tokens;
+
       begin
          case Op is
             when Plus        =>
-               return Left + Right;
+               return Embed (Left + Right);
 
             when Minus       =>
-               return Left - Right;
+               return Embed (Left - Right);
 
             when Mult        =>
-               return Left * Right;
+               return Embed (Left * Right);
 
             when Div         =>
-               return Left / Right;
+               return Embed (Left / Right);
 
             when Equal       =>
-               return Left = Right;
+               return Embed (Left = Right);
 
             when Different   =>
-               return Left /= Right;
+               return Embed (Left /= Right);
 
             when Less_Than   =>
-               return Left < Right;
+               return Embed (Left < Right);
 
             when Greater_Than =>
-               return Left > Right;
+               return Embed (Left > Right);
 
             when Less_Or_Equal =>
-               return Left <= Right;
+               return Embed (Left <= Right);
 
             when Greater_Or_Equal =>
-               return Left >= Right;
+               return Embed (Left >= Right);
 
             when Kw_And      =>
-               return Left and Right;
+               return Embed (Left and Right);
 
             when Kw_Or       =>
-               return Left or Right;
+               return Embed (Left or Right);
 
             when Kw_Xor      =>
-               return Left xor Right;
+               return Embed (Left xor Right);
          end case;
       end Apply;
 
@@ -346,37 +373,38 @@ package body Protypo.Code_Trees.Interpreter is
 
       case Code_Trees.Expression (Expr.Class) is
          when Binary_Op   =>
-            Left := + Eval (Status, Expr.Left);
-            Right := + Eval (Status, Expr.Right);
+            Left := Eval_Scalar (Status, Expr.Left);
+            Right := Eval_Scalar (Status, Expr.Right);
 
-            return + Apply (Expr.Operator, Left, Right);
+            return  Apply (Expr.Operator, Left, Right);
 
          when Unary_Op    =>
-            Right := + Eval (Status, Expr.Operand);
+            Right := Eval_Scalar (Status, Expr.Operand);
 
-            return + Apply (Expr.Uni_Op, Right);
+            return  Apply (Expr.Uni_Op, Right);
 
          when Int_Constant =>
-            return + Create (Expr.N);
+            return Embed (Create (Expr.N));
 
          when Real_Constant =>
-            return + Create (Expr.X);
+            return Embed (Create (Expr.X));
 
          when Text_Constant =>
-            return + Create (To_String (Expr.S));
+            return Embed (Create (To_String (Expr.S)));
 
-         when Selected    =>
-            raise Program_Error;
+         when Selected | Indexed | Identifier  =>
+            declare
+               Ref : constant Name_Reference := Eval_Name (Status, Expr);
+            begin
+               if not (Ref.Class in Evaluable_Classes) then
+                  raise Constraint_Error;
+               end if;
 
-         when Indexed     =>
-            raise Program_Error;
-
-         when Identifier  =>
-            raise Program_Error;
+               return To_Vector (To_Value (Ref));
+            end;
 
       end case;
-   end Eval;
-
+   end Eval_Expression;
 
 
    ---------
@@ -399,9 +427,9 @@ package body Protypo.Code_Trees.Interpreter is
 
    function Is_True (X : Engine_Value) return Boolean
    is (if X.Class in Numeric_Classes then
-         (case Numeric_Classes (X.Class) is
-             when Int => Get_Integer (X) /= 0,
-             when Real => Get_Float (X) /= 0.0)
+             (case Numeric_Classes (X.Class) is
+                 when Int  => Get_Integer (X) /= 0,
+                 when Real => Get_Float (X) /= 0.0)
        else
           raise Constraint_Error);
 
@@ -414,6 +442,38 @@ package body Protypo.Code_Trees.Interpreter is
                   Program : not null Node_Access)
    is
       use Compiled_Functions;
+
+      type Continue_Or_Stop is (Continue, Stop);
+
+      function Run_Loop_Body  (Status  : Interpreter_Access;
+                               Program : not null Node_Access)
+                               return Continue_Or_Stop
+            with Pre => Program.Class in Loop_Block .. While_Block;
+
+      function Run_Loop_Body  (Status  : Interpreter_Access;
+                               Program : not null Node_Access)
+                               return Continue_Or_Stop
+      is
+      begin
+         Run (Status, Program.Loop_Body);
+
+         case Status.Break.Breaking_Reason is
+            when None =>
+               return Continue;
+
+            when Return_Statement =>
+               return Stop;
+
+            when Exit_Statement =>
+               if Status.Break.Loop_Label = Program.Labl
+                     or Status.Break.Loop_Label = Null_Unbounded_String
+               then
+                  Status.Break := No_Break;
+               end if;
+
+               return Stop;
+         end case;
+      end Run_Loop_Body;
    begin
       if Program.Class not in Statement_Classes then
          raise Program_Error;
@@ -426,21 +486,21 @@ package body Protypo.Code_Trees.Interpreter is
 
          when Defun       =>
             Status.Symbol_Table.Create
-              (Name          =>
-                  To_String (Program.Definition_Name),
-               Initial_Value =>
-                  Create (new Compiled_Function'(Function_Body => Program.Function_Body,
-                                                 Parameters    => Program.Parameters,
-                                                 Status        => Status)));
+                  (Name          =>
+                      To_String (Program.Definition_Name),
+                   Initial_Value =>
+                      Create (new Compiled_Function'(Function_Body => Program.Function_Body,
+                                                     Parameters    => Program.Parameters,
+                                                     Status        => Status)));
 
          when Assignment  =>
-            pragma Compile_Time_Warning(True, "unimplemented");
+            pragma Compile_Time_Warning (True, "unimplemented");
             raise Program_Error;
 
          when Return_Statement =>
             Status.Break :=
-              Break_Status'(Breaking_Reason => Return_Statement,
-                            Result          => Eval_Vector (Status, Program.Return_Values));
+                  Break_Status'(Breaking_Reason => Return_Statement,
+                                Result          => Eval_Vector (Status, Program.Return_Values));
             return;
 
          when Procedure_Call =>
@@ -449,13 +509,13 @@ package body Protypo.Code_Trees.Interpreter is
 
          when Exit_Statement =>
             Status.Break :=
-              Break_Status'(Breaking_Reason => Exit_Statement,
-                            Loop_Label      => Program.Loop_Label);
+                  Break_Status'(Breaking_Reason => Exit_Statement,
+                                Loop_Label      => Program.Loop_Label);
             return;
 
          when If_Block    =>
             for Branch of Program.Branches loop
-               if Is_True (Eval (Status, Branch.Condition)) then
+               if Is_True (Eval_Scalar (Status, Branch.Condition)) then
                   Run (Status, Branch.Code);
                end if;
             end loop;
@@ -464,16 +524,19 @@ package body Protypo.Code_Trees.Interpreter is
                Run (Status, Program.Else_Branch);
             end if;
          when Loop_Block  =>
-            pragma Compile_Time_Warning(True, "unimplemented");
-            raise Program_Error;
+            loop
+               exit when Run_Loop_Body (Status, Program) = Stop;
+            end loop;
 
          when For_Block   =>
-            pragma Compile_Time_Warning(True, "unimplemented");
+            pragma Compile_Time_Warning (True, "unimplemented");
             raise Program_Error;
 
          when While_Block =>
-            pragma Compile_Time_Warning(True, "unimplemented");
-            raise Program_Error;
+            loop
+               exit when not Is_True (Eval_Scalar (Status, Program.Condition));
+               exit when Run_Loop_Body (Status, Program) = Stop;
+            end loop;
 
 
       end case;
@@ -485,9 +548,9 @@ package body Protypo.Code_Trees.Interpreter is
    ---------
 
    procedure Run
-     (Program      : Parsed_Code;
-      Symbol_Table : Api.Symbols.Table;
-      Consumer     : Api.Consumers.Consumer_Access)
+         (Program      : Parsed_Code;
+          Symbol_Table : Api.Symbols.Table;
+          Consumer     : Api.Consumers.Consumer_Access)
    is
       use Api.Symbols;
 
