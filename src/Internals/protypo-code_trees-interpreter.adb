@@ -141,8 +141,8 @@ package body Protypo.Code_Trees.Interpreter is
       ---------
 
       function "+" (X : Engine_Value) return Name_Reference
-            with
-                  Pre => X.Class in Handler_Classes;
+        with
+          Pre => X.Class in Handler_Classes;
 
       function "+" (X : Engine_Value) return Name_Reference
       is
@@ -195,7 +195,7 @@ package body Protypo.Code_Trees.Interpreter is
          when Indexed     =>
             declare
                subtype Indexed_References is Value_Name_Class
-                     with Static_Predicate => Indexed_References in Array_Reference | Function_Reference;
+                 with Static_Predicate => Indexed_References in Array_Reference | Function_Reference;
 
                Head    : constant Name_Reference := Eval_Name (Status, Expr.Indexed_Var);
                Indexes : constant Engine_Value_Vectors.Vector := Eval_Vector (Status, Expr.Indexes);
@@ -237,8 +237,8 @@ package body Protypo.Code_Trees.Interpreter is
 
                else
                   return Name_Reference'
-                        (Class            => Variable_Reference,
-                         Variable_Handler => Symbol_Table_Reference (Position));
+                    (Class            => Variable_Reference,
+                     Variable_Handler => Symbol_Table_Reference (Position));
 
                end if;
             end;
@@ -270,7 +270,7 @@ package body Protypo.Code_Trees.Interpreter is
                          Expr   : not null Node_Access)
                          return Engine_Value
    is
-      Tmp : constant Engine_Value_Vectors.Vector := Eval_Expression (Status, Expr);
+      Tmp    : constant Engine_Value_Vectors.Vector := Eval_Expression (Status, Expr);
       Result : Engine_Value;
    begin
       if Tmp.Length /= 1 then
@@ -298,7 +298,7 @@ package body Protypo.Code_Trees.Interpreter is
                            Expr   : not null Node_Access)
                            return Iterator_Interface_Access
    is
-      Tmp : constant Engine_Value_Vectors.Vector := Eval_Expression (Status, Expr);
+      Tmp    : constant Engine_Value_Vectors.Vector := Eval_Expression (Status, Expr);
       Result : Engine_Value;
    begin
       if Tmp.Length /= 1 then
@@ -466,9 +466,9 @@ package body Protypo.Code_Trees.Interpreter is
 
    function Is_True (X : Engine_Value) return Boolean
    is (if X.Class in Numeric_Classes then
-             (case Numeric_Classes (X.Class) is
-                 when Int  => Get_Integer (X) /= 0,
-                 when Real => Get_Float (X) /= 0.0)
+         (case Numeric_Classes (X.Class) is
+             when Int  => Get_Integer (X) /= 0,
+             when Real => Get_Float (X) /= 0.0)
        else
           raise Constraint_Error);
 
@@ -491,7 +491,7 @@ package body Protypo.Code_Trees.Interpreter is
       function Run_Loop_Body  (Status  : Interpreter_Access;
                                Program : not null Node_Access)
                                return Continue_Or_Stop
-            with Pre => Program.Class in Loop_Block .. While_Block;
+        with Pre => Program.Class in Loop_Block .. While_Block;
 
       function Run_Loop_Body  (Status  : Interpreter_Access;
                                Program : not null Node_Access)
@@ -509,7 +509,7 @@ package body Protypo.Code_Trees.Interpreter is
 
             when Exit_Statement =>
                if Status.Break.Loop_Label = Program.Labl
-                     or Status.Break.Loop_Label = Null_Unbounded_String
+                 or Status.Break.Loop_Label = Null_Unbounded_String
                then
                   Status.Break := No_Break;
                end if;
@@ -529,12 +529,12 @@ package body Protypo.Code_Trees.Interpreter is
 
          when Defun       =>
             Status.Symbol_Table.Create
-                  (Name          =>
-                      To_String (Program.Definition_Name),
-                   Initial_Value =>
-                      Create (new Compiled_Function'(Function_Body => Program.Function_Body,
-                                                     Parameters    => Program.Parameters,
-                                                     Status        => Status)));
+              (Name          =>
+                  To_String (Program.Definition_Name),
+               Initial_Value =>
+                  Create (new Compiled_Function'(Function_Body => Program.Function_Body,
+                                                 Parameters    => Program.Parameters,
+                                                 Status        => Status)));
 
          when Assignment  =>
             declare
@@ -587,8 +587,8 @@ package body Protypo.Code_Trees.Interpreter is
             end;
          when Return_Statement =>
             Status.Break :=
-                  Break_Status'(Breaking_Reason => Return_Statement,
-                                Result          => Eval_Vector (Status, Program.Return_Values));
+              Break_Status'(Breaking_Reason => Return_Statement,
+                            Result          => Eval_Vector (Status, Program.Return_Values));
             return;
 
          when Procedure_Call =>
@@ -599,7 +599,7 @@ package body Protypo.Code_Trees.Interpreter is
                             Status.Symbol_Table.Find (To_String (Program.Name));
 
                Proc_Handler : Engine_Value;
-               Result : Engine_Value;
+
             begin
                if Position = No_Element then
                   raise Constraint_Error;
@@ -611,12 +611,19 @@ package body Protypo.Code_Trees.Interpreter is
                end if;
 
                declare
-                  Call_Ref : constant Name_Reference :=
-                               (Name_Reference'(Class            => Function_Call,
-                                                Function_Handler => Get_Function (Proc_Handler),
-                                                Parameters       => Program.Parameters));
+                  Funct : constant Function_Interface_Access :=
+                            Get_Function (Proc_Handler);
 
-                  Result   : Constant Engine_Value_Array := Call_Function (Call_Ref);
+                  Params : constant Engine_Value_Vectors.Vector :=
+                             Eval_Vector (Status, Program.Params);
+
+                  Call_Ref : constant Name_Reference :=
+                               (Class            => Function_Call,
+                                Function_Handler => Funct,
+                                Parameters       => Params);
+
+                  Result   : constant Engine_Value_Array :=
+                               Call_Function (Call_Ref);
                begin
                   if Result'Length /= 0 then
                      raise Constraint_Error;
@@ -627,8 +634,8 @@ package body Protypo.Code_Trees.Interpreter is
 
          when Exit_Statement =>
             Status.Break :=
-                  Break_Status'(Breaking_Reason => Exit_Statement,
-                                Loop_Label      => Program.Loop_Label);
+              Break_Status'(Breaking_Reason => Exit_Statement,
+                            Loop_Label      => Program.Loop_Label);
             return;
 
          when If_Block    =>
@@ -696,9 +703,9 @@ package body Protypo.Code_Trees.Interpreter is
    ---------
 
    procedure Run
-         (Program      : Parsed_Code;
-          Symbol_Table : Api.Symbols.Table;
-          Consumer     : Api.Consumers.Consumer_Access)
+     (Program      : Parsed_Code;
+      Symbol_Table : Api.Symbols.Table;
+      Consumer     : Api.Consumers.Consumer_Access)
    is
       use Api.Symbols;
 
