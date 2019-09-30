@@ -35,7 +35,7 @@ package body Protypo.API.interpreter is
    procedure Run
      (Program      : Compiled_Code;
       Symbol_Table : Symbols.Table;
-      Consumer     : in out Consumers.Consumer_Interface'Class)
+      Consumer     : Consumers.Consumer_Access)
    is
    begin
       Code_Trees.Interpreter.Run (Program      => Program.Code,
@@ -50,7 +50,7 @@ package body Protypo.API.interpreter is
    procedure Run
      (Program      : String;
       Symbol_Table : Symbols.Table;
-      Consumer     : in out Consumers.Consumer_Interface'Class)
+      Consumer     : Consumers.Consumer_Access)
    is
    begin
       Run (Program      => Compile(Program),
@@ -69,7 +69,7 @@ package body Protypo.API.interpreter is
    is
       use Consumers.File_Writer;
 
-      Cons : Writer := Open (Target_Filenane);
+      Cons : constant Consumers.Consumer_Access := Open (Target_Filenane);
    begin
       Run (Program      => Template,
            Symbol_Table => Symbol_Table,

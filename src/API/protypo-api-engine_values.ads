@@ -316,6 +316,10 @@ private
    is (Engine_Value'(Class            => Reference_Handler,
                      Reference_Object => Val));
 
+   function Create (Val : Constant_Interface_Access) return Engine_Value
+   is (Engine_Value'(Class            => Constant_Handler,
+                     Constant_Object  => Val));
+
    function Get_Integer (Val : Integer_Value) return Integer
    is (Val.Int_Val);
 
@@ -339,6 +343,10 @@ private
 
    function Get_Reference (Val : Reference_Value) return Reference_Interface_Access
    is (Val.Reference_Object);
+
+   function Get_Constant (Val : Constant_Value) return Constant_Interface_Access
+   is (Val.Constant_Object);
+
 
    function "-" (Left, Right : Engine_Value) return Engine_Value
    is (Left + (-Right));

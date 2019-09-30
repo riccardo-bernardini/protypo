@@ -118,18 +118,17 @@ package body Protypo.Code_Trees is
       return Parsed_Code
    is
       Result : constant Node_Access := new Node (If_Block);
+      Shift  : constant Integer := Then_Branches'First - Conditions'First;
    begin
       if Conditions'Length /= Then_Branches'Length then
          raise Program_Error;
       end if;
 
-      for Cond of Conditions loop
-         Result.Conditions.Append (Cond.Pt);
+      for Idx in Conditions'Range loop
+         Result.Branches.Append (Conditional_Branch'(Condition => Conditions (Idx).Pt,
+                                                     Code      => Then_Branches (Idx + Shift).Pt));
       end loop;
 
-      for Branch of Then_Branches loop
-         Result.Branches.Append (Branch.Pt);
-      end loop;
 
       Result.Else_Branch := Else_Branch.Pt;
 
@@ -404,19 +403,19 @@ package body Protypo.Code_Trees is
       return (Pt => Result);
    end Basic_Loop;
 
-   --------------
-   -- Get_Name --
-   --------------
-
-   function Get_Name (X : Parsed_Code) return Node_Access
-   is
-   begin
-      if not (X.Pt.Class in Name) then
-         raise Program_Error;
-      end if;
-
-      return X.Pt;
-   end Get_Name;
+--     --------------
+--     -- Get_Name --
+--     --------------
+--
+--     function Get_Name (X : Parsed_Code) return Node_Access
+--     is
+--     begin
+--        if not (X.Pt.Class in Name) then
+--           raise Program_Error;
+--        end if;
+--
+--        return X.Pt;
+--     end Get_Name;
 
    --------------------
    -- Get_expression --
@@ -438,7 +437,7 @@ package body Protypo.Code_Trees is
    --------------
 
    function For_Loop
-     (Variable  : Parsed_Code;
+     (Variable  : String;
       Iterator  : Parsed_Code;
       Loop_Body : Parsed_Code)
       return Parsed_Code
@@ -446,7 +445,7 @@ package body Protypo.Code_Trees is
       Result : constant Node_Access := new Node'(Class      => For_Block,
                                                  Loop_Body  => <>,
                                                  Labl       => <>,
-                                                 Variable   => Get_Name (Variable),
+                                                 Variable   => To_Unbounded_String (Variable),
                                                  Iterator   => Get_Expression (Iterator));
    begin
       if Loop_Body.Pt.Class /= Loop_Block then
@@ -567,9 +566,6 @@ package body Protypo.Code_Trees is
             null;
 
          when If_Block =>
-            Delete (Item.Conditions);
-            Delete (Item.Branches);
-
             if Item.Else_Branch /= null then
                Delete (Item.Else_Branch);
             end if;
@@ -604,7 +600,6 @@ package body Protypo.Code_Trees is
 
          when For_Block =>
             Delete (Item.Loop_Body);
-            Delete (Item.Variable);
             Delete (Item.Iterator);
 
          when While_Block =>
@@ -632,6 +627,20 @@ package body Protypo.Code_Trees is
       end loop;
    end Dump;
 
+   ----------
+   -- Dump --
+   ----------
+
+   procedure Dump (Branches : Conditional_Branch_Vectors.Vector;
+                   Level    : Natural;
+                   Label    : String)
+   is
+   begin
+      for Branch of Branches loop
+         Dump (Branch.Condition, Level, Label & "(condition)");
+         Dump (Branch.Code, Level, Label & "(branch)");
+      end loop;
+   end Dump;
 
    ----------
    -- Dump --
@@ -650,7 +659,7 @@ package body Protypo.Code_Trees is
                       Level : Natural)
       is
       begin
-         Put_Line (Tabbing (Level)& To_String (Item));
+         Put_Line (Tabbing (Level) & To_String (Item));
       end Dump;
 
       procedure Dump (Item  : Parameter_Specs;
@@ -708,7 +717,6 @@ package body Protypo.Code_Trees is
             null;
 
          when If_Block =>
-            Dump (Item.Conditions, Level + 1, "conditions");
             Dump (Item.Branches, Level + 1, "branches");
 
             if Item.Else_Branch /= null then

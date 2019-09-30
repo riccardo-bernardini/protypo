@@ -517,7 +517,6 @@ package body Protypo.Parsing is
                             Label : String := "")
                             return Code_Trees.Parsed_Code
    is
-      Variable  : Code_Trees.Parsed_Code;
       Iterator  : Code_Trees.Parsed_Code;
       Loop_Body : Code_Trees.Parsed_Code;
    begin
@@ -528,17 +527,19 @@ package body Protypo.Parsing is
          raise Constraint_Error;
       end if;
 
-      Variable := Code_Trees.Identifier (Value (Input.Next));
+      declare
+         Variable : constant String := Value (Input.Next);
+      begin
+         Expect_And_Eat (Input, Kw_In);
 
-      Expect_And_Eat (Input, Kw_In);
+         Iterator := Parse_Expression (Input);
 
-      Iterator := Parse_Expression (Input);
+         Loop_Body := Parse_Loop (Input, Label);
 
-      Loop_Body := Parse_Loop (Input, Label);
-
-      return Code_Trees.For_Loop (Variable  => Variable,
-                                  Iterator  => Iterator,
-                                  Loop_Body => Loop_Body);
+         return Code_Trees.For_Loop (Variable  => Variable,
+                                     Iterator  => Iterator,
+                                     Loop_Body => Loop_Body);
+      end;
    end Parse_For_Loop;
 
 

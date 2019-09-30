@@ -173,15 +173,13 @@ package Protypo.Code_Trees is
        Post => Class (Basic_Loop'Result) = Loop_Block;
 
 
-   function For_Loop (Variable  : Parsed_Code;
+   function For_Loop (Variable  : String;
                       Iterator  : Parsed_Code;
                       Loop_Body : Parsed_Code)
                       return Parsed_Code
      with
        Post => Class (For_Loop'Result) = For_Block,
      Pre =>
-       Class (Variable) = Identifier
-     and
        Class (Loop_Body) = Loop_Block;
 
 

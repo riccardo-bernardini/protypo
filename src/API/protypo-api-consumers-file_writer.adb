@@ -5,13 +5,32 @@ package body Protypo.API.Consumers.File_Writer is
    -- Open --
    ----------
 
-   function Open (Filename : String) return Writer is
+   function Open (Filename : String) return Consumer_Access is
+      use Ada.Finalization;
+
+      type Writer_Access is access Writer;
+
+      Target : constant Target_Type := (if Filename = Standard_Output then
+                                           Stdout
+
+                                        elsif Filename = Standard_Error then
+                                           Stderr
+
+                                        else
+                                           File);
+
+      Result : constant Writer_Access := new Writer'(Limited_Controlled with
+                                                     Target        => Target,
+                                                     Open          => True,
+                                                     Output        => <>);
    begin
-      return Result : Writer do
-         Ada.Text_IO.Create (File => Result.output,
+      if Result.Target = File then
+         Ada.Text_IO.Create (File => Result.Output,
                              Mode => Ada.Text_IO.Out_File,
                              Name => Filename);
-      end return;
+      end if;
+
+      return Result;
    end Open;
 
    -------------
@@ -26,6 +45,20 @@ package body Protypo.API.Consumers.File_Writer is
       Ada.Text_IO.Put (Consumer.Output, Parameter);
    end Process;
 
+   -----------
+   -- Close --
+   -----------
+
+   procedure Close (Consumer : in out Writer)
+   is
+   begin
+      if Consumer.Open and Consumer.Target = File then
+         Ada.Text_IO.Close (Consumer.Output);
+         Consumer.Open := False;
+      end if;
+   end Close;
+
+
    --------------
    -- Finalize --
    --------------
@@ -33,7 +66,7 @@ package body Protypo.API.Consumers.File_Writer is
    overriding procedure Finalize (Obj : in out Writer)
    is
    begin
-      Ada.Text_IO.Close (Obj.Output);
+      Close (Obj);
    end Finalize;
 
 end Protypo.API.Consumers.File_Writer;
