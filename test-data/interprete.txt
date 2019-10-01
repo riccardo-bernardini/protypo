@@ -1,0 +1,30 @@
+Una riga
+#{
+
+function zorro(x; y:=2)
+begin
+  return x+2;
+end zorro;
+
+old := 1;
+x := 1;
+loop
+
+[ #42*x# gigi ]
+
+y := zorro(x);
+v := zorro(x,0);
+
+[ #y# ma anche #v#]
+
+  tmp := x;
+  x := x + old;
+  old := tmp;
+
+  if x > 10 then
+    exit;
+  end if;
+end loop;
+}#
+
+un'altra riga #x

@@ -4,25 +4,7 @@ with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Code_Trees is
 
-   --     ------------------
-   --     -- To_ID_Vector --
-   --     ------------------
-   --
-   --     function To_ID_Vector (X : Tree_Array)
-   --                            return Node_Vectors.Vector
-   --     is
-   --        Result : Node_Vectors.Vector;
-   --     begin
-   --        for Item of X loop
-   --           if not (Item.Pt.Class in Identifier) then
-   --              raise Program_Error;
-   --           end if;
-   --
-   --           Result.Append (Item.Pt);
-   --        end loop;
-   --
-   --        return Result;
-   --     end To_ID_Vector;
+
 
    ----------------
    -- Definition --

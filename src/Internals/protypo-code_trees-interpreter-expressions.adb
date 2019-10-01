@@ -1,4 +1,6 @@
 pragma Ada_2012;
+
+pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Code_Trees.Interpreter.Expressions is

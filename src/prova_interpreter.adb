@@ -2,7 +2,7 @@ with Protypo.Api.Interpreter;
 with Protypo.Api.Symbols;
 with Protypo.Api.Consumers.File_Writer;
 
---  with Utilities;
+with Utilities;
 
 
 procedure Prova_Interpreter is
@@ -10,7 +10,8 @@ procedure Prova_Interpreter is
    use Protypo.Api.Consumers;
    use Protypo.Api;
 
-   S        : constant String := "pippo pluto e paperino #{ c:=9; x := 2+3*c; }# #x#c";
+   S        : constant String := Utilities.Slurp ("test-data/interprete.txt");
+   --"pippo pluto e paperino #{ c:=9; x := 2+3*c; }# #x#c";
    Code     : constant Compiled_Code := Compile (S);
    Table    : Symbols.Table;
    Consumer : constant Consumer_Access :=

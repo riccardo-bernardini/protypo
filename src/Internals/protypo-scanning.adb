@@ -310,6 +310,28 @@ package body Protypo.Scanning is
             Buffer.Append (Input.Next);
          end loop;
       end Scan_Text;
+
+
+      procedure Scan_Embedded_Text is
+         Buffer : String_Sequences.Sequence;
+      begin
+         Buffer.Clear;
+
+         loop
+            if Peek_And_Eat (Input, "]") then
+               exit when Input.Read /= ']';
+            end if;
+
+            Buffer.Append (Input.Next);
+         end loop;
+
+         Result.Append (Make_Token (Identifier, Consume_With_Escape_Procedure_Name));
+         Result.Append (Make_Token (Open_Parenthesis));
+         Result.Append (Make_Token (Text, Buffer.Dump));
+         Result.Append (Make_Token (Close_Parenthesis));
+         Result.Append (Make_Token (End_Of_Statement));
+
+      end Scan_Embedded_Text;
    begin
       loop
          Skip_Spaces;
@@ -326,6 +348,9 @@ package body Protypo.Scanning is
 
          elsif Peek_And_Eat (Input, """") then
             Scan_Text;
+
+         elsif Peek_And_Eat (Input, "[") then
+            Scan_Embedded_Text;
 
          else
             declare
@@ -418,7 +443,7 @@ package body Protypo.Scanning is
 
       pragma Assert (ID_Name.Length > 0);
 
-      Result.Append (Make_Token (Identifier, "consume"));
+      Result.Append (Make_Token (Identifier, Consume_Procedure_Name));
       Result.Append (Make_Token (Open_Parenthesis));
       Result.Append (Make_Token (Identifier, ID_Name.Dump));
       Result.Append (Make_Token (Close_Parenthesis));
@@ -442,11 +467,10 @@ package body Protypo.Scanning is
                           Result : in out Token_List)
    is
       use Tokens;
-      To_Consumer : constant String := "consume";
 
    begin
       if Buffer.Length > 0 then
-         Result.Append (Make_Token (Identifier, To_Consumer));
+         Result.Append (Make_Token (Identifier, Consume_Procedure_Name));
          Result.Append (Make_Token (Open_Parenthesis));
          Result.Append (Make_Token (Text, Buffer.Dump));
          Result.Append (Make_Token (Close_Parenthesis));

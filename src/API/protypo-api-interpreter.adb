@@ -5,8 +5,9 @@ with Protypo.Code_Trees.Interpreter;
 with Protypo.API.Consumers.File_Writer;
 
 with Ada.Directories;
-with Ada.Text_IO; use Ada.Text_IO;
 
+pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.API.interpreter is
    use Ada.Finalization;

@@ -99,9 +99,7 @@ package body Protypo.Parsing is
       Input.Next;
    end Expect_And_Eat;
 
-   function Parse_Expression
-     (Input      : in out Scanning.Token_List)
-      return Code_Trees.Parsed_Code;
+
 
    function Parse_Expression_List
      (Input      : in out Scanning.Token_List)
@@ -356,23 +354,7 @@ package body Protypo.Parsing is
       return Result;
    end Parse_Expression_List;
 
-   --     -----------------
-   --     -- Parse_Naked --
-   --     -----------------
-   --
-   --     function Parse_Naked (Input : in out Scanning.Token_List)
-   --                           return Code_Trees.Parsed_Code
-   --     is
-   --        Result : Statement_Sequences.Sequence;
-   --     begin
-   --        Expect_And_Eat (Input, Open_Naked);
-   --
-   --        Result := Parse_Expression_List (Input);
-   --
-   --        Expect_And_Eat (Input, Close_Naked);
-   --
-   --        return Code_Trees.Naked_Expression (Result.Dump);
-   --     end Parse_Naked;
+
 
    ---------------------
    -- Parse_name_List --
@@ -407,7 +389,7 @@ package body Protypo.Parsing is
 
       Values := Parse_Expression_List (Input);
 
-      Code_Trees.Dump (Values.Read);
+--        Code_Trees.Dump (Values.Read);
 
       if Names.Length /= Values.Length then
          raise Constraint_Error;
@@ -803,7 +785,7 @@ package body Protypo.Parsing is
 
 
    begin
-      Scanning.Dump (Input);
+--        Scanning.Dump (Input);
 
       loop
          case Class (Input.Read) is
