@@ -1,5 +1,4 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Ada.Containers.Indefinite_Vectors;
 package Protypo.API.Engine_Values is
    type Engine_Value_Class is
      (
@@ -225,6 +224,8 @@ package Protypo.API.Engine_Values is
    function Get_Constant (Val : Constant_Value) return Constant_Interface_Access;
 
 private
+   type Engine_Value_Vector is range 1 .. 2;
+
    type Engine_Value (Class : Engine_Value_Class := Void) is
       record
          case Class is

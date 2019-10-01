@@ -685,10 +685,10 @@ package body Protypo.Parsing is
                   Expect_And_Eat (Input, Close_Parenthesis);
 
                   case Class (Input.Read) is
-                     when End_Of_Statement =>
+                     when End_Of_Statement | End_Of_Text =>
                         Input.Clear_Position;
 
-                        Expect_And_Eat (Input, End_Of_Statement);
+                        Expect_And_Eat (Input, Class(Input.Read));
 
                         return Code_Trees.Procedure_Call (ID, Parameters.Dump);
 
@@ -698,7 +698,7 @@ package body Protypo.Parsing is
                         return Parse_Assign (Input);
 
                      when others =>
-                        raise Constraint_Error;
+                        raise Constraint_Error with Class (Input.Read)'Image;
                   end case;
 
                end;

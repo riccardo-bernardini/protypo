@@ -22,5 +22,9 @@ package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is
       return No_Value;
    end Process;
 
+   function Default_Parameters (Fun : Consumer_Callback)
+                                return Engine_Value_Array
+   is (1 => Void_Value);
+
 
 end Protypo.Code_Trees.Interpreter.Consumer_Handlers;

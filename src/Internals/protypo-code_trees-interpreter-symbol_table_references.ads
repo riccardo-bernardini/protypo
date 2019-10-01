@@ -1,13 +1,20 @@
+--
+-- A "Symbol Table Reference" is a descendant of Reference_Interface
+-- that allows reading/writing a value from/to the symbol table
+--
 package Protypo.Code_Trees.Interpreter.Symbol_Table_References is
    type Symbol_Reference is new Reference_Interface with private;
 
-   function Read (X : Symbol_Reference) return Engine_Value;
+   function Symbol_Table_Reference
+     (Position : Api.Symbols.Protypo_Tables.Cursor)
+      return Reference_Interface_Access;
+   -- Get the reference associated with the specified table cursor
 
-   procedure Write (What  : Symbol_Reference;
-                    Value : Engine_Value);
+   overriding function Read (X : Symbol_Reference) return Engine_Value;
 
-   function Symbol_Table_Reference (Position : Api.Symbols.Protypo_Tables.Cursor)
-                                    return Reference_Interface_Access;
+   overriding procedure Write (What  : Symbol_Reference;
+                               Value : Engine_Value);
+
 private
    type Symbol_Reference is new Reference_Interface with
       record

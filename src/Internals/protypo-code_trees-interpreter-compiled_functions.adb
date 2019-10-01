@@ -1,4 +1,7 @@
 pragma Ada_2012;
+with Protypo.Code_Trees.Interpreter.Statements;
+with Protypo.Code_Trees.Interpreter.Expressions;
+
 package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
 
    -------------
@@ -28,7 +31,7 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
       end;
 
 
-      Run (Fun.Status, Fun.Function_Body);
+      Statements.Run (Fun.Status, Fun.Function_Body);
 
       case Fun.Status.Break.Breaking_Reason is
          when Exit_Statement =>
@@ -40,7 +43,7 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
          when Return_Statement =>
 
             declare
-               Result : constant Engine_Value_Array := To_Array (Fun.Status.Break.Result);
+               Result : constant Engine_Value_Array := Expressions.To_Array (Fun.Status.Break.Result);
             begin
                Fun.Status.Break := No_Break;
                return Result;
@@ -58,7 +61,7 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
       Result : Engine_Value_Array (Fun.Parameters.Default.First_Index .. Fun.Parameters.Default.Last_Index);
    begin
       for K in Result'Range loop
-         Result (K) := Eval_scalar (Fun.Status, Fun.Parameters.Default (K));
+         Result (K) := Expressions.Eval_scalar (Fun.Status, Fun.Parameters.Default (K));
       end loop;
 
       return Result;
