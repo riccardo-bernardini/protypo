@@ -472,11 +472,6 @@ package body Protypo.Code_Trees.Interpreter is
        else
           raise Constraint_Error);
 
-
-   ---------
-   -- Run --
-   ---------
-
    ---------
    -- Run --
    ---------

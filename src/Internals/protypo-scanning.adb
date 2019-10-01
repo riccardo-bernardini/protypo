@@ -1,8 +1,8 @@
 pragma Ada_2012;
+
+with Ada.Strings.Maps.Constants;     use Ada.Strings.Maps.Constants;
 with Ada.Characters.Latin_9;         use Ada.Characters.Latin_9;
 with Ada.Text_IO;                    use Ada.Text_IO;
-with Ada.Strings.Unbounded;          use Ada.Strings.Unbounded;
-with Ada.Strings.Maps.Constants;     use Ada.Strings.Maps.Constants;
 with Ada.Strings.Fixed;
 with Ada.Characters.Handling;
 with Ada.Sequential_IO;
@@ -12,7 +12,7 @@ with Ada.Directories;
 with Readable_Sequences.String_Sequences;
 use Readable_Sequences;
 
-use Ada.Strings.Maps;
+with String_Sets;                    use String_Sets;
 
 package body Protypo.Scanning is
 
@@ -42,13 +42,12 @@ package body Protypo.Scanning is
       return Result;
    end Slurp;
 
-   Id_Charset : constant Character_Set := Alphanumeric_Set or To_Set ('_');
 
    type Error_Reason is
-     (Unexpected_Short_End,
-      Unexpected_Token_In_Code,
-      Unexpected_Code_End,
-      Bad_Float);
+         (Unexpected_Short_End,
+          Unexpected_Token_In_Code,
+          Unexpected_Code_End,
+          Bad_Float);
 
    -----------
    -- Error --
@@ -59,35 +58,17 @@ package body Protypo.Scanning is
    begin
       raise Scanning_Error with (case Reason is
                                     when Unexpected_Short_End     =>
-                                      "Unexpected end of short code",
+                                          "Unexpected end of short code",
                                     when Unexpected_Token_In_Code =>
-                                      "Unexpected token code",
+                                          "Unexpected token code",
                                     when Unexpected_Code_End      =>
-                                      "Unexpected end  code",
+                                          "Unexpected end  code",
                                     when Bad_Float                =>
-                                      "Bad Float"
+                                          "Bad Float"
                                 );
    end Error;
 
-   type Set_String is array (Positive range <>) of Character_Set;
 
-   -------------------
-   -- To_Set_String --
-   -------------------
-
-   function To_Set_String (X : String) return Set_String
-   is
-      Result : Set_String (X'Range);
-   begin
-      for K in X'Range loop
-         Result (K) := To_Set (X (K));
-      end loop;
-
-      return Result;
-   end To_Set_String;
-
-   function "&" (X : String;  Y : Character_Set) return Set_String
-   is (To_Set_String (X) & Set_String'(1 => Y));
 
    Begin_Of_Code          : constant String := "#{";
    Short_Code_Begin       : constant Set_String := "#" & Letter_Set;
@@ -99,37 +80,42 @@ package body Protypo.Scanning is
    Directive_Begin        : constant String := "#" & Directive_Begin_Marker;
 
 
-   ----------
-   -- Peek --
-   ----------
 
-   function Peek (Where : String_Sequences.Sequence;
-                  What  : Set_String)
-                  return Boolean
+   function Does_It_Follow (Where    : String_Sequences.Sequence;
+                            Pattern  : Set_String)
+                            return Boolean;
+   -- Return true if a string matching Pattern is found at the current
+   -- position
+
+   function Does_It_Follow (Where    : String_Sequences.Sequence;
+                            Pattern  : Set_String)
+                            return Boolean
    is
    begin
-      if Where.Remaining < What'Length then
+      if Where.Remaining < Pattern'Length then
          return False;
       end if;
 
-      for K in What'Range loop
-         if not Is_In (Where.Read (K - What'First), What (K)) then
+      for K in Pattern'Range loop
+         if not Is_In (Where.Read (K - Pattern'First), Pattern (K)) then
             return False;
          end if;
       end loop;
 
       return True;
-   end Peek;
+   end Does_It_Follow;
 
 
-   ----------
-   -- Peek --
-   ----------
 
-   function Peek (Where : String_Sequences.Sequence;
-                  What  : String)
-                  return Boolean
-   is (Peek (Where, To_Set_String (What)));
+   --------------------
+   -- Does_It_Follow --
+   --------------------
+
+   function Does_It_Follow (Where : String_Sequences.Sequence;
+                            What  : String)
+                            return Boolean
+   is (Does_It_Follow (Where, To_Set_String (What)));
+   -- Syntactic sugar for when the set contains only one string
 
    ------------------
    -- Peek_And_Eat --
@@ -140,7 +126,7 @@ package body Protypo.Scanning is
                           return Boolean
    is
    begin
-      if Peek (Where, What) then
+      if Does_It_Follow (Where, What) then
          Where.Next (What'Length);
          return True;
       else
@@ -190,7 +176,7 @@ package body Protypo.Scanning is
    ------------------
    procedure  Code_Scanner (Input  : in out String_Sequences.Sequence;
                             Result : in out Token_List)
-     with Post => Result.Length > Result.Length'Old;
+         with Post => Result.Length > Result.Length'Old;
 
    procedure  Code_Scanner (Input  : in out String_Sequences.Sequence;
                             Result : in out Token_List)
@@ -332,7 +318,7 @@ package body Protypo.Scanning is
          if Peek_And_Eat (Input, "--") then
             Skip_Comment (Input);
 
-         elsif Is_In (Input.Read, Letter_Set) then
+         elsif Is_In (Input.Read, Begin_Id_Set) then
             Scan_Identifier;
 
          elsif Is_In (Input.Read, Decimal_Digit_Set) then
@@ -348,7 +334,7 @@ package body Protypo.Scanning is
                This_Match_Len : Natural;
             begin
                for Tk in Simple_Tokens'Range loop
-                  if Peek (Input, To_String (Simple_Tokens (Tk))) then
+                  if Does_It_Follow (Input, To_String (Simple_Tokens (Tk))) then
 
                      This_Match_Len := Length (Simple_Tokens (Tk));
 
@@ -381,7 +367,7 @@ package body Protypo.Scanning is
 
    procedure  Small_Code_Scanner (Input  : in out String_Sequences.Sequence;
                                   Result : in out Token_List)
-     with Post => Result.Length > Result.Length'Old;
+         with Post => Result.Length > Result.Length'Old;
 
    procedure  Small_Code_Scanner (Input  : in out String_Sequences.Sequence;
                                   Result : in out Token_List)
@@ -445,10 +431,10 @@ package body Protypo.Scanning is
 
    procedure Dump_Buffer (Buffer : in out String_Sequences.Sequence;
                           Result : in out Token_List)
-     with
-       Post =>
-         Buffer.Length = 0
-         and Result.Length = Result.Length'Old + (if Buffer.Length'Old > 0 then 5 else 0);
+         with
+               Post =>
+                     Buffer.Length = 0
+                     and Result.Length = Result.Length'Old + (if Buffer.Length'Old > 0 then 5 else 0);
 
 
    procedure Dump_Buffer (Buffer : in out String_Sequences.Sequence;
@@ -479,7 +465,7 @@ package body Protypo.Scanning is
    is
    begin
       while not At_End_Of_Line (Input) loop
-         if Peek (Input, Short_Code_Begin)  then
+         if Does_It_Follow (Input, Short_Code_Begin)  then
             Dump_Buffer (Buffer, Result);
             Input.Next;
 
@@ -574,37 +560,37 @@ package body Protypo.Scanning is
 
    begin
       while not Input.End_Of_Sequence loop
-         if Peek (Input, Begin_Of_Code) then
+         if Does_It_Follow (Input, Begin_Of_Code) then
             Dump_Buffer (Buffer, Result);
             Input.Next (Begin_Of_Code'Length);
 
             Code_Scanner (Input, Result);
 
-         elsif Peek (Input, Directive_Begin) then
+         elsif Does_It_Follow (Input, Directive_Begin) then
             Dump_Buffer (Buffer, Result);
             Input.Next (Directive_Begin'Length);
 
             Process_Directive (Input, Result, Base_Dir);
 
-         elsif Peek (Input, Short_Code_Begin)  then
+         elsif Does_It_Follow (Input, Short_Code_Begin)  then
             Dump_Buffer (Buffer, Result);
             Input.Next;
 
             Small_Code_Scanner (Input, Result);
 
-         elsif Peek (Input, Transparent_Comment) then
+         elsif Does_It_Follow (Input, Transparent_Comment) then
             Buffer.Append (Target_Comment);
             Input.Next (Transparent_Comment'Length);
 
             Transparent_Comment_Scanner (Buffer, Input, Result);
 
-         elsif Peek (Input, Target_Comment) then
+         elsif Does_It_Follow (Input, Target_Comment) then
             Buffer.Append (Target_Comment);
             Input.Next (Target_Comment'Length);
 
             Target_Comment_Scanner (Buffer, Input);
 
-         elsif Peek (Input, Template_Comment) then
+         elsif Does_It_Follow (Input, Template_Comment) then
             Skip_Comment (Input);
 
          else
