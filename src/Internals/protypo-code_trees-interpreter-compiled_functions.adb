@@ -2,6 +2,9 @@ pragma Ada_2012;
 with Protypo.Code_Trees.Interpreter.Statements;
 with Protypo.Code_Trees.Interpreter.Expressions;
 
+pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
+with Ada.Text_IO; use Ada.Text_IO;
+
 package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
 
    -------------
@@ -61,7 +64,11 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
       Result : Engine_Value_Array (Fun.Parameters.Default.First_Index .. Fun.Parameters.Default.Last_Index);
    begin
       for K in Result'Range loop
-         Result (K) := Expressions.Eval_scalar (Fun.Status, Fun.Parameters.Default (K));
+         if Fun.Parameters.Default (K) /= null then
+            Result (K) := Expressions.Eval_Scalar (Fun.Status, Fun.Parameters.Default (K));
+         else
+            Result (K) := Void_Value;
+         end if;
       end loop;
 
       return Result;

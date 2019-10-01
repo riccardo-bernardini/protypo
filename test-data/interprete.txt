@@ -3,7 +3,7 @@ Una riga
 
 function zorro(x; y:=2)
 begin
-  return x+2;
+  [ #x+y# ]
 end zorro;
 
 old := 1;
@@ -12,10 +12,10 @@ loop
 
 [ #42*x# gigi ]
 
-y := zorro(x);
-v := zorro(x,0);
+zorro(x);
+zorro(x,0);
 
-[ #y# ma anche #v#]
+--[ #y# ma anche #v#]
 
   tmp := x;
   x := x + old;
