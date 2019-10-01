@@ -1,19 +1,19 @@
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-
+with Ada.Containers.Indefinite_Vectors;
 package Protypo.API.Engine_Values is
    type Engine_Value_Class is
-         (
-          Void,
-          Int,
-          Real,
-          Text,
-          Array_Handler,
-          Record_Handler,
-          Function_Handler,
-          Reference_Handler,
-          Constant_Handler,
-          Iterator
-         );
+     (
+      Void,
+      Int,
+      Real,
+      Text,
+      Array_Handler,
+      Record_Handler,
+      Function_Handler,
+      Reference_Handler,
+      Constant_Handler,
+      Iterator
+     );
 
    subtype Scalar_Classes is Engine_Value_Class  range Int .. Text;
    subtype Numeric_Classes is Scalar_Classes     range Int .. Real;
@@ -21,85 +21,7 @@ package Protypo.API.Engine_Values is
 
    type Engine_Value (Class : Engine_Value_Class := Void) is private;
 
-   function Is_Scalar (X : Engine_Value) return Boolean
-   is (X.Class in Scalar_Classes);
-
-
-   function Is_Numeric (X : Engine_Value) return Boolean
-   is (X.Class in Numeric_Classes);
-
-   function Is_Handler (X : Engine_Value) return Boolean
-   is (X.Class in Handler_Classes);
-
-   function "-" (X : Engine_Value) return Engine_Value
-         with Pre => Is_Numeric (X),
-         Post => X.Class = "-"'Result.Class;
-
-   function "not" (X : Engine_Value) return Engine_Value
-         with Pre => Is_Numeric (X),
-         Post => "not"'Result.Class = Int;
-
-   function Mixed_Numeric (X, Y : Numeric_Classes) return Numeric_Classes
-   is (if X = Y then X else Real);
-
-   function Compatible_Scalars (X, Y : Engine_Value) return Boolean
-   is ((X.Class = Text and Y.Class = Text) or (Is_Numeric (X) and Is_Numeric (Y)))
-         with Pre => Is_Scalar (X) and Is_Scalar (Y);
-
-   function "+" (Left, Right : Engine_Value) return Engine_Value
-         with Pre => (Left.Class = Text and Right.Class = Text)
-         or (Is_Numeric (Left) and Is_Numeric (Right)),
-         Post =>
-               "+"'Result.Class = (if Is_Numeric (Left)
-                                                     then
-                                                           Mixed_Numeric (Left.Class, Right.Class)
-                                                     else
-                                                           Text);
-
-   function "-" (Left, Right : Engine_Value) return Engine_Value
-         with Pre => Is_Numeric (Left) and Is_Numeric (Right),
-         Post => "-"'Result.Class = Mixed_Numeric (Left.Class, Right.Class);
-
-   function "*" (Left, Right : Engine_Value) return Engine_Value
-         with Pre => Is_Numeric (Left) and Is_Numeric (Right),
-         Post => "*"'Result.Class = Mixed_Numeric (Left.Class, Right.Class);
-
-   function "/" (Left, Right : Engine_Value) return Engine_Value
-         with Pre => Is_Numeric (Left) and Is_Numeric (Right),
-         Post => "/"'Result.Class = Mixed_Numeric (Left.Class, Right.Class);
-
-
-   function "=" (Left, Right : Engine_Value) return Engine_Value
-         with Pre => Compatible_Scalars (Left, Right),
-         Post => "="'Result.Class = Int;
-
-   function "/=" (Left, Right : Engine_Value) return Engine_Value
-         with Pre => Compatible_Scalars (Left, Right),
-         Post => "/="'Result.Class = Int;
-
-   function "<" (Left, Right : Engine_Value) return Engine_Value
-         with Pre => Compatible_Scalars (Left, Right),
-         Post => "<"'Result.Class = Int;
-   function "<=" (Left, Right : Engine_Value) return Engine_Value
-         with Pre => Compatible_Scalars (Left, Right),
-         Post => "<="'Result.Class = Int;
-
-   function ">" (Left, Right : Engine_Value) return Engine_Value
-         with Pre => Compatible_Scalars (Left, Right),
-         Post => ">"'Result.Class = Int;
-
-   function ">=" (Left, Right : Engine_Value) return Engine_Value
-         with Pre => Compatible_Scalars (Left, Right),
-         Post => ">="'Result.Class = Int;
-
-   function "and" (Left, Right : Engine_Value) return Engine_Value;
-   function "or"  (Left, Right : Engine_Value) return Engine_Value;
-   function "xor" (Left, Right : Engine_Value) return Engine_Value;
-
-   type Engine_Value_Array is array (Positive range <>) of Engine_Value;
-
    Void_Value : constant Engine_Value;
-   No_Value   : constant Engine_Value_Array;
 
    subtype Integer_Value   is Engine_Value (Int);
    subtype Real_Value      is Engine_Value (Real);
@@ -111,6 +33,92 @@ package Protypo.API.Engine_Values is
    subtype Reference_Value is Engine_Value (Reference_Handler);
    subtype Constant_Value  is Engine_Value (Constant_Handler);
 
+   type Engine_Value_Array is array (Positive range <>) of Engine_Value;
+
+   No_Value   : constant Engine_Value_Array;
+
+
+   function Is_Scalar (X : Engine_Value) return Boolean
+   is (X.Class in Scalar_Classes);
+
+
+   function Is_Numeric (X : Engine_Value) return Boolean
+   is (X.Class in Numeric_Classes);
+
+   function Is_Handler (X : Engine_Value) return Boolean
+   is (X.Class in Handler_Classes);
+
+   function Mixed_Numeric (X, Y : Numeric_Classes) return Numeric_Classes
+   is (if X = Y then X else Real);
+   -- Function used in contracts.  Return the highest common numeric
+   -- class between X and Y (Int if both are integers, Real otherwise)
+
+   function Compatible_Scalars (X, Y : Engine_Value) return Boolean
+   is ((X.Class = Text and Y.Class = Text) or (Is_Numeric (X) and Is_Numeric (Y)))
+     with Pre => Is_Scalar (X) and Is_Scalar (Y);
+   -- Function used in contract to express the fact that X and Y are
+   -- compatible, that is, they are both text or numeric.
+
+   function "-" (X : Engine_Value) return Engine_Value
+     with Pre => Is_Numeric (X),
+     Post => X.Class = "-"'Result.Class;
+
+   function "not" (X : Engine_Value) return Engine_Value
+     with Pre => Is_Numeric (X),
+     Post => "not"'Result.Class = Int;
+
+
+   function "+" (Left, Right : Engine_Value) return Engine_Value
+     with Pre => (Left.Class = Text and Right.Class = Text)
+     or (Is_Numeric (Left) and Is_Numeric (Right)),
+     Post =>
+       "+"'Result.Class = (if Is_Numeric (Left)
+                                 then
+                                   Mixed_Numeric (Left.Class, Right.Class)
+                                 else
+                                   Text);
+
+   function "-" (Left, Right : Engine_Value) return Engine_Value
+     with Pre => Is_Numeric (Left) and Is_Numeric (Right),
+     Post => "-"'Result.Class = Mixed_Numeric (Left.Class, Right.Class);
+
+   function "*" (Left, Right : Engine_Value) return Engine_Value
+     with Pre => Is_Numeric (Left) and Is_Numeric (Right),
+     Post => "*"'Result.Class = Mixed_Numeric (Left.Class, Right.Class);
+
+   function "/" (Left, Right : Engine_Value) return Engine_Value
+     with Pre => Is_Numeric (Left) and Is_Numeric (Right),
+     Post => "/"'Result.Class = Mixed_Numeric (Left.Class, Right.Class);
+
+
+   function "=" (Left, Right : Engine_Value) return Engine_Value
+     with Pre => Compatible_Scalars (Left, Right),
+     Post => "="'Result.Class = Int;
+
+   function "/=" (Left, Right : Engine_Value) return Engine_Value
+     with Pre => Compatible_Scalars (Left, Right),
+     Post => "/="'Result.Class = Int;
+
+   function "<" (Left, Right : Engine_Value) return Engine_Value
+     with Pre => Compatible_Scalars (Left, Right),
+     Post => "<"'Result.Class = Int;
+   function "<=" (Left, Right : Engine_Value) return Engine_Value
+     with Pre => Compatible_Scalars (Left, Right),
+     Post => "<="'Result.Class = Int;
+
+   function ">" (Left, Right : Engine_Value) return Engine_Value
+     with Pre => Compatible_Scalars (Left, Right),
+     Post => ">"'Result.Class = Int;
+
+   function ">=" (Left, Right : Engine_Value) return Engine_Value
+     with Pre => Compatible_Scalars (Left, Right),
+     Post => ">="'Result.Class = Int;
+
+   function "and" (Left, Right : Engine_Value) return Engine_Value;
+   function "or"  (Left, Right : Engine_Value) return Engine_Value;
+   function "xor" (Left, Right : Engine_Value) return Engine_Value;
+
+
    type Array_Interface is interface;
    type Array_Interface_Access is not null access all Array_Interface'Class;
 
@@ -119,10 +127,6 @@ package Protypo.API.Engine_Values is
                  return Engine_Value
                  is abstract;
 
-   --     procedure Set (X     : in out Array_Interface;
-   --                    Index : Engine_Value_Array;
-   --                    Value : Engine_Value)
-   --     is abstract;
 
    type Record_Interface is interface;
    type Record_Interface_Access is not null access all Record_Interface'Class;
@@ -179,35 +183,35 @@ package Protypo.API.Engine_Values is
 
 
    function Create (Val : Integer) return Engine_Value
-         with Post => Create'Result.Class = Int;
+     with Post => Create'Result.Class = Int;
 
    function Create (Val : Float) return Engine_Value
-         with Post => Create'Result.Class = Real;
+     with Post => Create'Result.Class = Real;
 
    function Create (Val : String) return Engine_Value
-         with Post => Create'Result.Class = Text;
+     with Post => Create'Result.Class = Text;
 
    function Create (Val : Array_Interface_Access) return Engine_Value
-         with Post => Create'Result.Class = Array_Handler;
+     with Post => Create'Result.Class = Array_Handler;
 
    function Create (Val : Record_Interface_Access) return Engine_Value
-         with Post => Create'Result.Class = Record_Handler;
+     with Post => Create'Result.Class = Record_Handler;
 
    function Create (Val : Iterator_Interface_Access) return Engine_Value
-         with Post => Create'Result.Class = Iterator;
+     with Post => Create'Result.Class = Iterator;
 
    function Create (Val : Function_Interface_Access) return Engine_Value
-         with Post => Create'Result.Class = Function_Handler;
+     with Post => Create'Result.Class = Function_Handler;
 
    function Create (Val          : Callback_Function_Access;
                     N_Parameters : Natural := 1) return Engine_Value
-         with Post => Create'Result.Class = Function_Handler;
+     with Post => Create'Result.Class = Function_Handler;
 
    function Create (Val : Reference_Interface_Access) return Engine_Value
-         with Post => Create'Result.Class = Reference_Handler;
+     with Post => Create'Result.Class = Reference_Handler;
 
    function Create (Val : Constant_Interface_Access) return Engine_Value
-         with Post => Create'Result.Class = Constant_Handler;
+     with Post => Create'Result.Class = Constant_Handler;
 
 
    function Get_Integer (Val : Integer_Value) return Integer;
@@ -260,7 +264,7 @@ private
    No_Value   : constant Engine_Value_Array (2 .. 1) := (others => Void_Value);
 
    type Callback_Based_Handler is
-         new Function_Interface
+     new Function_Interface
    with
       record
          Callback     : Callback_Function_Access;

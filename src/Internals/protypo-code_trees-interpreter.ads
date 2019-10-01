@@ -72,7 +72,12 @@ private
                              return Engine_Value_Vectors.Vector
          with
                Pre => Expr.Class in Code_Trees.Expression,
-               Post => not Eval_Expression'Result.Is_Empty;
+       Post => not Eval_Expression'Result.Is_Empty;
+
+   function Eval_Scalar (Status : Interpreter_Access;
+                         Expr   : not null Node_Access)
+                         return Engine_Value;
+
 
    function Eval_Vector (Status : Interpreter_Access;
                          Expr   : Node_Vectors.Vector)
