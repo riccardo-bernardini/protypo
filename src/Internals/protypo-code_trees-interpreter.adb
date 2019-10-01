@@ -27,16 +27,15 @@ package body Protypo.Code_Trees.Interpreter is
                       new Interpreter_Type'(Break        => No_Break,
                                             Symbol_Table => Copy_Globals (Symbol_Table));
    begin
+--        Code_Trees.Dump (Program);
+
       Add_Builtin_Values (Interpreter.Symbol_Table);
 
-      PUt_Line ("xxx");
       Statements.Run (Interpreter, Program.Pt);
-      PUt_Line ("BBB");
 
       if Interpreter.Break /= No_Break  then
          raise Program_Error;
       end if;
-      PUt_Line ("CCC");
    end Run;
 
 end Protypo.Code_Trees.Interpreter;

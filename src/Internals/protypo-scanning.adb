@@ -422,6 +422,7 @@ package body Protypo.Scanning is
       Result.Append (Make_Token (Open_Parenthesis));
       Result.Append (Make_Token (Identifier, ID_Name.Dump));
       Result.Append (Make_Token (Close_Parenthesis));
+      Result.Append (Make_Token (End_Of_Statement));
 
    end Small_Code_Scanner;
 

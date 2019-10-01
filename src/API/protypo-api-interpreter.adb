@@ -12,6 +12,13 @@ package body Protypo.API.interpreter is
    use Ada.Finalization;
    use Ada;
 
+
+   procedure Bye (X : in out Compiled_Code)
+   is
+   begin
+      Code_Trees.Delete (X.Code);
+   end Bye;
+
    -------------
    -- Compile --
    -------------
@@ -83,11 +90,11 @@ package body Protypo.API.interpreter is
 
    overriding procedure Finalize (Object : in out Compiled_Code) is
    begin
-      Put_Line ("Finalizing compiled code");
-      pragma Compile_Time_Warning (True, "Compiled code finalization disabled");
---        Code_Trees.Delete (Object.Code);
+--        Put_Line ("Finalizing compiled code");
+--        pragma Compile_Time_Warning (True, "Compiled code finalization disabled");
+      Code_Trees.Delete (Object.Code);
 
-      Put_Line ("Done");
+--        Put_Line ("Done");
    end Finalize;
 
 end Protypo.API.interpreter;

@@ -76,10 +76,7 @@ package body Protypo.API.Consumers.File_Writer is
    overriding procedure Finalize (Obj : in out Writer)
    is
    begin
-      Put_Line("Finalizing consumer");
       Close (Obj);
-
-      Put_Line("done");
    end Finalize;
 
 end Protypo.API.Consumers.File_Writer;

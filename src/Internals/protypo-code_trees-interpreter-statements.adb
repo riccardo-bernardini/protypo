@@ -81,7 +81,6 @@ package body Protypo.Code_Trees.Interpreter.Statements is
          end case;
       end Run_Loop_Body;
    begin
-      Put_Line ("111" & Program.Class'Image);
       if Program.Class not in Statement_Classes then
          raise Program_Error;
       end if;
@@ -101,7 +100,6 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                                                  Status        => Status)));
 
          when Assignment  =>
-            Put_Line ("220");
             declare
                use type Ada.Containers.Count_Type;
                use type Names.Value_Name_Class;
@@ -111,15 +109,13 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                Values : Engine_Value_Vectors.Vector;
                LHS : Lhs_Array;
             begin
-               Put_Line ("991");
                Values  := Expressions.Eval_Vector (Status, Program.Rvalues);
-               Put_Line ("992");
 
                if Program.Lhs.Length /= Values.Length then
                   raise Constraint_Error;
                end if;
-               Put_Line ("333");
-               Put_Line ("[" & Program.Lhs.First_Index'Image & Program.Lhs.Last_Index'Image);
+
+--                 Put_Line ("[" & Program.Lhs.First_Index'Image & Program.Lhs.Last_Index'Image);
 
 
                for Name of Program.Lhs loop
@@ -142,9 +138,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                   -- (with the variable values still unchanged) and finally
                   -- the assigment is done-
                   --
-                  Put_Line ("@4");
                   LHS.Append (Names.Eval_Name (Status, Name));
-                  Put_Line ("@5");
 
                   if LHS.Last_Element.Class /= Names.Variable_Reference then
                      --
@@ -158,13 +152,9 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                declare
                   Shift : constant Integer := Values.First_Index - LHS.First_Index;
                begin
-                  Put_Line ("@6");
 
                   for K in LHS.First_Index .. Lhs.Last_Index loop
-                     Put_Line ("@7");
                      LHS (K).Variable_Handler.Write (Values (K + Shift));
-                     Put_Line ("@8");
-
                   end loop;
                end;
             end;
@@ -184,12 +174,12 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                Proc_Handler : Engine_Value;
 
             begin
-               Put_Line ("@pc " & To_String (Program.Name));
+--                 Put_Line ("@pc " & To_String (Program.Name));
                if Position = No_Element then
-                  Put_Line ("@pc 1");
-                  raise Constraint_Error;
+--                    Put_Line ("@pc 1");
+                  raise Constraint_Error with
+                    "Unknown function '" & To_String (Program.Name) & "'";
                end if;
-               Put_Line ("@pc 2");
 
                Proc_Handler :=  Value (Position);
                if Proc_Handler.Class /= Function_Handler then

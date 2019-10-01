@@ -803,6 +803,8 @@ package body Protypo.Parsing is
 
 
    begin
+      Scanning.Dump (Input);
+
       loop
          case Class (Input.Read) is
             when Identifier =>

@@ -560,7 +560,7 @@ package body Protypo.Code_Trees is
             Delete (Item.Return_Values);
 
          when Procedure_Call =>
-            Delete (Item.Parameters);
+            Delete (Item.Params);
 
          when Exit_Statement =>
             null;

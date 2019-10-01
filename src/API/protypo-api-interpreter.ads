@@ -8,6 +8,7 @@ private with Protypo.Code_Trees;
 package Protypo.API.Interpreter is
    type Compiled_Code is limited private;
 
+   procedure Bye (X : in out Compiled_Code);
    function Compile (Program  : String;
                      Base_Dir : String := "") return Compiled_Code;
 
