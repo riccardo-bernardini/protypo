@@ -20,6 +20,8 @@ package String_Sets is
    function "&" (X, Y : Set_String) return Set_String;
 
    function "&" (X : String;  Y : Character_Set) return Set_String;
+
+   function Match (X : String; Pattern : Set_String) return Boolean;
 private
    type Basic_Set_String is array (Positive range <>) of Character_Set;
    type Set_String is new Basic_Set_String;

@@ -2,6 +2,8 @@
 \begin{WPs}
 #{ for wp of project.wps loop
 -- Anche con un commento
+   @x_3 := 4;
+   @("pippo");
 }#
 \wpitem{#WP.number}{#WP.start}
 #{ end loop; }#

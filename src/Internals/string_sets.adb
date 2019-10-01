@@ -16,4 +16,25 @@ package body String_Sets is
       return Result;
    end To_Set_String;
 
+
+   -----------
+   -- Match --
+   -----------
+
+   function Match (X : String; Pattern : Set_String) return Boolean
+   is
+   begin
+      if X'Length < Pattern'Length then
+         return False;
+      end if;
+
+      for K in Pattern'Range loop
+         if not Is_In (X (K - Pattern'First + X'First), Pattern (K)) then
+            return False;
+         end if;
+      end loop;
+
+      return True;
+   end Match;
+
 end String_Sets;

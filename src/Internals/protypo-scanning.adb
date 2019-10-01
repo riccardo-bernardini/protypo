@@ -87,23 +87,23 @@ package body Protypo.Scanning is
    -- Return true if a string matching Pattern is found at the current
    -- position
 
+    function Does_It_Follow (Where : String_Sequences.Sequence;
+                            What  : String)
+                            return Boolean;
+   -- Syntactic sugar for when the set contains only one string
+
+   function Peek_And_Eat (Where : in out String_Sequences.Sequence;
+                          What  : String)
+                          return Boolean;
+   -- If What is at the current position, "eat it" and return true,
+   -- otherwise leave the position unchanged and return false.
+   -- Very convenient
+
+
    function Does_It_Follow (Where    : String_Sequences.Sequence;
                             Pattern  : Set_String)
                             return Boolean
-   is
-   begin
-      if Where.Remaining < Pattern'Length then
-         return False;
-      end if;
-
-      for K in Pattern'Range loop
-         if not Is_In (Where.Read (K - Pattern'First), Pattern (K)) then
-            return False;
-         end if;
-      end loop;
-
-      return True;
-   end Does_It_Follow;
+   is (Match (Where.Dump (From => Where.Current_Position), Pattern));
 
 
 

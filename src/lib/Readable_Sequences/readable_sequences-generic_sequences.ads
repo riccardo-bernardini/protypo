@@ -21,7 +21,8 @@ package Readable_Sequences.Generic_Sequences is
 
    function Has_End_Of_Sequence_Marker (Item : Sequence) return Boolean;
 
-   function Dump (Seq : Sequence) return Element_Array;
+   function Dump (Seq : Sequence;
+                 From : Cursor := Beginning) return Element_Array;
 
    procedure Clear (Seq : in out Sequence)
      with

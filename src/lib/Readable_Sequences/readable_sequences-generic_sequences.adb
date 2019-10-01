@@ -18,9 +18,10 @@ package body Readable_Sequences.Generic_Sequences is
    -- Dump --
    ----------
 
-   function Dump (Seq : Sequence) return Element_Array
+   function Dump (Seq  : Sequence;
+                  From : Cursor := Beginning) return Element_Array
    is
-      Result : Element_Array (Integer (Seq.Vector.First_Index) .. Integer (Seq.Vector.Last_Index));
+      Result : Element_Array (Integer (From) .. Integer (Seq.Vector.Last_Index));
    begin
       for K in Result'Range loop
          Result (K) := Seq.Vector (Cursor (K));
