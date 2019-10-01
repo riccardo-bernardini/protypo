@@ -10,10 +10,10 @@ procedure Prova_Interpreter is
    use Protypo.Api.Consumers;
    use Protypo.Api;
 
-   S    : constant String := "#{ x := 2+3; }# #x";
+   S    : constant String := "pippo pluto e paperino #{ x := 2+3*4; }# #x";
    Code : constant Compiled_Code := Compile (S);
    Table : Symbols.Table;
-   Consumer : constant Consumer_Access := File_Writer.Open (File_Writer.Standard_Output);
+   Consumer : constant Consumer_Access := File_Writer.Open (File_Writer.Standard_Error);
 begin
    Run (Program      => Code,
         Symbol_Table => Table,

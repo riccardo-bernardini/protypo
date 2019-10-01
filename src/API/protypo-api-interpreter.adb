@@ -5,6 +5,7 @@ with Protypo.Code_Trees.Interpreter;
 with Protypo.API.Consumers.File_Writer;
 
 with Ada.Directories;
+with Ada.Text_IO; use Ada.Text_IO;
 
 
 package body Protypo.API.interpreter is
@@ -82,7 +83,11 @@ package body Protypo.API.interpreter is
 
    overriding procedure Finalize (Object : in out Compiled_Code) is
    begin
-      Code_Trees.Delete (Object.Code);
+      Put_Line ("Finalizing compiled code");
+      pragma Compile_Time_Warning (True, "Compiled code finalization disabled");
+--        Code_Trees.Delete (Object.Code);
+
+      Put_Line ("Done");
    end Finalize;
 
 end Protypo.API.interpreter;

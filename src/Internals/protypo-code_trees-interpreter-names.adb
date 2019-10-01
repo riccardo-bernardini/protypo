@@ -2,6 +2,7 @@ pragma Ada_2012;
 
 with Protypo.Code_Trees.Interpreter.Expressions;
 with Protypo.Code_Trees.Interpreter.Symbol_Table_References;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Code_Trees.Interpreter.Names is
 
@@ -55,6 +56,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
 
 
    begin
+      Put_Line ("#1" & Expr.Class'Image);
       if not (Expr.Class in Name) then
          raise Program_Error;
       end if;
@@ -96,24 +98,35 @@ package body Protypo.Code_Trees.Interpreter.Names is
             end;
 
          when Identifier  =>
+            Put_Line ("#2");
+
             declare
                use Api.Symbols.Protypo_Tables;
                use Protypo.Code_Trees.Interpreter.Symbol_Table_References;
 
                ID       : constant String := To_String (Expr.ID_Value);
-               Position : constant Cursor := Status.Symbol_Table.Find (ID);
+               Position : Cursor := Status.Symbol_Table.Find (ID);
                Val      : Engine_Value;
             begin
+               Put_Line ("#3");
+
                if Position = No_Element then
-                  raise Constraint_Error;
+                  Status.Symbol_Table.Create (Name          => ID,
+                                              Initial_Value => Void_Value,
+                                              Position      => Position);
                end if;
+Put_Line ("#3-a");
 
                Val := Value (Position);
+Put_Line ("#3-x");
 
                if Val.Class in Handler_Classes then
+                  Put_Line ("#4");
                   return + Val;
 
                else
+                  Put_Line ("#5");
+
                   return Name_Reference'
                     (Class            => Variable_Reference,
                      Variable_Handler => Symbol_Table_Reference (Position));

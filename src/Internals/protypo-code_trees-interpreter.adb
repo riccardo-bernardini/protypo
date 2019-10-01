@@ -2,6 +2,7 @@ pragma Ada_2012;
 with Protypo.Api.Engine_Values;  use Protypo.Api.Engine_Values;
 with Protypo.Code_Trees.Interpreter.Consumer_Handlers;
 with Protypo.Code_Trees.Interpreter.Statements;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Code_Trees.Interpreter is
    ---------
@@ -28,11 +29,14 @@ package body Protypo.Code_Trees.Interpreter is
    begin
       Add_Builtin_Values (Interpreter.Symbol_Table);
 
+      PUt_Line ("xxx");
       Statements.Run (Interpreter, Program.Pt);
+      PUt_Line ("BBB");
 
       if Interpreter.Break /= No_Break  then
          raise Program_Error;
       end if;
+      PUt_Line ("CCC");
    end Run;
 
 end Protypo.Code_Trees.Interpreter;

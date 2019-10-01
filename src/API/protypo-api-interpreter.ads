@@ -11,13 +11,14 @@ package Protypo.API.Interpreter is
    function Compile (Program  : String;
                      Base_Dir : String := "") return Compiled_Code;
 
+   procedure Run (Program      : Compiled_Code;
+                  Symbol_Table : Symbols.Table;
+                  Consumer     : Consumers.Consumer_Access);
+
    procedure Run (Program      : String;
                   Symbol_Table : Symbols.Table;
                   Consumer     : Consumers.Consumer_Access);
 
-   procedure Run (Program      : Compiled_Code;
-                  Symbol_Table : Symbols.Table;
-                  Consumer     : Consumers.Consumer_Access);
 
    procedure Expand_Template (Template        : String;
                               Symbol_Table    : Symbols.Table;

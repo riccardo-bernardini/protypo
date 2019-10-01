@@ -1,4 +1,5 @@
 pragma Ada_2012;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Code_Trees.Interpreter.Expressions is
 
@@ -150,6 +151,8 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
 
       Left, Right : Engine_Value;
    begin
+
+      Put_Line ("@X " & Expr.Class'Image);
       if not (Expr.Class in Code_Trees.Expression) then
          raise Program_Error;
       end if;
@@ -199,8 +202,13 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
    is
       Result : Engine_Value_Vectors.Vector;
    begin
+      Put_Line ("@a");
       for Ex of Expr loop
+
+         Put_Line ("@b");
          Result.Append (Eval_Expression (Status, Ex));
+
+         Put_Line ("@v");
       end loop;
 
       return Result;

@@ -52,12 +52,12 @@ private package Protypo.Code_Trees.Interpreter.Names is
             Parameters       : Engine_Value_Vectors.Vector;
 
          end case;
-      end record
-     with
-       Dynamic_Predicate =>
-         (if Name_Reference.Class = Function_Reference
-            then
-              Name_Reference.Parameters.Is_Empty);
+      end record;
+--       with
+--         Dynamic_Predicate =>
+--           (if Name_Reference.Class = Function_Reference
+--              then
+--                Name_Reference.Parameters.Is_Empty);
 
    function Eval_Name (Status : Interpreter_Access;
                        Expr   : not null Node_Access)

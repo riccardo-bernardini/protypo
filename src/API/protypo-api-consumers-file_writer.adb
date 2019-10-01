@@ -1,4 +1,5 @@
 pragma Ada_2012;
+with Ada.Text_IO; use Ada.Text_IO;
 package body Protypo.API.Consumers.File_Writer is
 
    ----------
@@ -42,7 +43,16 @@ package body Protypo.API.Consumers.File_Writer is
       Parameter : String)
    is
    begin
-      Ada.Text_IO.Put (Consumer.Output, Parameter);
+      case Consumer.Target is
+         when Stdout =>
+            Ada.Text_IO.Put (Parameter);
+
+         when Stderr =>
+            Ada.Text_IO.Put (Ada.Text_IO.Standard_Error, Parameter);
+
+         when File =>
+            Ada.Text_IO.Put (Consumer.Output, Parameter);
+      end case;
    end Process;
 
    -----------
@@ -66,7 +76,10 @@ package body Protypo.API.Consumers.File_Writer is
    overriding procedure Finalize (Obj : in out Writer)
    is
    begin
+      Put_Line("Finalizing consumer");
       Close (Obj);
+
+      Put_Line("done");
    end Finalize;
 
 end Protypo.API.Consumers.File_Writer;
