@@ -36,6 +36,8 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
 
       Statements.Run (Fun.Status, Fun.Function_Body);
 
+      Fun.Status.Symbol_Table.Close_Block;
+
       case Fun.Status.Break.Breaking_Reason is
          when Exit_Statement =>
             raise Constraint_Error;

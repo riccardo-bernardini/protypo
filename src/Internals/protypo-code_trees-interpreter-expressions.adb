@@ -183,6 +183,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
             declare
                Ref : constant Names.Name_Reference := Names.Eval_Name (Status, Expr);
             begin
+--                 Put_Line("@@@" & Ref.Class'Image);
                if not (Ref.Class in Evaluable_Classes) then
                   raise Constraint_Error;
                end if;

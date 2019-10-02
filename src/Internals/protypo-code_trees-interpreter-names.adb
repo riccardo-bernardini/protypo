@@ -58,7 +58,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
 
 
    begin
---        Put_Line ("#1" & Expr.Class'Image);
+      --        Put_Line ("#1" & Expr.Class'Image);
       if not (Expr.Class in Name) then
          raise Program_Error;
       end if;
@@ -111,22 +111,35 @@ package body Protypo.Code_Trees.Interpreter.Names is
             begin
 
                if Position = No_Element then
+                  --
+                  -- The name is not in the symbol table: create it
+                  -- but leave it not initialized, it can be used only
+                  -- as a LHS.
+                  --
                   Status.Symbol_Table.Create (Name          => ID,
-                                              Initial_Value => Void_Value,
                                               Position      => Position);
-               end if;
-
-               Val := Value (Position);
-
-               if Val.Class in Handler_Classes then
-                  return + Val;
-
-               else
 
                   return Name_Reference'
                     (Class            => Variable_Reference,
                      Variable_Handler => Symbol_Table_Reference (Position));
+               else
+                  --
+                  -- The name is in the symbol table.  If its value is an
+                  -- handler, returnt the handler; otherwise return the
+                  -- reference to the symbol table.  Remember that the
+                  -- result of the evaluation of a name is always a reference.
+                  --
+                  Val := Value (Position);
 
+                  if Val.Class in Handler_Classes then
+                     return + Val;
+
+                  else
+                     return Name_Reference'
+                       (Class            => Variable_Reference,
+                        Variable_Handler => Symbol_Table_Reference (Position));
+
+                  end if;
                end if;
             end;
       end case;

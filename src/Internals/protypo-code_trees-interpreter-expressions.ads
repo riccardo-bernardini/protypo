@@ -30,7 +30,7 @@ package Protypo.Code_Trees.Interpreter.Expressions is
 
    function Eval_Iterator (Status : Interpreter_Access;
                            Expr   : not null Node_Access)
-                            return Iterator_Interface_Access;
+                           return Iterator_Interface_Access;
 
 
    subtype Function_Call_Reference is Names.Name_Reference (Names.Function_Call);

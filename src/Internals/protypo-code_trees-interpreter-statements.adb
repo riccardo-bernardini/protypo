@@ -220,6 +220,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
             for Branch of Program.Branches loop
                if Is_True (Expressions.Eval_Scalar (Status, Branch.Condition)) then
                   Run (Status, Branch.Code);
+                  return;
                end if;
             end loop;
 

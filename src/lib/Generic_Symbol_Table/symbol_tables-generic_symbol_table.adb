@@ -1,8 +1,31 @@
 pragma Ada_2012;
 
 with Ada.Unchecked_Deallocation;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Symbol_Tables.Generic_Symbol_Table is
+   Activate_Debug : constant Boolean := False;
+
+   Printer : Value_Printer := null;
+
+   procedure Set_Printer (Callback : Value_Printer) is
+   begin
+      Printer := Callback;
+   end Set_Printer;
+
+   function Image (X : Symbol_Value) return String
+   is (if Printer = null then
+          "???"
+       else
+          Printer (X));
+
+
+   procedure Debug (X : String) is
+   begin
+      if Activate_Debug then
+         Put_Line (Standard_Error, X);
+      end if;
+   end Debug;
 
    function Copy_Globals (T : Symbol_Table) return Symbol_Table
    is
@@ -19,9 +42,12 @@ package body Symbol_Tables.Generic_Symbol_Table is
    procedure Open_Block (Table : in out Symbol_Table; Parent : Table_Block) is
       New_Block : constant Table_Block := new Basic_Block'(Map         => <>,
                                                            Parent      => Parent,
-                                                           Old_Current => Table.Current);
+                                                           Old_Current => Table.Current,
+                                                           ID          => Table.Counter + 1);
    begin
+      Debug ("Opening block " & New_Block.Id'Image & " child of " & Parent.Id'Image);
       Table.Current := New_Block;
+      Table.Counter := New_Block.Id;
    end Open_Block;
 
 
@@ -55,6 +81,8 @@ package body Symbol_Tables.Generic_Symbol_Table is
                                         Name   => Table_Block);
       Old_Current : Table_Block;
    begin
+      Debug ("Closing block " & Table.Current.Id'Image);
+
       if Table.Current = Table.Root then
          raise Constraint_Error;
       end if;
@@ -78,9 +106,12 @@ package body Symbol_Tables.Generic_Symbol_Table is
       pragma Assert (Current_Trial /= No_Block);
 
       while Current_Trial /= No_Block loop
+         Debug ("Looking for '" & String (Name) & "' in block " & Current_Trial.ID'Image);
+
          Pos := Current_Trial.Map.Find (Name);
 
          if Pos /= Symbol_Maps.No_Element then
+            Debug("found");
             return Cursor'(Block           => Current_Trial,
                            Internal_Cursor => Pos);
          end if;
@@ -88,6 +119,7 @@ package body Symbol_Tables.Generic_Symbol_Table is
          Current_Trial := Current_Trial.Parent;
       end loop;
 
+      Debug("Not found");
       return No_Element;
    end Find;
 
@@ -119,10 +151,26 @@ package body Symbol_Tables.Generic_Symbol_Table is
    is
       Ignored : Boolean;
    begin
+      Table.Create (Name, Position);
+      Update (Position, Initial_Value);
+   end Create;
+
+   ------------
+   -- Create --
+   ------------
+
+   procedure Create (Table         : in out Symbol_Table;
+                     Name          : Symbol_Name;
+                     Position      : out Cursor)
+   is
+      Ignored : Boolean;
+   begin
+      Debug ("Creating '" & String (Name) & "' in block " & Table.Current.ID'Image);
+
       Position.Block := Table.Current;
 
       Table.Current.Map.Insert (Key      => Name,
-                                New_Item => Initial_Value,
+                                New_Item => Value_Holders.Empty_Holder,
                                 Position => Position.Internal_Cursor,
                                 Inserted => Ignored);
    end Create;
@@ -134,7 +182,12 @@ package body Symbol_Tables.Generic_Symbol_Table is
    procedure Update (Pos       : Cursor;
                      New_Value : Symbol_Value) is
    begin
-      Pos.Block.Map.Replace_Element (Pos.Internal_Cursor, New_Value);
+      Debug ("Updating '"
+             & String (Name (Pos))
+             & "' in block "
+             & Pos.Block.ID'Image
+             & " to [" & Image (New_Value) & "]");
+      Pos.Block.Map.Replace_Element (Pos.Internal_Cursor, Value_Holders.To_Holder (New_Value));
    end Update;
 
    ----------------
@@ -145,9 +198,11 @@ package body Symbol_Tables.Generic_Symbol_Table is
    begin
       Object.Root := new Basic_Block'(Map         => <>,
                                       Parent      => No_Block,
-                                      Old_Current => No_Block);
+                                      Old_Current => No_Block,
+                                      ID          => Block_ID'First);
 
       Object.Current := Object.Root;
+      Object.Counter := Object.Root.ID;
    end Initialize;
 
 end Symbol_Tables.Generic_Symbol_Table;

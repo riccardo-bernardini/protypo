@@ -640,9 +640,13 @@ package body Protypo.Parsing is
          case ID_Follower (Follower) is
             when End_Of_Statement =>
 
-               Expect_And_Eat (Input, End_Of_Statement);
-
-               return Code_Trees.Procedure_Call (Value (Input.Read));
+               declare
+                  Result : Constant Code_Trees.Parsed_Code :=
+                             Code_Trees.Procedure_Call (Value (Input.Next));
+               begin
+                  Expect_And_Eat (Input, End_Of_Statement);
+                  return Result;
+               end;
 
             when Assign | Dot =>
                return Parse_Assign (Input);

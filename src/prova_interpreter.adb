@@ -31,7 +31,7 @@ procedure Prova_Interpreter is
 begin
    Compile (Target   => Code,
             Program  => Program);
-   Dump (Code);
+--     Dump (Code);
 
    Run (Program      => Code,
         Symbol_Table => Table,

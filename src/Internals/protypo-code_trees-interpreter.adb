@@ -8,6 +8,13 @@ pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Code_Trees.Interpreter is
+   function To_String (X : Engine_Value) return String
+      is (case X.Class is
+             when Int    => Get_Integer (X)'Image,
+             when Real   => Get_Float (X)'Image,
+             when Text   => Get_String (X),
+             when others => X.Class'Image);
+
    ---------
    -- Run --
    ---------
@@ -41,6 +48,7 @@ package body Protypo.Code_Trees.Interpreter is
                                             Symbol_Table => Copy_Globals (Symbol_Table));
    begin
       --        Code_Trees.Dump (Program);
+      Api.Symbols.Protypo_Tables.Set_Printer (To_String'Access);
 
       Add_Builtin_Values (Interpreter.Symbol_Table, Interpreter);
 

@@ -1,4 +1,5 @@
 with Ada.Containers.Indefinite_Hashed_Maps;
+with Ada.Containers.Indefinite_Holders;
 with Ada.Finalization;
 
 use Ada;
@@ -57,7 +58,15 @@ package Symbol_Tables.Generic_Symbol_Table is
                       return Boolean
    is (Table.Find (Name) /= No_Element);
 
-   function Value (Pos : Cursor) return Symbol_Value;
+   function Has_Value (Pos : Cursor) return Boolean
+     with Pre => Pos /= No_Element;
+
+   function Value (Pos : Cursor) return Symbol_Value
+     with Pre => Has_Value (Pos);
+
+
+   function Name (Pos : Cursor) return Symbol_Name
+     with Pre => Pos /= No_Element;
 
    function Contains (Block : Table_Block;
                       Name  : Symbol_Name)
@@ -86,16 +95,48 @@ package Symbol_Tables.Generic_Symbol_Table is
      and
        Table.Current_Block = Table.Current_Block'Old
        and
-         Table.Find (Name) = Position;
+         Table.Find (Name) = Position
+     and
+       Has_Value (Position)
+     and
+       Value (Position) = Initial_Value;
+
+   procedure Create (Table         : in out Symbol_Table;
+                     Name          : Symbol_Name;
+                     Position      : out Cursor)
+     with
+       Pre =>
+         not Contains (Table.Current_Block, Name),
+     Post =>
+       Contains (Table.Current_Block, Name)
+     and
+       Table.Current_Block = Table.Current_Block'Old
+       and
+         Table.Find (Name) = Position
+     and
+       not Has_Value (Position);
 
    procedure Update (Pos       : Cursor;
                      New_Value : Symbol_Value)
      with
        Pre => Pos /= No_Element;
+
+   Uninitialized_Value : exception;
+
+   type Value_Printer is access function (X : Symbol_Value) return String;
+
+   procedure Set_Printer (Callback : Value_Printer);
 private
+   package Value_Holders is
+     new Ada.Containers.Indefinite_Holders (Symbol_Value);
+
+   use type Value_Holders.Holder;
+
+   subtype Map_Entry is Value_Holders.Holder;
+
    package Symbol_Maps is
      new  Ada.Containers.Indefinite_Hashed_Maps (Key_Type        => Symbol_Name,
-                                                 Element_Type    => Symbol_Value,
+                                                 Element_Type    => Map_Entry,
                                                  Hash            => Hash,
                                                  Equivalent_Keys => Equivalent_Names);
 
@@ -106,11 +147,14 @@ private
    type Table_Block is access Basic_Block;
    No_Block : constant Table_Block := null;
 
+   subtype Block_ID is Positive;
+
    type Basic_Block is
       record
          Map         : Symbol_Maps.Map;
          Parent      : Table_Block;
          Old_Current : Table_Block;
+         ID          : Block_ID;
       end record;
 
    type Cursor is
@@ -128,6 +172,7 @@ private
       record
          Root    : Table_Block;
          Current : Table_Block;
+         Counter : Block_ID;
       end record;
 
    overriding procedure Initialize (Object : in out Symbol_Table);
@@ -150,6 +195,16 @@ private
 
 
    function Value (Pos : Cursor) return Symbol_Value
-   is (Symbol_Maps.Element (Pos.Internal_Cursor));
+   is (if Has_Value (Pos) then
+          Value_Holders.Element (Symbol_Maps.Element (Pos.Internal_Cursor))
+       else
+          raise Uninitialized_Value with String (Name (Pos)));
+
+   function Has_Value (Pos : Cursor) return Boolean
+   is (not Symbol_Maps.Element (Pos.Internal_Cursor).Is_Empty);
+
+   function Name (Pos : Cursor) return Symbol_Name
+   is (Symbol_Maps.Key (Pos.Internal_Cursor));
+
 
 end Symbol_Tables.Generic_Symbol_Table;
