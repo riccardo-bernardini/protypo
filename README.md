@@ -31,8 +31,9 @@ This is the trailer
 ```
 
 As you can see, there are two different type of sections
-1. *Free-text section*
-2. *Code section*
+1. *Free-text sections* (e.g., "This is the header", "this is the #k#-th line of the body")
+2. *Code sections* between `#{...}#`
+
 The idea is that free-text sections are copied *as-they-are* to the output, while code sections are executed. 
 The interaction between code and free-text sections can be a bit confusing at first. The best way to understand it is to explain what the library does internally.  When the template is read the first stage transforms the free-text sections in code that sends the section content to the output.  For example, the template above is changed internally to something equivalent to
 ```
@@ -46,7 +47,9 @@ end loop;
 @("This is the trailer");
 }#
 ```
-where `@` is a builtin-function that sends its parameter to the output.  If you are crincing to the name choice, just know that most probably you will never need to use it explicitely (although you can, it is a normal function) and I wanted something unlikely to cause clashes. 
+where `@` is a builtin-function that sends its parameter to the output.  I
+
+> f you are crincing to the name choice, just know that most probably you will never need to use it explicitely (although you can, it is a normal function) and I wanted something unlikely to cause clashes. 
 
 Most probably you noticed the expression `#k#` in the free-text and you probably already guessed that they will be replaced by the corresponding value when the text is sent to the output.  If you are familiar with Ruby, this is similar to the `#{...}` mechanism inside `"`-strings. 
 For example, the last template example will generate this output
@@ -88,65 +91,101 @@ The following is an example of template that could be used to generate a LaTeX f
   \begin{tabular}{|l|l|l|}
   \hline 
   \multicolumn{1}{c}{Name} & \multicolumn{1}{c}{Institution} & \multicolumn{1}{c}{Signature} \\
-#-- 
-#-- Here the free text section ends.  Between #{ ... }# we place some code that iterates
-#-- over the set of participants (its value is determined by the software that uses the engine)
-#-- 
+
 #{ 
     for user in participants loop 
-}#
-#-- 
-#-- Back to free text. Since we are inside the loop this text will be repeated for every user
-#--
-  \hline
-  #user.last_name#  #user.first_name# & #user.institution# & \\
-#-- 
-#-- Let's close the loop
-#--
-#{ 
+       [ \hline #user.last_name#  #user.first_name# & #user.institution# & \\ ]
     end loop; 
 }#
-#--
-#-- Free text again, the trailer.
-#--
-\hline
-\end{tabular}
+
+   \hline
+   \end{tabular}
 \end{center}
 \end{document}
 ```
 
 
-As said above, syntax is very Ada-like, but with some semplification (e.g, no task, type definitions, ...), allowing for indexing components and selectors.  Also assignement could accept a list of names on the LHS.  
+#### Syntax overview
+It is worth giving a brief overview of the syntax, a more complete description can be found in the `doc/` folder.
 
-## "Here doc" syntax
-
-The template syntax is indeed a bit peculiar, with a kind of "here doc" implicit that is transformed in normal code by a pre-processor. 
-
-More precisely, the parser has two states: doc and code.  Initially the state is "doc."  When in the doc state the parser reades the characters one at time and collect them in a string.  The state changes to code when the marker `#{` is found.  On the "doc-> code" transition the string is closed and output by the pre-processor as a normal string.  When the processor is in the code state it just copies the text from input to output.  It goes back to doc when the marker `}#` is found.  At the end of the file the state must be doc.
-A special case is when the code is represented by a simple name.  In this case the syntax is a # directly followed (without spaces) by the name itself, for example #bar.field, we return back to code at the end of the name. This construction is equivalent to the `#{...}#` construction, for example, `#bar.field` is equivalent `#{ bar.field; #}` 
-
-### Example
-For example, the following 
+As said above, syntax is very Ada-like. Again, maybe the best thing is an example.  Let's start with function definition 
 ```
-\section{Foo}
-
-\begin{wp}
-#{ for WP in project.wps loop }#
-\wpitem{#WP.index}{#WP.name}{#WP.begin}{#WP.end}
-#{ end loop; }#
-\end{wp}
+#{
+  function factorial(x) -- Procedures are possible, too.  Oh, BTW, this is a comment
+  begin 
+     if x < 1 then
+        return 1;
+     else 
+        return x*factorial(x-1);
+     end if;
+  end factorial; 
+  
+  function fibonacci(n ; x2:= 1; x1:=1) -- Optional parameters too?  Wow!
+  begin
+    old := x2;
+    current := x1;
+    counter := 1;
+    
+    while counter < n loop
+       tmp := current + old;
+       old := current;
+       current := tmp;
+       n := n+1;
+    end loop;
+    
+    return current;
+  end fibonacci;
+  
+  function mod_div(num, den) 
+  begin
+    quotient := num / den; -- I'm supposing they are integers
+    rem      := num - quotient * den;
+    
+    return quotient, rem; -- Functions can return multiple values
+  end mod_div;
+  
+  q, r := mod_div(13, 5);  -- Multiple assignment
+  
+  x, y := y, x;  -- Old trick 
+}#
 ```
+Not bad for a template language, right? (Yeah, let me brag a bit  ;-) 
 
-is equivalent to
+If you program in Ada I guess you'll feel at home.  Two major differences that maybe you noticed is the absence of type declaration (to keep things simple, it is for templates after all...) and the fact that functions can return more than one value.  The latter feature was added to turn around the fact that there are no `out` parameters.  If you allows for multiple return values, you must allow multiple assignment too.
+
+Let's talk about loops.  You saw that we have `while` loops, we have `for` and never ending `loop`s too
+
 ```
-"\section{Foo}
+#{
+  foo : loop 
+      for user in subscriptions loop
+         if user.name /= "boo boo sette-te" then
+            [ \newuser{#user.name#}{#user.age#} ]
+         else
+            exit foo;
+         end if
+      end loop;
+  end loop;
+}#
+```
+As you can see we have `exit` like in Ada (with or without the loop label).  There is not `exit when` construction (still for simplicity). `continue` is not implemented yet, but I  plan to add it.
 
-\begin{wp}";
-for WP in project.wps loop
-   "\wpitem{"; WP.index; "}{"; WP.name; "}{"; WP.begin; "}{"; WP.end; "}"
+It is worth spending a couple of words on `for` loops
+```
+for user in subscriptions loop
+   [name = #user.name#]         
 end loop;
-"\end{wp}";
 ```
+As you can see, they are a generalized version of the classical `for` and based on `iterator`s. This allows you to iterate over the element of a structure, e.g., the users that subscribed to something.  Maybe you are wondering how you can define an iterator. You cannot define it with the template language, usually it is the application using the template engine that defines variables holding iterators that use callbacks inside the application to implement the iterator.  More about this in the "programmer tutorial" section.
+
+If you want the classical `for` you can use the built-in function `range` that returns an iterator
+```
+for k in range(1, 6) loop
+   [#k#-th iteration]
+end loop;
+```
+Yes, no special `..` syntax. 
+
 ## Directives
 When scanning the main text a string of the form
 ```
