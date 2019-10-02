@@ -111,7 +111,7 @@ It is worth giving a brief overview of the syntax, a more complete description c
 As said above, syntax is very Ada-like. Again, maybe the best thing is an example.  Let's start with function definition 
 ```
 #{
-  function factorial(x) -- Procedures are possible, too.  Oh, BTW, this is a comment
+  function factorial(x) is -- Procedures are possible, too.  Oh, BTW, this is a comment
   begin 
      if x < 1 then
         return 1;
@@ -120,7 +120,7 @@ As said above, syntax is very Ada-like. Again, maybe the best thing is an exampl
      end if;
   end factorial; 
   
-  function fibonacci(n ; x2:= 1; x1:=1) -- Optional parameters too?  Wow!
+  function fibonacci(n ; x2:= 1; x1:=1) is -- Optional parameters too?  Wow!
   begin
     old := x2;
     current := x1;
@@ -136,7 +136,7 @@ As said above, syntax is very Ada-like. Again, maybe the best thing is an exampl
     return current;
   end fibonacci;
   
-  function mod_div(num, den) 
+  function mod_div(num, den) is
   begin
     quotient := num / den; -- I'm supposing they are integers
     rem      := num - quotient * den;
@@ -187,6 +187,12 @@ end loop;
 Yes, no special `..` syntax. 
 
 ## Directives
+
+In template expansion there is often the necessity of using a  "boilerplate" shared among different templates.  Because of this, we allow for the inclusion of an external file with an `include` *directive*
+```
+#(include /path/to/file)
+```
+
 When scanning the main text a string of the form
 ```
 #(commmand parameter)
