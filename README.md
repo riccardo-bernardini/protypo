@@ -17,6 +17,63 @@ I guess the best way to introduce you to this library is by means of a simple tu
 It follows that we actually need *two* tutorials: one to explain to the *users* how to write templates and another to explain to the *programmers* how to include the library into a software.  We begin with the first tutorial
 
 ### User-level tutorial
+Consider the following simple example of template
+```
+This is the header
+#{
+    for k in range(1, 5) loop
+}#
+this is the #k#-th line of the body
+#{
+    end loop;
+}#
+This is the trailer
+```
+
+As you can see, there are two different type of sections
+1. *Free-text section*
+2. *Code section*
+The idea is that free-text sections are copied *as-they-are* to the output, while code sections are executed. 
+The interaction between code and free-text sections can be a bit confusing at first. The best way to understand it is to explain what the library does internally.  When the template is read the first stage transforms the free-text sections in code that sends the section content to the output.  For example, the template above is changed internally to something equivalent to
+```
+#{
+@("This is the header");
+
+for k in range(1, 5) loop
+   @("this is the #k#-th line of the body");
+end loop;
+
+@("This is the trailer");
+}#
+```
+where `@` is a builtin-function that sends its parameter to the output.  If you are crincing to the name choice, just know that most probably you will never need to use it explicitely (although you can, it is a normal function) and I wanted something unlikely to cause clashes. 
+
+Most probably you noticed the expression `#k#` in the free-text and you probably already guessed that they will be replaced by the corresponding value when the text is sent to the output.  If you are familiar with Ruby, this is similar to the `#{...}` mechanism inside `"`-strings. 
+For example, the last template example will generate this output
+```
+This is the header
+this is the 1-th line of the body
+this is the 2-th line of the body
+this is the 3-th line of the body
+this is the 4-th line of the body
+this is the 5-th line of the body
+This is the trailer
+```
+(Yes, `1-th` is not the best English ever, nevertheless... Correcting the template in order to take into account this case is left as an exercise to the reader... ;-)
+
+There is a similar short-cut to embed strings into the code section: just include the text between `[...]`.  For example, the last example can be rewritten as 
+```
+This is the header
+#{
+    for k in range(1, 5) loop
+      [this is the #k#-th line of the body]
+    end loop;
+}#
+This is the trailer
+```
+Note that there is no `;` after the `]`.  Personally, I find this a more readable alternative when the text to be inserted is short (avoiding lots of `}#...#{` stuff).
+
+#### A more complex example
 
 The following is an example of template that could be used to generate a LaTeX file producing a table with the participants to an event (a use case quite similar to the one that triggered the development of this library)
 ```
@@ -57,61 +114,6 @@ The following is an example of template that could be used to generate a LaTeX f
 \end{center}
 \end{document}
 ```
-As you can see, there are two different type of sections
-1. *Free-text section*
-2. *Code section*
-The idea is that free-text sections are copied *as-they-are* to the output, while code sections are executed. 
-
-The interaction between code and free-text sections can be a bit confusing at first. The best way to understand it is to explain what the library does internally.  When the template is read the first stage transforms the free-text sections in code that sends the section content to the output.  For example, the template
-```
-This is the header
-#{
-    for k in range(1, 5) loop
-}#
-this is the #k#-th line of the body
-#{
-    end loop;
-}#
-This is the trailer
-```
-is changed internally to something equivalent to
-```
-#{
-@("This is the header");
-
-for k in range(1, 5) loop
-   @("this is the #k#-th line of the body");
-end loop;
-
-@("This is the trailer");
-}#
-```
-where `@` is a builtin-function that sends its parameter to the output.  If you are crincing to the name choice, just know that most probably you will never need to use it explicitely (although you can, it is a normal function) and I wanted something unlikely to cause clashes. 
-
-Most probably you noticed expressions like `#user.last_name#` in the free-text.  You probably already guessed that they will be replaced by the corresponding value when the text is sent to the output.  If you are familiar with Ruby, this is similar to the `#{...}` mechanism inside `"`-strings. 
-For example, the last template example will generate this output
-```
-This is the header
-this is the 1-th line of the body
-this is the 2-th line of the body
-this is the 3-th line of the body
-this is the 4-th line of the body
-this is the 5-th line of the body
-This is the trailer
-```
-(Yes, `1-th` is not the best English ever, nevertheless... Correcting the template in order to take into account this case is left as an exercise to the reader... ;-)
-
-There is a similar short-cut to embed strings into the code section: just include the text between `[...]`.  For example, the last example can be rewritten as 
-```
-This is the header
-#{
-    for k in range(1, 5) loop
-      [this is the #k#-th line of the body]
-    end loop;
-}#
-This is the trailer
-```
-Note that there is no `;` after the `]`.  Personally, I find this a more readable alternative when the text to be inserted is short (avoiding lots of `}#...#{` stuff).
 
 
 As said above, syntax is very Ada-like, but with some semplification (e.g, no task, type definitions, ...), allowing for indexing components and selectors.  Also assignement could accept a list of names on the LHS.  
