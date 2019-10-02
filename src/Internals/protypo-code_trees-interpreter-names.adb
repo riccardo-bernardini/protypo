@@ -42,7 +42,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
                                       Record_Handler    => Get_Record (X));
 
             when Function_Handler =>
-               return Name_Reference'(Class            => Function_Call,
+               return Name_Reference'(Class            => Function_Reference,
                                       Function_Handler => Get_Function (X),
                                       Parameters       => <>);
 

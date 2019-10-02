@@ -1,0 +1,27 @@
+#{
+function foo(x)
+begin
+[primo]
+t:=0;
+[-#t#-]
+  return x*x;
+end foo;
+
+function fact(x)
+begin
+  if x < 1 then
+     return 1;
+  else
+     t:=4;
+     [ fifi]
+     y:=foo(x);
+     [>#t#<]
+     [qq]
+     return x*y;
+  end if; 
+end fact;
+
+[ prima ]
+y := fact(3);
+[ dopo #y# #t# ]
+}#

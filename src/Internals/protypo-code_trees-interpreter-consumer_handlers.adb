@@ -5,6 +5,8 @@ use Readable_Sequences.String_Sequences;
 with Protypo.Scanning;
 with Protypo.Parsing;
 with Protypo.Code_Trees.Interpreter.Expressions;
+
+pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is

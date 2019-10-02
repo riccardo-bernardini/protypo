@@ -230,7 +230,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
       Result := Tmp.First_Element;
 
       if not (Result.Class in Scalar_Classes) then
-         raise Constraint_Error;
+         raise Constraint_Error with Result.Class'Image;
       end if;
 
       return Result;

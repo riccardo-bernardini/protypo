@@ -9,8 +9,14 @@ package Protypo.API.Interpreter is
    type Compiled_Code is limited private;
 
    procedure Bye (X : in out Compiled_Code);
+   procedure Dump (X : Compiled_Code);
+
    function Compile (Program  : String;
                      Base_Dir : String := "") return Compiled_Code;
+
+   procedure Compile (Target   : out Compiled_Code;
+                      Program  : String;
+                      Base_Dir : String := "");
 
    procedure Run (Program      : Compiled_Code;
                   Symbol_Table : Symbols.Table;
@@ -24,6 +30,7 @@ package Protypo.API.Interpreter is
    procedure Expand_Template (Template        : String;
                               Symbol_Table    : Symbols.Table;
                               Target_Filenane : String);
+
 private
    type Compiled_Code is
      new Ada.Finalization.Limited_Controlled

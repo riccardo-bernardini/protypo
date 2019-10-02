@@ -767,7 +767,7 @@ package body Protypo.Parsing is
          then
             Put_Line (">> " & Class (Input.Read)'Image);
             Put_Line (">> [" & Value (Input.Read)  & "][" & To_String (Name) & "]");
-            raise Constraint_Error;
+            raise Parsing_Error with "end " & To_String(Name) & "; expected";
          else
             Input.Next;
          end if;

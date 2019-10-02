@@ -204,7 +204,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                                Expressions.Call_Function (Call_Ref);
                begin
                   if Result'Length /= 0 then
-                     raise Constraint_Error;
+                     raise Run_Time_Error with "Procedure call returns a value";
                   end if;
                end;
 
