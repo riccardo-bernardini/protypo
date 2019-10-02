@@ -180,6 +180,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
             return Embed (Create (To_String (Expr.S)));
 
          when Selected | Indexed | Identifier  =>
+--              Code_Trees.Dump (Expr, 0);
             declare
                Ref : constant Names.Name_Reference := Names.Eval_Name (Status, Expr);
             begin
@@ -255,7 +256,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
          end if;
 
          declare
-            Shift : constant Natural := Parameters.First_Index - Result'First;
+            Shift : constant Integer := Parameters.First_Index - Result'First;
          begin
             for Idx in Result'Range loop
                if Idx + Shift <= Parameters.Last_Index then

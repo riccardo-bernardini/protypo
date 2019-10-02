@@ -250,7 +250,8 @@ package body Protypo.Code_Trees.Interpreter.Statements is
 
                Status.Symbol_Table.Create
                  (Name          => Variable,
-                  Initial_Value => Void_Value);
+                  Initial_Value => Void_Value,
+                  Position      => Position);
 
                loop
                   exit when Iterator_Ref.End_Of_Iteration;

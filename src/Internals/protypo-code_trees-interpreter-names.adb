@@ -110,7 +110,10 @@ package body Protypo.Code_Trees.Interpreter.Names is
                Val      : Engine_Value;
             begin
 
+--                 Put_Line ("@@@ searching '" & ID & "'");
                if Position = No_Element then
+
+--                    Put_Line ("@@@ not found '" & ID & "'");
                   --
                   -- The name is not in the symbol table: create it
                   -- but leave it not initialized, it can be used only
@@ -130,6 +133,9 @@ package body Protypo.Code_Trees.Interpreter.Names is
                   -- result of the evaluation of a name is always a reference.
                   --
                   Val := Value (Position);
+
+
+--                    Put_Line ("@@@ found '" & ID & "': " & Val.Class'Image);
 
                   if Val.Class in Handler_Classes then
                      return + Val;

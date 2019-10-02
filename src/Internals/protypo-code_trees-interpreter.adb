@@ -2,6 +2,7 @@ pragma Ada_2012;
 with Protypo.Api.Engine_Values;  use Protypo.Api.Engine_Values;
 with Protypo.Code_Trees.Interpreter.Consumer_Handlers;
 with Protypo.Code_Trees.Interpreter.Statements;
+with Protypo.Code_Trees.Interpreter.Range_Iterators;
 with Protypo.Scanning;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
@@ -14,6 +15,23 @@ package body Protypo.Code_Trees.Interpreter is
              when Real   => Get_Float (X)'Image,
              when Text   => Get_String (X),
              when others => X.Class'Image);
+
+   --------------------
+   -- Range_Callback --
+   --------------------
+
+   function Range_Callback (Parameters : Engine_Value_Array)
+                            return Engine_Value_Array
+   is
+   begin
+      if Parameters'Length /= 2 then
+         raise Run_Time_Error with "range needs 2 parameters";
+      end if;
+
+      return (1 => Create (Range_Iterators.Create
+              (Start => Get_Integer (Parameters (Parameters'First)),
+               Stop  => Get_Integer (Parameters (Parameters'First + 1)))));
+   end Range_Callback;
 
    ---------
    -- Run --
@@ -41,6 +59,9 @@ package body Protypo.Code_Trees.Interpreter is
             Initial_Value => Create (Consumer_Handlers.Create (Consumer    => Consumer,
                                                                With_Escape => True,
                                                                Status      => Inter)));
+         Table.Create
+           (Name          => "range",
+            Initial_Value => Create (Range_Callback'Access, 2));
       end Add_Builtin_Values;
 
       Interpreter : constant Interpreter_Access :=

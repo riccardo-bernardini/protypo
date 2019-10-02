@@ -24,5 +24,19 @@ pippo : loop
 end loop;
 end gigi;
 
-gigi;
+titti:for k in range(3, 8) loop
+  for n in range(2, 7) loop
+    [(#k#,#n#)]
+
+    if k=7 and n =4 then
+       exit titti;
+    elsif n=6 then
+      exit;
+    else
+      [...]
+    end if;
+  end loop;
+[\newtask{#k#}{2}
+]
+end loop;
 }#

@@ -331,6 +331,9 @@ private
    
    procedure Delete (Item : in out Node_Access);
    procedure Delete (Item : in out Node_Vectors.Vector);
+   procedure Dump (Item  : Node_Access;
+                   Level : Natural;
+                   Label : String := "");
    
    type Parsed_Code is
       record

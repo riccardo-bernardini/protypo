@@ -854,16 +854,4 @@ package body Protypo.Parsing is
       return Code_Trees.Statement_Sequence (Statement_Sequences.Dump (Result));
    end Parse_Statement_Sequence;
 
-   ------------------------------
-   --     -- Parse_Statement_Sequence --
-   --     ------------------------------
-   --
-   --     function Parse_Statement_Sequence
-   --       (Input      : in out Scanning.Token_List)
-   --        return Code_Trees.Parsed_Code
-   --     is
-   --     begin
-   --        return Parse_Statement_Sequence (Input);
-   --     end Parse_Statement_Sequence;
-
 end Protypo.Parsing;

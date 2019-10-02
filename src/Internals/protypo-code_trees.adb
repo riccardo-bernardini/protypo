@@ -591,9 +591,7 @@ package body Protypo.Code_Trees is
       Free (Item);
    end Delete;
 
-   procedure Dump (Item  : Node_Access;
-                   Level : Natural;
-                   Label : String := "");
+
 
    ----------
    -- Dump --
