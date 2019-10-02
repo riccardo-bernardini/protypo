@@ -1,25 +1,118 @@
 # Protypo
-Another template engine "alla mia maniera" (in my style).
 
-## Abstract
+## What is this?
 
-This library is a templating engine that I wrote because unsatisfied of what I found around. It is though to be quite flexible and with a simple conceptual model.  The language syntax is very Ada-like. At the moment it is not strongly typed, but rather duck-typed "a la Ruby."
+This is library that provides a template expansion engine in Ada.
 
-## The model
-A template is a program written in a language with an Ada-ish syntax.  Differently from Ada (and similarly to C) the language allows *naked expressions* like
+I wrote it because I needed it and nothing that I found satisfied me fully. Moreover, I had lots of fun (and work...) writing it ;-)
 
+I like the final result (but I guess you can say I am partial to it). It is quite flexible and with a simple conceptual model and a syntax is very Ada-ish. At the moment it is not strongly typed, but rather duck-typed "a la Ruby."
+
+## A fast tutorial (or maybe two?)
+
+I guess the best way to introduce you to this library is by means of a simple tutorial.  Being this a library there are two different type of users
+1. Users that write templates to be expanded by the engine.  We will call these users *final users* or simply *users*
+2. Programmers that include the library into a software of theirs. We will call these users *programmers*
+
+It follows that we actually need *two* tutorials: one to explain to the *users* how to write templates and another to explain to the *programmers* how to include the library into a software.  We begin with the first tutorial
+
+### User-level tutorial
+
+The following is an example of template that could be used to generate a LaTeX file producing a table with the participants to an event (a use case quite similar to the one that triggered the development of this library)
 ```
-"Hello world";
+#-- This line is totally ignored.  A "free text" section that will be copied verbatim to the
+#-- output follows.
+%%% 
+%%% Automatically generated file: every edit will be lost
+%%%
+\documentclass{article}
+\begin{document}
+\begin{center}
+  \begin{tabular}{|l|l|l|}
+  \hline 
+  \multicolumn{1}{c}{Name} & \multicolumn{1}{c}{Institution} & \multicolumn{1}{c}{Signature} \\
+#-- 
+#-- Here the free text section ends.  Between #{ ... }# we place some code that iterates
+#-- over the set of participants (its value is determined by the software that uses the engine)
+#-- 
+#{ 
+    for user in participants loop 
+}#
+#-- 
+#-- Back to free text. Since we are inside the loop this text will be repeated for every user
+#--
+  \hline
+  #user.last_name#  #user.first_name# & #user.institution# & \\
+#-- 
+#-- Let's close the loop
+#--
+#{ 
+    end loop; 
+}#
+#--
+#-- Free text again, the trailer.
+#--
+\hline
+\end{tabular}
+\end{center}
+\end{document}
 ```
-Differently from C, however, naked expressions have side-effect.  More precisely, every time a naked expression is evaluated, the result (of type Engine_Value) is passed to a "consumer" defined by the library user (that is, who writes the application that uses this library).  The consumer can do whatever it wants with the output; in the default case the statement output is converted to string (when meningful) and printed on a file.
+As you can see, there are two different type of sections
+1. *Free-text section*
+2. *Code section*
+The idea is that free-text sections are copied *as-they-are* to the output, while code sections are executed. 
 
-A basic syntax can be
+The interaction between code and free-text sections can be a bit confusing at first. The best way to understand it is to explain what the library does internally.  When the template is read the first stage transforms the free-text sections in code that sends the section content to the output.  For example, the template
+```
+This is the header
+#{
+    for k in range(1, 5) loop
+}#
+this is the #k#-th line of the body
+#{
+    end loop;
+}#
+This is the trailer
+```
+is changed internally to something equivalent to
+```
+#{
+@("This is the header");
 
+for k in range(1, 5) loop
+   @("this is the #k#-th line of the body");
+end loop;
+
+@("This is the trailer");
+}#
 ```
-statement := simple_statement | compound
-simple_statement := assignment | return | expression
-compound  := if | loop | case
+where `@` is a builtin-function that sends its parameter to the output.  If you are crincing to the name choice, just know that most probably you will never need to use it explicitely (although you can, it is a normal function) and I wanted something unlikely to cause clashes. 
+
+Most probably you noticed expressions like `#user.last_name#` in the free-text.  You probably already guessed that they will be replaced by the corresponding value when the text is sent to the output.  If you are familiar with Ruby, this is similar to the `#{...}` mechanism inside `"`-strings. 
+For example, the last template example will generate this output
 ```
+This is the header
+this is the 1-th line of the body
+this is the 2-th line of the body
+this is the 3-th line of the body
+this is the 4-th line of the body
+this is the 5-th line of the body
+This is the trailer
+```
+(Yes, `1-th` is not the best English ever, nevertheless... Correcting the template in order to take into account this case is left as an exercise to the reader... ;-)
+
+There is a similar short-cut to embed strings into the code section: just include the text between `[...]`.  For example, the last example can be rewritten as 
+```
+This is the header
+#{
+    for k in range(1, 5) loop
+      [this is the #k#-th line of the body]
+    end loop;
+}#
+This is the trailer
+```
+Note that there is no `;` after the `]`.  Personally, I find this a more readable alternative when the text to be inserted is short (avoiding lots of `}#...#{` stuff).
+
 
 As said above, syntax is very Ada-like, but with some semplification (e.g, no task, type definitions, ...), allowing for indexing components and selectors.  Also assignement could accept a list of names on the LHS.  
 
