@@ -1,19 +1,4 @@
 #{
-procedure foo(x)
-begin
---[foo(#t#)]
-t:=0;
-x:=1.2;
-[-#t#-]
-end foo;
-
-procedure bar(x:=1; a:=4)
-begin
-  t:=a;
-    [bar1(#t#, #x#)]
-  foo(3);
-  [bar2(#t#, #x#)]
-end bar;
 
 function fact(x)
 begin
@@ -24,7 +9,20 @@ begin
   end if; 
 end fact;
 
-bar;
+procedure gigi
+begin
+x := 0;
 
-[ dopo #fact(fact(3))# #fact(3)#]
+pippo : loop
+   loop
+   [#x#]
+      if x > 10 then
+        return;
+      end if;
+      x := x+1;
+   end loop;
+end loop;
+end gigi;
+
+gigi;
 }#

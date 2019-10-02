@@ -126,6 +126,12 @@ package Symbol_Tables.Generic_Symbol_Table is
    type Value_Printer is access function (X : Symbol_Value) return String;
 
    procedure Set_Printer (Callback : Value_Printer);
+   -- Useful for debugging.  Setup a function that converts symbol values
+   -- to string.  This function will be used in generating debug prints.
+   -- Why specifying the converter in this way  and not as a parameter
+   -- to package?  Because it is a feature that it is not always
+   -- required.
+
 private
    package Value_Holders is
      new Ada.Containers.Indefinite_Holders (Symbol_Value);

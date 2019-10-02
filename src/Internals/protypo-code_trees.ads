@@ -45,6 +45,7 @@ package Protypo.Code_Trees is
    type Parsed_Code is private;
 
    Empty_Tree : constant Parsed_Code;
+   
 
    function Is_Empty (X : Parsed_Code) return Boolean;
    
@@ -83,6 +84,8 @@ package Protypo.Code_Trees is
      with 
        Pre => (for all Val of Default => Is_Empty (Val) or else (Class (Val) in Expression)),
      Post => Class (Parameter_List'Result) = Parameter_Signature;
+   
+   function Empty_Parameter_List return Parsed_Code;
 
    function Definition (Name           : String;
                         Parameter_List : Parsed_Code;
@@ -92,7 +95,9 @@ package Protypo.Code_Trees is
      with 
        Pre => 
          Class (Function_Body) = Statement_Sequence
-     and Class (Parameter_List) = Parameter_Signature,
+     and (Parameter_List = Empty_Tree 
+          or else 
+            Class (Parameter_List) = Parameter_Signature),
      Post => 
        Class (Definition'Result) = Defun;
    
@@ -336,6 +341,13 @@ private
 
    Empty_Tree_Array : constant Tree_Array (2 .. 1) := (others => <>);
 
+   
+   function Empty_Parameter_List return Parsed_Code
+   is (Pt => new Node
+         '(Class     => Parameter_Signature,
+           Signature => Parameter_Specs'(Names   => ID_Lists.Empty_Vector,
+                                         Default => Node_Vectors.Empty_Vector)));
+   
    function Is_Empty (X : Parsed_Code) return Boolean
    is (X.Pt = null);
    

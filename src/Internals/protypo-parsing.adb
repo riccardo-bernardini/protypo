@@ -757,6 +757,8 @@ package body Protypo.Parsing is
             Parameter_Names := Parse_ID_List (Input);
 
             Expect_And_Eat (Input, Close_Parenthesis);
+         else
+            Parameter_Names := Code_Trees.Empty_Parameter_List;
          end if;
 
          Expect_And_Eat (Input, Kw_Begin);
