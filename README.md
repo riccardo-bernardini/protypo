@@ -49,7 +49,7 @@ end loop;
 ```
 where `@` is a builtin-function that sends its parameter to the output.  I
 
-> f you are crincing to the name choice, just know that most probably you will never need to use it explicitely (although you can, it is a normal function) and I wanted something unlikely to cause clashes. 
+> If you are crincing to the name choice, just know that most probably you will never need to use it explicitely (although you can, it is a normal function) and I wanted something unlikely to cause clashes. 
 
 Most probably you noticed the expression `#k#` in the free-text and you probably already guessed that they will be replaced by the corresponding value when the text is sent to the output.  If you are familiar with Ruby, this is similar to the `#{...}` mechanism inside `"`-strings. 
 For example, the last template example will generate this output
