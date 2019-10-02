@@ -38,6 +38,7 @@ package Protypo.Tokens is
       Kw_Xor,
       Kw_Not,
       Kw_In,
+      Kw_Is,
       Kw_Of,
       End_Of_Text);
 

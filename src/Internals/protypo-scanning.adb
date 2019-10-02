@@ -228,6 +228,7 @@ package body Protypo.Scanning is
                     Kw_Xor       => +"xor",
                     Kw_Not       => +"not",
                     Kw_In        => +"in",
+                    Kw_Is        => +"is",
                     Kw_Of        => +"of");
 
 

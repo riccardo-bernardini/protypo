@@ -1,6 +1,6 @@
 #{
 
-function fact(x)
+function fact(x) is
 begin
   if x < 1 then
      return 1;
@@ -9,7 +9,7 @@ begin
   end if; 
 end fact;
 
-procedure gigi
+procedure gigi is
 begin
 x := 0;
 
@@ -26,7 +26,7 @@ end gigi;
 
 titti:for k in range(3, 8) loop
   for n in range(2, 7) loop
-    [(#k#,#n#)]
+    [(###k#,#n#)]
 
     if k=7 and n =4 then
        exit titti;

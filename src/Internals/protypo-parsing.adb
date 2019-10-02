@@ -761,6 +761,8 @@ package body Protypo.Parsing is
             Parameter_Names := Code_Trees.Empty_Parameter_List;
          end if;
 
+         Expect_And_Eat (Input, Kw_Is);
+
          Expect_And_Eat (Input, Kw_Begin);
 
          Function_Body := Parse_Statement_Sequence (Input);
@@ -844,7 +846,7 @@ package body Protypo.Parsing is
                Open_Parenthesis | Label_Separator  |
                Kw_When          | Kw_In            | Kw_Of               |
                Real             | Kw_Xor           | Kw_Not              |
-               Kw_Begin               =>
+               Kw_Begin         | Kw_Is       =>
 
                Unexpected_Token (Class (Input.Read), End_Of_Text);
                exit;

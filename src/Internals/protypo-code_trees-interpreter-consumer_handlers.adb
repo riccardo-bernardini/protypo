@@ -45,7 +45,8 @@ package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is
    is
       type Automata_State is (Reading_Text, Reading_Expression);
 
-      Seq : Sequence := Create (Input);
+      EOF : constant Character := Character'Val (0);
+      Seq : Sequence := Create (Input, EOF);
       Current_State : Automata_State := Reading_Text;
 
       Result : Sequence;
@@ -55,11 +56,15 @@ package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is
          case Current_State is
             when Reading_Text =>
 
-               if seq.Read = '#' then
-                  seq.Next;
+               if Seq.Read = '#' and Seq.Read (1) /= '#' then
+                  Seq.Next;
                   Expr.Clear;
 
                   Current_State := Reading_Expression;
+               elsif Seq.Read = '#' and Seq.Read (1) = '#' then
+                  Seq.Next (2);
+
+                  Result.Append ('#');
                else
                   Result.Append (seq.Next);
                end if;
