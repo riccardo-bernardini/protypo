@@ -5,12 +5,16 @@ This document describes the syntax of the template language.  The description is
 program   = sequence_of_statement  EOT
 sequence_of_statement = statement*
 statement = simple | compound
-simple    = assignment | return | proc_call | exit  
+simple    = assignment | return | proc_call | exit | embedded_text  
 compound  = if | loop | while | for | defun
 defun     = (FUNCTION | PROCEDURE) ID [ '( signature ') ] IS BEGIN sequence_of_statement END ID;
 signature = mandatory ; optional | mandatory | optional 
 mandatory = ID (; ID)*
 optional  = ID := expr (; ID := expr)*
+
+embedded_text = '[ content ']
+content       = bracket_free | bracket_free? '[ content '] bracket_free?
+bracket_free  = [^[]]+
 
 proc_call  = ID [ '( expr_list ') ]  ;
 assignment = name_list := expr_list ;
