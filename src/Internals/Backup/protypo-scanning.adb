@@ -70,16 +70,14 @@ package body Protypo.Scanning is
 
 
 
-   Escape           : constant Character := '#';
-   Begin_Of_Code    : constant String := Escape & "{";
-   Template_Comment : constant String := Escape & "--";
-   Directive_Begin  : constant Character := '(';
-   Directive_End    : constant Character := ')';
-   Directive_Marker : constant String := Escape & Directive_Begin;
-
-   --     Short_Code_Begin       : constant Set_String := "#" & Letter_Set;
-   --     Transparent_Comment    : constant String := "%#";
-   --     Target_Comment         : constant String := "%";
+   Begin_Of_Code          : constant String := "#{";
+   Short_Code_Begin       : constant Set_String := "#" & Letter_Set;
+   Transparent_Comment    : constant String := "%#";
+   Target_Comment         : constant String := "%";
+   Template_Comment       : constant String := "#--";
+   Directive_Begin_Marker : constant Character := '(';
+   Directive_End_Marker   : constant Character := ')';
+   Directive_Begin        : constant String := "#" & Directive_Begin_Marker;
 
 
 
@@ -151,36 +149,38 @@ package body Protypo.Scanning is
    -- Skip_Comment --
    ------------------
 
-   procedure Skip_To_End_Of_Line (Input : in out String_Sequences.Sequence) is
+   procedure Skip_Comment (Input : in out String_Sequences.Sequence) is
    begin
       while not At_End_Of_Line (Input) loop
          Input.Next;
       end loop;
-   end Skip_To_End_Of_Line;
+   end Skip_Comment;
 
-   --     ----------------------------
-   --     -- Target_Comment_Scanner --
-   --     ----------------------------
-   --
-   --     procedure Target_Comment_Scanner (Buffer : in out String_Sequences.Sequence;
-   --                                       Input  : in out String_Sequences.Sequence)
-   --     is
-   --     begin
-   --        while not At_End_Of_Line (Input) loop
-   --           Buffer.Append (Input.Read);
-   --           Input.Next;
-   --        end loop;
-   --     end Target_Comment_Scanner;
+   ----------------------------
+   -- Target_Comment_Scanner --
+   ----------------------------
+
+   procedure Target_Comment_Scanner (Buffer : in out String_Sequences.Sequence;
+                                     Input  : in out String_Sequences.Sequence)
+   is
+   begin
+      while not At_End_Of_Line (Input) loop
+         Buffer.Append (Input.Read);
+         Input.Next;
+      end loop;
+   end Target_Comment_Scanner;
 
 
    ------------------
    -- Code_Scanner --
    ------------------
-   procedure  Code_Scanner (Input   : in out String_Sequences.Sequence;
+   procedure  Code_Scanner (Builder : in out Tokens.Token_Builder;
+                            Input   : in out String_Sequences.Sequence;
                             Result  : in out Token_List)
      with Post => Result.Length > Result.Length'Old;
 
-   procedure  Code_Scanner (Input   : in out String_Sequences.Sequence;
+   procedure  Code_Scanner (Builder : in out Tokens.Token_Builder;
+                            Input   : in out String_Sequences.Sequence;
                             Result  : in out Token_List)
    is
       use Tokens;
@@ -232,33 +232,6 @@ package body Protypo.Scanning is
                     Kw_In        => +"in",
                     Kw_Is        => +"is",
                     Kw_Of        => +"of");
-
-      Builder : Tokens.Token_Builder;
-
-      procedure Skip_Spaces
-        with
-          Pre => not Builder.Is_Position_Set,
-          Post => not Builder.Is_Position_Set;
-
-      procedure Scan_Identifier
-        with
-          Pre => Builder.Is_Position_Set,
-          Post => not Builder.Is_Position_Set;
-
-      procedure Scan_Number
-        with
-          Pre => Builder.Is_Position_Set,
-          Post => not Builder.Is_Position_Set;
-
-      procedure Scan_Text
-        with
-          Pre => Builder.Is_Position_Set,
-          Post => not Builder.Is_Position_Set;
-
-      procedure Scan_Embedded_Text
-        with
-          Pre => Builder.Is_Position_Set,
-          Post => not Builder.Is_Position_Set;
 
 
       procedure Skip_Spaces is
@@ -371,8 +344,8 @@ package body Protypo.Scanning is
          exit when Peek_And_Eat (Input, "}#");
 
          if Peek_And_Eat (Input, "--") then
+            Skip_Comment (Input);
             Builder.Clear_Position;
-            Skip_To_End_Of_Line (Input);
 
          elsif Is_In (Input.Read, Begin_Id_Set) then
             Scan_Identifier;
@@ -412,15 +385,11 @@ package body Protypo.Scanning is
                   Result.Append (Builder.Make_Token (Best_Match));
                   Input.Next (Best_Match_Len);
                else
-                  Put_Line ("[" & Input.Read & "]"
-                            & String_Sequences.Line (Input.Position)'Image
-                            & String_Sequences.Char (Input.Position)'Image);
+                  Put_Line ("[" & Input.Read & "]");
                   Error (Unexpected_Token_In_Code);
                end if;
             end;
          end if;
-
-         pragma Assert (not Builder.Is_Position_Set);
       end loop;
 
    exception
@@ -428,74 +397,75 @@ package body Protypo.Scanning is
          Error (Unexpected_Code_End);
    end Code_Scanner;
 
-   --     procedure  Small_Code_Scanner (Builder : in out Tokens.Token_Builder;
-   --                                    Input   : in out String_Sequences.Sequence;
-   --                                    Result  : in out Token_List)
-   --       with Post => Result.Length > Result.Length'Old;
-   --
-   --     procedure  Small_Code_Scanner (Builder : in out Tokens.Token_Builder;
-   --                                    Input   : in out String_Sequences.Sequence;
-   --                                    Result  : in out Token_List)
-   --     is
-   --        use Tokens;
-   --
-   --        type Scanner_State is (In_ID, After_Dot);
-   --
-   --        State   : Scanner_State := In_ID;
-   --        ID_Name : String_Sequences.Sequence;
-   --     begin
-   --
-   --
-   --        while not Input.End_Of_Sequence loop
-   --           case State is
-   --              when In_ID =>
-   --                 if Is_In (Input.Read, Id_Charset) then
-   --                    Id_Name.Append (Input.Read);
-   --                    Input.Next;
-   --
-   --                 elsif Input.Read = '.' then
-   --                    Result.Append (Builder.Make_Token (Identifier, ID_Name.Dump));
-   --                    Result.Append (Make_Unanchored_Token (Dot));
-   --                    ID_Name.Clear;
-   --                    Input.Next;
-   --
-   --                    State := After_Dot;
-   --
-   --                 else
-   --                    exit;
-   --                 end if;
-   --
-   --              when After_Dot =>
-   --                 if Is_In (Input.Read, Id_Charset) then
-   --                    Id_Name.Append (Input.Read);
-   --                    Input.Next;
-   --
-   --                    State := In_ID;
-   --                 else
-   --                    Error (Unexpected_Short_End);
-   --                 end if;
-   --           end case;
-   --        end loop;
-   --
-   --        if State = After_Dot then
-   --           Error (Unexpected_Short_End);
-   --        end if;
-   --
-   --        pragma Assert (ID_Name.Length > 0);
-   --
-   --        Result.Append (Builder.Make_Token (Identifier, Consume_Procedure_Name));
-   --        Result.Append (Make_Unanchored_Token (Open_Parenthesis));
-   --        Result.Append (Make_Unanchored_Token (Identifier, ID_Name.Dump));
-   --        Result.Append (Make_Unanchored_Token (Close_Parenthesis));
-   --        Result.Append (Make_Unanchored_Token (End_Of_Statement));
-   --
-   --     end Small_Code_Scanner;
+   procedure  Small_Code_Scanner (Builder : in out Tokens.Token_Builder;
+                                  Input   : in out String_Sequences.Sequence;
+                                  Result  : in out Token_List)
+     with Post => Result.Length > Result.Length'Old;
+
+   procedure  Small_Code_Scanner (Builder : in out Tokens.Token_Builder;
+                                  Input   : in out String_Sequences.Sequence;
+                                  Result  : in out Token_List)
+   is
+      use Tokens;
+
+      type Scanner_State is (In_ID, After_Dot);
+
+      State   : Scanner_State := In_ID;
+      ID_Name : String_Sequences.Sequence;
+   begin
+
+
+      while not Input.End_Of_Sequence loop
+         case State is
+            when In_ID =>
+               if Is_In (Input.Read, Id_Charset) then
+                  Id_Name.Append (Input.Read);
+                  Input.Next;
+
+               elsif Input.Read = '.' then
+                  Result.Append (Builder.Make_Token (Identifier, ID_Name.Dump));
+                  Result.Append (Make_Unanchored_Token (Dot));
+                  ID_Name.Clear;
+                  Input.Next;
+
+                  State := After_Dot;
+
+               else
+                  exit;
+               end if;
+
+            when After_Dot =>
+               if Is_In (Input.Read, Id_Charset) then
+                  Id_Name.Append (Input.Read);
+                  Input.Next;
+
+                  State := In_ID;
+               else
+                  Error (Unexpected_Short_End);
+               end if;
+         end case;
+      end loop;
+
+      if State = After_Dot then
+         Error (Unexpected_Short_End);
+      end if;
+
+      pragma Assert (ID_Name.Length > 0);
+
+      Result.Append (Builder.Make_Token (Identifier, Consume_Procedure_Name));
+      Result.Append (Make_Unanchored_Token (Open_Parenthesis));
+      Result.Append (Make_Unanchored_Token (Identifier, ID_Name.Dump));
+      Result.Append (Make_Unanchored_Token (Close_Parenthesis));
+      Result.Append (Make_Unanchored_Token (End_Of_Statement));
+
+   end Small_Code_Scanner;
 
    -----------------
    -- Dump_Buffer --
    -----------------
 
-   procedure Dump_Buffer (Buffer  : in out String_Sequences.Sequence;
+   procedure Dump_Buffer (Builder : in out Tokens.Token_Builder;
+                          Buffer  : in out String_Sequences.Sequence;
                           Result  : in out Token_List)
      with
        Post =>
@@ -503,14 +473,15 @@ package body Protypo.Scanning is
          and Result.Length = Result.Length'Old + (if Buffer.Length'Old > 0 then 5 else 0);
 
 
-   procedure Dump_Buffer (Buffer  : in out String_Sequences.Sequence;
+   procedure Dump_Buffer (Builder : in out Tokens.Token_Builder;
+                          Buffer  : in out String_Sequences.Sequence;
                           Result  : in out Token_List)
    is
       use Tokens;
 
    begin
       if Buffer.Length > 0 then
-         Result.Append (Make_Unanchored_Token (Identifier, Consume_Procedure_Name));
+         Result.Append (Builder.Make_Token (Identifier, Consume_Procedure_Name));
          Result.Append (Make_Unanchored_Token (Open_Parenthesis));
          Result.Append (Make_Unanchored_Token (Text, Buffer.Dump));
          Result.Append (Make_Unanchored_Token (Close_Parenthesis));
@@ -520,30 +491,30 @@ package body Protypo.Scanning is
    end Dump_Buffer;
 
 
-   --     ---------------------------------
-   --     -- Transparent_Comment_Scanner --
-   --     ---------------------------------
-   --
-   --     procedure Transparent_Comment_Scanner (Builder : in out Tokens.Token_Builder;
-   --                                            Buffer  : in out String_Sequences.Sequence;
-   --                                            Input   : in out String_Sequences.Sequence;
-   --                                            Result  : in out Token_List)
-   --     is
-   --     begin
-   --        while not At_End_Of_Line (Input) loop
-   --           if Does_It_Follow (Input, Short_Code_Begin)  then
-   --              Dump_Buffer (Builder, Buffer, Result);
-   --              Input.Next;
-   --              Builder.Set_Position (Input.Position);
-   --
-   --              Small_Code_Scanner (Builder, Input, Result);
-   --              Builder.Set_Position (Input.Position);
-   --           else
-   --              Buffer.Append (Input.Read);
-   --              Input.Next;
-   --           end if;
-   --        end loop;
-   --     end Transparent_Comment_Scanner;
+   ---------------------------------
+   -- Transparent_Comment_Scanner --
+   ---------------------------------
+
+   procedure Transparent_Comment_Scanner (Builder : in out Tokens.Token_Builder;
+                                          Buffer  : in out String_Sequences.Sequence;
+                                          Input  : in out String_Sequences.Sequence;
+                                          Result : in out Token_List)
+   is
+   begin
+      while not At_End_Of_Line (Input) loop
+         if Does_It_Follow (Input, Short_Code_Begin)  then
+            Dump_Buffer (Builder, Buffer, Result);
+            Input.Next;
+            Builder.Set_Position (Input.Position);
+
+            Small_Code_Scanner (Builder, Input, Result);
+            Builder.Set_Position(Input.Position);
+         else
+            Buffer.Append (Input.Read);
+            Input.Next;
+         end if;
+      end loop;
+   end Transparent_Comment_Scanner;
 
    procedure Process_Directive (Input    : in out String_Sequences.Sequence;
                                 Result   : in out Token_List;
@@ -554,19 +525,25 @@ package body Protypo.Scanning is
 
    begin
       while Parenthesis_Level > 0 loop
-         if Input.Read = '(' then
+         if Input.Read = Directive_Begin_Marker then
             Parenthesis_Level := Parenthesis_Level + 1;
 
             Buffer.Append (Input.Next);
 
-         elsif Input.Read = Directive_End then
-            Parenthesis_Level := Parenthesis_Level - 1;
+         elsif Input.Read = Directive_End_Marker then
+            if Input.Read (1) = Directive_End_Marker then
+               Buffer.Append (Directive_End_Marker);
+               Input.Next (2);
 
-            if Parenthesis_Level > 0 then
-               Buffer.Append (Input.Read);
+            else
+               Parenthesis_Level := Parenthesis_Level - 1;
+
+               if Parenthesis_Level > 0 then
+                  Buffer.Append (Input.Read);
+               end if;
+
+               Input.Next;
             end if;
-
-            Input.Next;
 
          else
             Buffer.Append (Input.Next);
@@ -616,48 +593,56 @@ package body Protypo.Scanning is
                       Base_Dir : String) return Token_List is
       use Tokens;
 
+      Builder : Tokens.Token_Builder;
 
-      Result  : Token_List := Token_Sequences.Create (Make_Unanchored_Token (End_Of_Text));
+      Result  : Token_List := Token_Sequences.Create (Builder.Make_Token (End_Of_Text));
       Input   : String_Sequences.Sequence := String_Sequences.Create (Template);
       Buffer  : String_Sequences.Sequence;
 
-      procedure Handle_Escape
-        with Pre => Input.Read = Escape and Input.Remaining > 1;
+   begin
+      while not Input.End_Of_Sequence loop
+         Builder.Set_Position (Input.Position);
 
-      procedure Handle_Escape is
-      begin
          if Does_It_Follow (Input, Begin_Of_Code) then
-            Dump_Buffer (Buffer, Result);
+            Dump_Buffer (Builder, Buffer, Result);
             Input.Next (Begin_Of_Code'Length);
 
-            Code_Scanner (Input, Result);
+            Code_Scanner (Builder, Input, Result);
 
-         elsif Does_It_Follow (Input, Directive_Marker) then
-            Dump_Buffer (Buffer, Result);
-            Input.Next (Directive_Marker'Length);
+         elsif Does_It_Follow (Input, Directive_Begin) then
+            Dump_Buffer (Builder, Buffer, Result);
+            Input.Next (Directive_Begin'Length);
 
             Process_Directive (Input, Result, Base_Dir);
 
+--           elsif Does_It_Follow (Input, Short_Code_Begin)  then
+--              Dump_Buffer (Builder, Buffer, Result);
+--              Input.Next;
+--
+--              Small_Code_Scanner (Input, Result);
+
+         elsif Does_It_Follow (Input, Transparent_Comment) then
+            Buffer.Append (Target_Comment);
+            Input.Next (Transparent_Comment'Length);
+
+            Transparent_Comment_Scanner (Builder, Buffer, Input, Result);
+
+         elsif Does_It_Follow (Input, Target_Comment) then
+            Buffer.Append (Target_Comment);
+            Input.Next (Target_Comment'Length);
+
+            Target_Comment_Scanner (Buffer, Input);
 
          elsif Does_It_Follow (Input, Template_Comment) then
-            Skip_To_End_Of_Line (Input);
+            Skip_Comment (Input);
 
          else
-            Buffer.Append (Input.Next);
-            Buffer.Append (Input.Next);
-         end if;
-      end Handle_Escape;
-
-   begin
-      while not Input.End_Of_Sequence loop
-         if Input.Read = Escape and Input.Remaining > 1 then
-            Handle_Escape;
-         else
-            Buffer.Append (Input.Next);
+            Buffer.Append (Input.Read);
+            Input.Next;
          end if;
       end loop;
 
-      Dump_Buffer (Buffer, Result);
+      Dump_Buffer (Builder, Buffer, Result);
 
       return Result;
    end Tokenize;

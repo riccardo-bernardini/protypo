@@ -51,7 +51,7 @@ package body Protypo.Code_Trees.Interpreter is
          Table.Create
            (Name          => Scanning.Consume_Procedure_Name,
             Initial_Value => Create (Consumer_Handlers.Create (Consumer    => Consumer,
-                                                               With_Escape => False,
+                                                               With_Escape => True,
                                                                Status      => Inter)));
 
          Table.Create

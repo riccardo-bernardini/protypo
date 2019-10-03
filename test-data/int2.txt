@@ -1,8 +1,11 @@
+Questo è testo libero 3+4=#3+4#
+\newcommand{\gigi}[2]{##1,##2} 
+#-- ciao
 #{
 
 function fact(x) is
 begin
-  if x < 1 then
+  if x < 1 then -- bingo
      return 1;
   else
     return x*fact(x-1);
