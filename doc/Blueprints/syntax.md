@@ -7,7 +7,7 @@ sequence_of_statement = statement*
 statement = simple | compound
 simple    = assignment | return | proc_call | exit  
 compound  = if | loop | while | for | defun
-defun     = (FUNCTION | PROCEDURE) ID [ '( signature ') ] BEGIN sequence_of_statement END ID;
+defun     = (FUNCTION | PROCEDURE) ID [ '( signature ') ] IS BEGIN sequence_of_statement END ID;
 signature = mandatory ; optional | mandatory | optional 
 mandatory = ID (; ID)*
 optional  = ID := expr (; ID := expr)*
