@@ -3,10 +3,10 @@
 ## Extracting the free text
 
 The engine is parameterized with the following strings
-* An escape character (`#` by default)
-* A two-char *start code* marker made by the escape character followed by `{` 
-* An *end code* marker made by `}` followed by the escape character
-* A *begin directive* marker made by the escape  followed by `"`
+* An escape character: `#` Currently is hard-wired in the code, maybe in a future will be parameterizable
+* A *start code* marker: escape character + `{` 
+* An *end code* marker: made by `}` + escape
+* A *begin directive* marker:  escape + `"`
 
 The way the free text is handled is as follows:
 
