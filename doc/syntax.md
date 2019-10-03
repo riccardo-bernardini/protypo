@@ -5,7 +5,7 @@ This document describes the syntax of the template language.  The description is
 program   = sequence_of_statement  EOT
 sequence_of_statement = statement*
 statement = simple | compound
-simple    = assignment | return | proc_call | exit | embedded_text  
+simple    = assignment | return | proc_call | exit | embedded_text
 compound  = if | loop | while | for | defun
 defun     = (FUNCTION | PROCEDURE) ID [ '( signature ') ] IS BEGIN sequence_of_statement END ID;
 signature = mandatory ; optional | mandatory | optional 
@@ -42,13 +42,4 @@ while      = [ ID : ] WHILE expression loop
 
 exit       = EXIT [ ID ] ;
 ```
-Note that a name in basic can denote both a variable access or a function call (they are undistinguishable at the syntax level). By analyzing the FIRST relation we see that
-```
-proc_call  -> ID
-assignment -> name -> ID
-return     -> RETURN
-if         -> IF
-loops      -> ID
-etc.
-```
-Therefore, when we are at the beginning of parsing a `statement`, the next non terminal tells us what kind of statement we are going to parse.  
+
