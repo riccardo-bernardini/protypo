@@ -31,6 +31,8 @@ package Readable_Sequences.Generic_Sequences is
          and not Seq.Saved_Position
          and Seq.Current_Position = Beginning;
 
+   function Index (Seq : Sequence) return Positive;
+
    procedure Append (Seq      : in out Sequence;
                      Elements : Element_Array)
      with
@@ -57,6 +59,9 @@ package Readable_Sequences.Generic_Sequences is
    -- Seq.  This includes also the current element
 
    function Current_Position (Seq : Sequence) return Cursor;
+
+   procedure Set_Position (Seq : in out Sequence;
+                           Pos : Cursor);
 
    function Saved_Position (Seq : Sequence)return Boolean;
 
@@ -136,7 +141,7 @@ private
    function Read (Seq   : Sequence;
                   Ahead : Natural := 0) return Element_Type
    is (if Seq.Remaining > Ahead then
-          Seq.Vector (Cursor (Positive (Seq.Position) + Ahead))
+          Seq.Vector (Cursor (Integer (Seq.Position) + Ahead))
        elsif Seq.Has_End_Marker then
           Seq.End_Marker
        else
@@ -153,4 +158,6 @@ private
                                 Has_End_Marker => False,
                                 End_Marker     => <>);
 
+   function Index (Seq : Sequence) return Positive
+   is (Positive (Seq.Position));
 end Readable_Sequences.Generic_Sequences;

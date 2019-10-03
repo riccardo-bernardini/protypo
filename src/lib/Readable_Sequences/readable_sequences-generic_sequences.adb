@@ -1,6 +1,16 @@
 pragma Ada_2012;
 package body Readable_Sequences.Generic_Sequences is
 
+   ------------------
+   -- Set_Position --
+   ------------------
+
+   procedure Set_Position (Seq : in out Sequence;
+                         Pos : Cursor)
+   is
+   begin
+      Seq.Position := Pos;
+   end Set_Position;
 
    ----------
    -- Next --

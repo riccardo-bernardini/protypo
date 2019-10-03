@@ -1,7 +1,10 @@
 with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 
-
+with Readable_Sequences.String_Sequences;
+use Readable_Sequences;
 package Protypo.Tokens is
+   subtype Token_Position is Readable_Sequences.String_Sequences.Position_Type;
+
    type Token_Class is
      (Int,
       Real,
@@ -61,13 +64,43 @@ package Protypo.Tokens is
 
    type Token is private;
 
-   function Make_Token (Class : Valued_Token;
-                        Value : String)
-                        return Token
-     with Pre => Value /= "";
+   type Token_Builder is tagged private;
 
-   function Make_Token (Class : Unvalued_Token)
-                        return Token;
+   function Is_Position_Set (Builder : Token_Builder) return Boolean;
+
+   procedure Set_Position (Builder  : in out Token_Builder;
+                           Position : Token_Position)
+     with
+       Pre => not Builder.Is_Position_Set,
+       Post => Builder.Is_Position_Set;
+
+   procedure Clear_Position (Builder  : in out Token_Builder)
+     with
+       Pre => Builder.Is_Position_Set,
+       Post => not Builder.Is_Position_Set;
+
+   function Make_Token (Builder : in out Token_Builder;
+                        Class   : Valued_Token;
+                        Value   : String)
+                        return Token
+     with
+       Pre => Value /= "" and Builder.Is_Position_Set,
+     Post => not Builder.Is_Position_Set;
+
+   function Make_Token (Builder : in out Token_Builder;
+                        Class   : Unvalued_Token)
+                        return Token
+     with
+       Pre => Builder.Is_Position_Set,
+       Post => not Builder.Is_Position_Set;
+
+   function Make_Unanchored_Token (Class   : Valued_Token;
+                                   Value   : String)
+                                   return Token;
+
+   function Make_Unanchored_Token (Class : Unvalued_Token)
+                                   return Token;
+
 
    function Class (Tk : Token) return Token_Class;
 
@@ -75,26 +108,40 @@ package Protypo.Tokens is
      with Pre => Class (Tk) in Valued_Token;
 
    function Image (Tk : Token) return String;
+
+   function Position (Tk : Token) return Token_Position;
+   function Line (Tk : Token) return Positive;
+   function Char (Tk : Token) return Positive;
 private
+   type Token_Builder is tagged
+      record
+         Has_Position : Boolean := False;
+         Position     : Token_Position;
+      end record;
+
    type Token is
       record
-         Class : Token_Class;
-         Value : Unbounded_String;
+         Class    : Token_Class;
+         Value    : Unbounded_String;
+         Position : Token_Position;
       end record
      with Dynamic_Predicate => ((Class in Unvalued_Token) = (Value = Null_Unbounded_String));
 
 
+   function Make_Unanchored_Token (Class : Unvalued_Token)
+                                   return Token
+   is ((Class   => Class,
+        Value    => Null_Unbounded_String,
+        Position => String_Sequences.No_Position));
 
-   function Make_Token (Class : Valued_Token;
-                        Value : String)
-                        return Token
-   is (Token'(Class => Class,
-              Value => To_Unbounded_String (Value)));
 
-   function Make_Token (Class : Unvalued_Token)
-                        return Token
-   is (Token'(Class => Class,
-              Value => Null_Unbounded_String));
+   function Make_Unanchored_Token (Class   : Valued_Token;
+                                   Value   : String)
+                                   return Token
+   is ((Class   => Class,
+        Value    => To_Unbounded_String (Value),
+        Position => String_Sequences.No_Position));
+
 
    function Class (Tk : Token) return Token_Class
    is (Tk.Class);
@@ -110,4 +157,14 @@ private
              "(" & To_String (Tk.Value) & ")"
           else
              ""));
+
+   function Position (Tk : Token) return Token_Position
+   is (Tk.Position);
+
+   function Line (Tk : Token) return Positive
+   is (String_Sequences.Line (Tk.Position));
+
+   function Char (Tk : Token) return Positive
+   is (String_Sequences.Char (Tk.Position));
+
 end Protypo.Tokens;

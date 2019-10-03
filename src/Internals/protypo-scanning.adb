@@ -44,10 +44,10 @@ package body Protypo.Scanning is
 
 
    type Error_Reason is
-         (Unexpected_Short_End,
-          Unexpected_Token_In_Code,
-          Unexpected_Code_End,
-          Bad_Float);
+     (Unexpected_Short_End,
+      Unexpected_Token_In_Code,
+      Unexpected_Code_End,
+      Bad_Float);
 
    -----------
    -- Error --
@@ -58,13 +58,13 @@ package body Protypo.Scanning is
    begin
       raise Scanning_Error with (case Reason is
                                     when Unexpected_Short_End     =>
-                                          "Unexpected end of short code",
+                                      "Unexpected end of short code",
                                     when Unexpected_Token_In_Code =>
-                                          "Unexpected token code",
+                                      "Unexpected token code",
                                     when Unexpected_Code_End      =>
-                                          "Unexpected end  code",
+                                      "Unexpected end  code",
                                     when Bad_Float                =>
-                                          "Bad Float"
+                                      "Bad Float"
                                 );
    end Error;
 
@@ -87,7 +87,7 @@ package body Protypo.Scanning is
    -- Return true if a string matching Pattern is found at the current
    -- position
 
-    function Does_It_Follow (Where : String_Sequences.Sequence;
+   function Does_It_Follow (Where : String_Sequences.Sequence;
                             What  : String)
                             return Boolean;
    -- Syntactic sugar for when the set contains only one string
@@ -174,12 +174,14 @@ package body Protypo.Scanning is
    ------------------
    -- Code_Scanner --
    ------------------
-   procedure  Code_Scanner (Input  : in out String_Sequences.Sequence;
-                            Result : in out Token_List)
-         with Post => Result.Length > Result.Length'Old;
+   procedure  Code_Scanner (Builder : in out Tokens.Token_Builder;
+                            Input   : in out String_Sequences.Sequence;
+                            Result  : in out Token_List)
+     with Post => Result.Length > Result.Length'Old;
 
-   procedure  Code_Scanner (Input  : in out String_Sequences.Sequence;
-                            Result : in out Token_List)
+   procedure  Code_Scanner (Builder : in out Tokens.Token_Builder;
+                            Input   : in out String_Sequences.Sequence;
+                            Result  : in out Token_List)
    is
       use Tokens;
 
@@ -250,23 +252,24 @@ package body Protypo.Scanning is
 
          for Tk in Keywords'Range loop
             if To_String (Keywords (Tk)) = Id.Dump then
-               Result.Append (Make_Token (Tk));
+               Result.Append (Builder.Make_Token (Tk));
                return;
             end if;
          end loop;
 
-         Result.Append (Make_Token (Identifier, Id.Dump));
+         Result.Append (Builder.Make_Token (Identifier, Id.Dump));
       end Scan_Identifier;
 
       procedure Scan_Number is
          Buffer : String_Sequences.Sequence;
       begin
+
          while Is_In (Input.Read, Decimal_Digit_Set) loop
             Buffer.Append (Input.Next);
          end loop;
 
          if Input.Read /= '.' then
-            Result.Append (Make_Token (Int, Buffer.Dump));
+            Result.Append (Builder.Make_Token (Int, Buffer.Dump));
             return;
          end if;
 
@@ -292,7 +295,7 @@ package body Protypo.Scanning is
             end loop;
          end if;
 
-         Result.Append (Make_Token (Real, Buffer.Dump));
+         Result.Append (Builder.Make_Token (Real, Buffer.Dump));
       end Scan_Number;
 
       procedure Scan_Text is
@@ -303,7 +306,7 @@ package body Protypo.Scanning is
          loop
             if Peek_And_Eat (Input, """") then
                if Input.Read /= '"' then
-                  Result.Append (Make_Token (Text, Buffer.Dump));
+                  Result.Append (Builder.Make_Token (Text, Buffer.Dump));
                   return;
                end if;
             end if;
@@ -326,20 +329,23 @@ package body Protypo.Scanning is
             Buffer.Append (Input.Next);
          end loop;
 
-         Result.Append (Make_Token (Identifier, Consume_With_Escape_Procedure_Name));
-         Result.Append (Make_Token (Open_Parenthesis));
-         Result.Append (Make_Token (Text, Buffer.Dump));
-         Result.Append (Make_Token (Close_Parenthesis));
-         Result.Append (Make_Token (End_Of_Statement));
+         Result.Append (Builder.Make_Token (Identifier, Consume_With_Escape_Procedure_Name));
+         Result.Append (Make_Unanchored_Token (Open_Parenthesis));
+         Result.Append (Make_Unanchored_Token (Text, Buffer.Dump));
+         Result.Append (Make_Unanchored_Token (Close_Parenthesis));
+         Result.Append (Make_Unanchored_Token (End_Of_Statement));
 
       end Scan_Embedded_Text;
    begin
       loop
          Skip_Spaces;
+         Builder.Set_Position (Input.Position);
+
          exit when Peek_And_Eat (Input, "}#");
 
          if Peek_And_Eat (Input, "--") then
             Skip_Comment (Input);
+            Builder.Clear_Position;
 
          elsif Is_In (Input.Read, Begin_Id_Set) then
             Scan_Identifier;
@@ -376,7 +382,7 @@ package body Protypo.Scanning is
                end loop;
 
                if Best_Match_Len > 0 then
-                  Result.Append (Make_Token (Best_Match));
+                  Result.Append (Builder.Make_Token (Best_Match));
                   Input.Next (Best_Match_Len);
                else
                   Put_Line ("[" & Input.Read & "]");
@@ -391,12 +397,14 @@ package body Protypo.Scanning is
          Error (Unexpected_Code_End);
    end Code_Scanner;
 
-   procedure  Small_Code_Scanner (Input  : in out String_Sequences.Sequence;
-                                  Result : in out Token_List)
-         with Post => Result.Length > Result.Length'Old;
+   procedure  Small_Code_Scanner (Builder : in out Tokens.Token_Builder;
+                                  Input   : in out String_Sequences.Sequence;
+                                  Result  : in out Token_List)
+     with Post => Result.Length > Result.Length'Old;
 
-   procedure  Small_Code_Scanner (Input  : in out String_Sequences.Sequence;
-                                  Result : in out Token_List)
+   procedure  Small_Code_Scanner (Builder : in out Tokens.Token_Builder;
+                                  Input   : in out String_Sequences.Sequence;
+                                  Result  : in out Token_List)
    is
       use Tokens;
 
@@ -415,8 +423,8 @@ package body Protypo.Scanning is
                   Input.Next;
 
                elsif Input.Read = '.' then
-                  Result.Append (Make_Token (Identifier, ID_Name.Dump));
-                  Result.Append (Make_Token (Dot));
+                  Result.Append (Builder.Make_Token (Identifier, ID_Name.Dump));
+                  Result.Append (Make_Unanchored_Token (Dot));
                   ID_Name.Clear;
                   Input.Next;
 
@@ -444,11 +452,11 @@ package body Protypo.Scanning is
 
       pragma Assert (ID_Name.Length > 0);
 
-      Result.Append (Make_Token (Identifier, Consume_Procedure_Name));
-      Result.Append (Make_Token (Open_Parenthesis));
-      Result.Append (Make_Token (Identifier, ID_Name.Dump));
-      Result.Append (Make_Token (Close_Parenthesis));
-      Result.Append (Make_Token (End_Of_Statement));
+      Result.Append (Builder.Make_Token (Identifier, Consume_Procedure_Name));
+      Result.Append (Make_Unanchored_Token (Open_Parenthesis));
+      Result.Append (Make_Unanchored_Token (Identifier, ID_Name.Dump));
+      Result.Append (Make_Unanchored_Token (Close_Parenthesis));
+      Result.Append (Make_Unanchored_Token (End_Of_Statement));
 
    end Small_Code_Scanner;
 
@@ -456,26 +464,28 @@ package body Protypo.Scanning is
    -- Dump_Buffer --
    -----------------
 
-   procedure Dump_Buffer (Buffer : in out String_Sequences.Sequence;
-                          Result : in out Token_List)
-         with
-               Post =>
-                     Buffer.Length = 0
-                     and Result.Length = Result.Length'Old + (if Buffer.Length'Old > 0 then 5 else 0);
+   procedure Dump_Buffer (Builder : in out Tokens.Token_Builder;
+                          Buffer  : in out String_Sequences.Sequence;
+                          Result  : in out Token_List)
+     with
+       Post =>
+         Buffer.Length = 0
+         and Result.Length = Result.Length'Old + (if Buffer.Length'Old > 0 then 5 else 0);
 
 
-   procedure Dump_Buffer (Buffer : in out String_Sequences.Sequence;
-                          Result : in out Token_List)
+   procedure Dump_Buffer (Builder : in out Tokens.Token_Builder;
+                          Buffer  : in out String_Sequences.Sequence;
+                          Result  : in out Token_List)
    is
       use Tokens;
 
    begin
       if Buffer.Length > 0 then
-         Result.Append (Make_Token (Identifier, Consume_Procedure_Name));
-         Result.Append (Make_Token (Open_Parenthesis));
-         Result.Append (Make_Token (Text, Buffer.Dump));
-         Result.Append (Make_Token (Close_Parenthesis));
-         Result.Append (Make_Token (End_Of_Statement));
+         Result.Append (Builder.Make_Token (Identifier, Consume_Procedure_Name));
+         Result.Append (Make_Unanchored_Token (Open_Parenthesis));
+         Result.Append (Make_Unanchored_Token (Text, Buffer.Dump));
+         Result.Append (Make_Unanchored_Token (Close_Parenthesis));
+         Result.Append (Make_Unanchored_Token (End_Of_Statement));
          Buffer.Clear;
       end if;
    end Dump_Buffer;
@@ -485,17 +495,20 @@ package body Protypo.Scanning is
    -- Transparent_Comment_Scanner --
    ---------------------------------
 
-   procedure Transparent_Comment_Scanner (Buffer : in out String_Sequences.Sequence;
+   procedure Transparent_Comment_Scanner (Builder : in out Tokens.Token_Builder;
+                                          Buffer  : in out String_Sequences.Sequence;
                                           Input  : in out String_Sequences.Sequence;
                                           Result : in out Token_List)
    is
    begin
       while not At_End_Of_Line (Input) loop
          if Does_It_Follow (Input, Short_Code_Begin)  then
-            Dump_Buffer (Buffer, Result);
+            Dump_Buffer (Builder, Buffer, Result);
             Input.Next;
+            Builder.Set_Position (Input.Position);
 
-            Small_Code_Scanner (Input, Result);
+            Small_Code_Scanner (Builder, Input, Result);
+            Builder.Set_Position(Input.Position);
          else
             Buffer.Append (Input.Read);
             Input.Next;
@@ -580,35 +593,39 @@ package body Protypo.Scanning is
                       Base_Dir : String) return Token_List is
       use Tokens;
 
-      Result : Token_List := Token_Sequences.Create (Make_Token (End_Of_Text));
-      Input  : String_Sequences.Sequence := String_Sequences.Create (Template);
-      Buffer : String_Sequences.Sequence;
+      Builder : Tokens.Token_Builder;
+
+      Result  : Token_List := Token_Sequences.Create (Builder.Make_Token (End_Of_Text));
+      Input   : String_Sequences.Sequence := String_Sequences.Create (Template);
+      Buffer  : String_Sequences.Sequence;
 
    begin
       while not Input.End_Of_Sequence loop
+         Builder.Set_Position (Input.Position);
+
          if Does_It_Follow (Input, Begin_Of_Code) then
-            Dump_Buffer (Buffer, Result);
+            Dump_Buffer (Builder, Buffer, Result);
             Input.Next (Begin_Of_Code'Length);
 
-            Code_Scanner (Input, Result);
+            Code_Scanner (Builder, Input, Result);
 
          elsif Does_It_Follow (Input, Directive_Begin) then
-            Dump_Buffer (Buffer, Result);
+            Dump_Buffer (Builder, Buffer, Result);
             Input.Next (Directive_Begin'Length);
 
             Process_Directive (Input, Result, Base_Dir);
 
-         elsif Does_It_Follow (Input, Short_Code_Begin)  then
-            Dump_Buffer (Buffer, Result);
-            Input.Next;
-
-            Small_Code_Scanner (Input, Result);
+--           elsif Does_It_Follow (Input, Short_Code_Begin)  then
+--              Dump_Buffer (Builder, Buffer, Result);
+--              Input.Next;
+--
+--              Small_Code_Scanner (Input, Result);
 
          elsif Does_It_Follow (Input, Transparent_Comment) then
             Buffer.Append (Target_Comment);
             Input.Next (Transparent_Comment'Length);
 
-            Transparent_Comment_Scanner (Buffer, Input, Result);
+            Transparent_Comment_Scanner (Builder, Buffer, Input, Result);
 
          elsif Does_It_Follow (Input, Target_Comment) then
             Buffer.Append (Target_Comment);
@@ -625,7 +642,7 @@ package body Protypo.Scanning is
          end if;
       end loop;
 
-      Dump_Buffer (Buffer, Result);
+      Dump_Buffer (Builder, Buffer, Result);
 
       return Result;
    end Tokenize;
