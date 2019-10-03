@@ -12,9 +12,11 @@ The way the free text is handled is as follows:
 
 * If the current character
     * is not the escape character, it is added to the free-text
-    * is the escape and it is followed by `{`, we scan the code section until we find the end marker.  Note that the end marker is expected to be in places where a token is expected.  For example if it is inside a string (e.g. `"foo }#"`) or an embedded text (e.g. `[{foo}#k#]`) it is not considered as an end marker.
-    * is the escape and it is followed by `"` we scan the string until the closing `"` using the Ada-like quoting (i.e., `""` to insert a `"` in the string)
+    * is the escape and it is followed by `{`, we scan the code section until we find the end marker.  
+    * is the escape and it is followed by `(` we scan the string until the closing `)` taking into account balanced parenthesis. 
     * is the escape and it is followed by any other character, we put **both** to the free-text
+    
+> Note that when scanning the code, the end marker is recognized only if it appears in places where a token is expected.  For example if it is inside a string (e.g. `"foo }#"`) or inside an embedded text (e.g. `[{foo}#k#]`) it is not considered as an end marker.
 
 ## Free text processing by `@`
 
