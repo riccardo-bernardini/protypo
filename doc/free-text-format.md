@@ -53,3 +53,8 @@ Summarizing, the template above (say, for `nargs=4`) expands to
 ```
 \def\foo#1#2#3#4{Macro Content}
 ```
+
+## Comments
+
+* Comments in the *free text* are marked by escape + `--` **at the beginning of a line** with at most whitespaces before.  This restriction is due to the fact that we want to keep free text as free as possible...
+* Comments in the *code* are Ada-like: from `--` to end of line.  They are not limited to the beginning of the line
