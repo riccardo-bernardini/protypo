@@ -42,10 +42,9 @@ package Protypo.Code_Trees.Interpreter.Expressions is
    subtype Evaluable_Classes is Names.Value_Name_Class
      with
        Static_Predicate =>
-         Evaluable_Classes in
-           Names.Function_Call
-             | Names.Constant_Reference
-               | Names.Variable_Reference;
+         Evaluable_Classes
+           in Names.Function_Call      | Names.Constant_Reference |
+              Names.Variable_Reference | Names.Function_Reference;
 
    function To_Value (Ref : Names.Name_Reference) return Engine_Value_Array
      with Pre => Ref.Class in Evaluable_Classes;

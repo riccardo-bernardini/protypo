@@ -1,4 +1,7 @@
 pragma Ada_2012;
+with Ada.Calendar.Formatting;
+with Ada.Strings.Fixed;        use Ada.Strings;
+
 with Protypo.Api.Engine_Values;  use Protypo.Api.Engine_Values;
 with Protypo.Code_Trees.Interpreter.Consumer_Handlers;
 with Protypo.Code_Trees.Interpreter.Statements;
@@ -11,10 +14,24 @@ with Ada.Text_IO; use Ada.Text_IO;
 package body Protypo.Code_Trees.Interpreter is
    function To_String (X : Engine_Value) return String
       is (case X.Class is
-             when Int    => Get_Integer (X)'Image,
-             when Real   => Get_Float (X)'Image,
+             when Int    => Fixed.Trim (Get_Integer (X)'Image, Both),
+             when Real   => Fixed.Trim (Get_Float (X)'Image, Both),
              when Text   => Get_String (X),
              when others => X.Class'Image);
+
+   function Date_Callback  (Parameters : Engine_Value_Array)
+                            return Engine_Value_Array
+   is
+      use Ada.Calendar.Formatting;
+      use Ada.Calendar;
+   begin
+      if Parameters'Length /= 0 then
+         raise Run_Time_Error with "date wants no parameter";
+      end if;
+
+      return (1 => Create (Image (Clock)));
+
+   end Date_Callback;
 
    --------------------
    -- Range_Callback --
@@ -62,6 +79,10 @@ package body Protypo.Code_Trees.Interpreter is
          Table.Create
            (Name          => "range",
             Initial_Value => Create (Range_Callback'Access, 2));
+
+         Table.Create
+           (Name          => "now",
+            Initial_Value => Create (Date_Callback'Access, 0));
       end Add_Builtin_Values;
 
       Interpreter : constant Interpreter_Access :=

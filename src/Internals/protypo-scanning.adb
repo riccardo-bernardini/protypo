@@ -17,6 +17,51 @@ with String_Sets;                    use String_Sets;
 package body Protypo.Scanning is
 
 
+   ------------------------
+   -- Parenthesis_String --
+   ------------------------
+
+   function Parenthesis_String
+     (Input  : in out String_Sequences.Sequence;
+      Open   : Character;
+      Close  : Character;
+      Escape : Character)
+      return String
+   is
+      Buffer            : String_Sequences.Sequence;
+      Parenthesis_Level : Natural := 1;
+   begin
+      while Parenthesis_Level > 0 loop
+         if Input.End_Of_Sequence then
+            raise Constraint_Error with "Unexpected EOF";
+         end if;
+
+         if Input.Read = Escape then
+            Input.Next;
+            Buffer.Append (Input.Next);
+
+         elsif Input.Read = Open then
+            Parenthesis_Level := Parenthesis_Level + 1;
+
+            Buffer.Append (Input.Next);
+
+         elsif Input.Read = Close then
+            Parenthesis_Level := Parenthesis_Level - 1;
+
+            if Parenthesis_Level > 0 then
+               Buffer.Append (Input.Read);
+            end if;
+
+            Input.Next;
+
+         else
+            Buffer.Append (Input.Next);
+         end if;
+      end loop;
+
+      return Buffer.Dump;
+   end Parenthesis_String;
+
    -----------
    -- Slurp --
    -----------
@@ -74,7 +119,6 @@ package body Protypo.Scanning is
    Begin_Of_Code    : constant String := Escape & "{";
    Template_Comment : constant String := Escape & "--";
    Directive_Begin  : constant Character := '(';
-   Directive_End    : constant Character := ')';
    Directive_Marker : constant String := Escape & Directive_Begin;
 
    --     Short_Code_Begin       : constant Set_String := "#" & Letter_Set;
@@ -157,21 +201,6 @@ package body Protypo.Scanning is
          Input.Next;
       end loop;
    end Skip_To_End_Of_Line;
-
-   --     ----------------------------
-   --     -- Target_Comment_Scanner --
-   --     ----------------------------
-   --
-   --     procedure Target_Comment_Scanner (Buffer : in out String_Sequences.Sequence;
-   --                                       Input  : in out String_Sequences.Sequence)
-   --     is
-   --     begin
-   --        while not At_End_Of_Line (Input) loop
-   --           Buffer.Append (Input.Read);
-   --           Input.Next;
-   --        end loop;
-   --     end Target_Comment_Scanner;
-
 
    ------------------
    -- Code_Scanner --
@@ -344,21 +373,24 @@ package body Protypo.Scanning is
 
 
       procedure Scan_Embedded_Text is
-         Buffer : String_Sequences.Sequence;
+         Content : constant String := Parenthesis_String (Input  => input,
+                                                          Open   => '[',
+                                                          Close  => ']',
+                                                          Escape => '\');
       begin
-         Buffer.Clear;
-
-         loop
-            if Peek_And_Eat (Input, "]") then
-               exit when Input.Read /= ']';
-            end if;
-
-            Buffer.Append (Input.Next);
-         end loop;
+--           Buffer.Clear;
+--
+--           loop
+--              if Peek_And_Eat (Input, "]") then
+--                 exit when Input.Read /= ']';
+--              end if;
+--
+--              Buffer.Append (Input.Next);
+--           end loop;
 
          Result.Append (Builder.Make_Token (Identifier, Consume_With_Escape_Procedure_Name));
          Result.Append (Make_Unanchored_Token (Open_Parenthesis));
-         Result.Append (Make_Unanchored_Token (Text, Buffer.Dump));
+         Result.Append (Make_Unanchored_Token (Text, Content));
          Result.Append (Make_Unanchored_Token (Close_Parenthesis));
          Result.Append (Make_Unanchored_Token (End_Of_Statement));
 
@@ -428,68 +460,6 @@ package body Protypo.Scanning is
          Error (Unexpected_Code_End);
    end Code_Scanner;
 
-   --     procedure  Small_Code_Scanner (Builder : in out Tokens.Token_Builder;
-   --                                    Input   : in out String_Sequences.Sequence;
-   --                                    Result  : in out Token_List)
-   --       with Post => Result.Length > Result.Length'Old;
-   --
-   --     procedure  Small_Code_Scanner (Builder : in out Tokens.Token_Builder;
-   --                                    Input   : in out String_Sequences.Sequence;
-   --                                    Result  : in out Token_List)
-   --     is
-   --        use Tokens;
-   --
-   --        type Scanner_State is (In_ID, After_Dot);
-   --
-   --        State   : Scanner_State := In_ID;
-   --        ID_Name : String_Sequences.Sequence;
-   --     begin
-   --
-   --
-   --        while not Input.End_Of_Sequence loop
-   --           case State is
-   --              when In_ID =>
-   --                 if Is_In (Input.Read, Id_Charset) then
-   --                    Id_Name.Append (Input.Read);
-   --                    Input.Next;
-   --
-   --                 elsif Input.Read = '.' then
-   --                    Result.Append (Builder.Make_Token (Identifier, ID_Name.Dump));
-   --                    Result.Append (Make_Unanchored_Token (Dot));
-   --                    ID_Name.Clear;
-   --                    Input.Next;
-   --
-   --                    State := After_Dot;
-   --
-   --                 else
-   --                    exit;
-   --                 end if;
-   --
-   --              when After_Dot =>
-   --                 if Is_In (Input.Read, Id_Charset) then
-   --                    Id_Name.Append (Input.Read);
-   --                    Input.Next;
-   --
-   --                    State := In_ID;
-   --                 else
-   --                    Error (Unexpected_Short_End);
-   --                 end if;
-   --           end case;
-   --        end loop;
-   --
-   --        if State = After_Dot then
-   --           Error (Unexpected_Short_End);
-   --        end if;
-   --
-   --        pragma Assert (ID_Name.Length > 0);
-   --
-   --        Result.Append (Builder.Make_Token (Identifier, Consume_Procedure_Name));
-   --        Result.Append (Make_Unanchored_Token (Open_Parenthesis));
-   --        Result.Append (Make_Unanchored_Token (Identifier, ID_Name.Dump));
-   --        Result.Append (Make_Unanchored_Token (Close_Parenthesis));
-   --        Result.Append (Make_Unanchored_Token (End_Of_Statement));
-   --
-   --     end Small_Code_Scanner;
 
    -----------------
    -- Dump_Buffer --
@@ -520,78 +490,39 @@ package body Protypo.Scanning is
    end Dump_Buffer;
 
 
-   --     ---------------------------------
-   --     -- Transparent_Comment_Scanner --
-   --     ---------------------------------
-   --
-   --     procedure Transparent_Comment_Scanner (Builder : in out Tokens.Token_Builder;
-   --                                            Buffer  : in out String_Sequences.Sequence;
-   --                                            Input   : in out String_Sequences.Sequence;
-   --                                            Result  : in out Token_List)
-   --     is
-   --     begin
-   --        while not At_End_Of_Line (Input) loop
-   --           if Does_It_Follow (Input, Short_Code_Begin)  then
-   --              Dump_Buffer (Builder, Buffer, Result);
-   --              Input.Next;
-   --              Builder.Set_Position (Input.Position);
-   --
-   --              Small_Code_Scanner (Builder, Input, Result);
-   --              Builder.Set_Position (Input.Position);
-   --           else
-   --              Buffer.Append (Input.Read);
-   --              Input.Next;
-   --           end if;
-   --        end loop;
-   --     end Transparent_Comment_Scanner;
-
    procedure Process_Directive (Input    : in out String_Sequences.Sequence;
                                 Result   : in out Token_List;
                                 Base_Dir : String)
    is
-      Buffer            : String_Sequences.Sequence;
-      Parenthesis_Level : Natural := 1;
 
    begin
-      while Parenthesis_Level > 0 loop
-         if Input.Read = '(' then
-            Parenthesis_Level := Parenthesis_Level + 1;
-
-            Buffer.Append (Input.Next);
-
-         elsif Input.Read = Directive_End then
-            Parenthesis_Level := Parenthesis_Level - 1;
-
-            if Parenthesis_Level > 0 then
-               Buffer.Append (Input.Read);
-            end if;
-
-            Input.Next;
-
-         else
-            Buffer.Append (Input.Next);
-         end if;
-      end loop;
 
       declare
          use Ada.Strings.Fixed;
          use Ada.Strings;
          use Ada.Characters.Handling;
 
-         S : constant String := Trim (Buffer.Dump, Left);
+         Raw : constant String := Parenthesis_String (Input  => Input,
+                                                      Open   => '(',
+                                                      Close  => ')',
+                                                      Escape => '\');
 
-         End_Directive_Pos : constant Natural := Index (Source  => S,
+         Trimmed : constant String := Trim (Raw, Left);
+
+         End_Directive_Pos : constant Natural := Index (Source  => Trimmed,
                                                         Pattern => " ");
 
-         Directive : constant String := To_Lower (if End_Directive_Pos = 0 then
-                                                     S
-                                                  else
-                                                     S (S'First .. End_Directive_Pos - 1));
+         Directive : constant String :=
+                       To_Lower (if (End_Directive_Pos = 0) then
+                                    Trimmed
+                                 else
+                                    Trimmed (Trimmed'First .. End_Directive_Pos - 1));
 
-         Parameter : constant String := Trim ((if End_Directive_Pos < S'Last then
-                                                 S (End_Directive_Pos + 1 .. S'Last)
-                                              else
-                                                 ""), Left);
+         Parameter : constant String :=
+                       Trim ((if End_Directive_Pos < Trimmed'Last then
+                                Trimmed (End_Directive_Pos + 1 .. Trimmed'Last)
+                             else
+                                ""), Left);
       begin
          if Directive = "include" then
             declare

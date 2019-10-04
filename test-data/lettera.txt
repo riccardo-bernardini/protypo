@@ -1,0 +1,17 @@
+#{
+   for destinatario in users loop
+}#
+                            #destinatario.first_name# #destinatario.last_name#
+                            
+Gentile #destinatario.first_name#,
+ti mandiamo questa lettera generata automaticamente.  Ti chiameremo al
+numero #destinatario.telephone#.
+
+Cordiali saluti
+
+---------------------------------
+
+#{
+   end loop;
+}#
+#(  include   test-data/s.txt)

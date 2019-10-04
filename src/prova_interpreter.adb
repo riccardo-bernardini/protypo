@@ -31,7 +31,6 @@ procedure Prova_Interpreter is
           Argument (1));
 
    Program  : constant String := Utilities.Slurp (Source_File);
-   --"pippo pluto e paperino #{ c:=9; x := 2+3*c; }# #x#c";
    Code     : Compiled_Code;
    Table    : Symbols.Table;
    Consumer : constant Consumer_Access :=
@@ -59,21 +58,17 @@ begin
            (Record_Interface_Access (Make_Record (Db (K)))));
    end loop;
 
-   --     User.Map.Insert ("first_name", Create ("Pippo"));
-   --     User.Map.Insert ("last_name", Create ("Recupero"));
-   --     User.Map.Insert ("telephone", Create ("3204365973"));
 
    Table.Create (Name          => "users",
                  Initial_Value => Create (User_Dir.Iterator));
 
    Compile (Target   => Code,
             Program  => Program);
-   --     Dump (Code);
 
    Run (Program      => Code,
         Symbol_Table => Table,
         Consumer     => Consumer);
-   Put_Line ("gigi");
+
    Set_Exit_Status (Success);
 exception
    when E : Protypo.Run_Time_Error =>

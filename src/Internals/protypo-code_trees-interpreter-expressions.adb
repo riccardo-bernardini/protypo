@@ -302,6 +302,13 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
 
          when Names.Function_Call =>
             return Call_Function (Ref);
+
+         when Names.Function_Reference =>
+            return Call_Function
+              (Names.Name_Reference'
+                 (Class            => Names.Function_Call,
+                  Function_Handler => Ref.Function_Handler,
+                  Parameters       => Engine_Value_Vectors.Empty_Vector));
       end case;
    end To_Value;
 
