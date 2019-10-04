@@ -1,13 +1,14 @@
 with Protypo.Api.Interpreter;
 with Protypo.Api.Symbols;
-with Protypo.Api.Engine_Values.Record_Wrappers;
 with Protypo.Api.Consumers.File_Writer;
 
 with Utilities;
+with User_Records;
 
 with Ada.Command_Line;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Exceptions;
+with Protypo.Api.Engine_Values;
 
 procedure Prova_Interpreter is
    use Ada.Command_Line;
@@ -16,6 +17,9 @@ procedure Prova_Interpreter is
    use Protypo.Api.Engine_Values;
    use Protypo.Api.Consumers;
    use Protypo.Api;
+
+   use User_Records;
+   use User_Records.User_Record_Package;
 
    function Source_File return String
    is (if Argument_Count = 0 then
@@ -30,13 +34,16 @@ procedure Prova_Interpreter is
    Consumer : constant Consumer_Access :=
                 File_Writer.Open (File_Writer.Standard_Error);
 
-   User     : constant Record_Wrappers.Record_Wrapper_Access :=
-                Record_Wrappers.Create_Wrapper;
+   User     : constant Enumerated_Record_Access := Make_Record;
 
 begin
-   User.Map.Insert ("first_name", Create ("Pippo"));
-   User.Map.Insert ("last_name", Create ("Recupero"));
-   User.Map.Insert ("telephone", Create ("3204365973"));
+   User.Fill ((First_Name => Create ("Pippo"),
+               Last_Name  => Create ("Recupero"),
+               Telephone  => Create ("3204365972")));
+
+--     User.Map.Insert ("first_name", Create ("Pippo"));
+--     User.Map.Insert ("last_name", Create ("Recupero"));
+--     User.Map.Insert ("telephone", Create ("3204365973"));
 
    Table.Create (Name          => "user",
                  Initial_Value => Create (Record_Interface_Access(User)));

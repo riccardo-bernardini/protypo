@@ -7,6 +7,7 @@ package Protypo.Api.Engine_Values.Constant_Wrappers is
    function Make_Wrapper (Value : String) return Constant_Wrapper_Access;
    function Read (X : Constant_Wrapper) return Engine_Value;
 
+   function To_Handler_Value (Value : Engine_Value) return Handler_Value;
 private
    type Constant_Wrapper is new Constant_Interface
    with

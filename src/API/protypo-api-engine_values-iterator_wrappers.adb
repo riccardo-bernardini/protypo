@@ -59,16 +59,6 @@ package body Protypo.Api.Engine_Values.Iterator_Wrappers is
    -------------
 
    function Element (Iter : Iterator_Wrapper) return Handler_Value
-   is
-      use Constant_Wrappers;
-
-      Result : constant Engine_Value := Element(Iter.Position);
-   begin
-      if Result in Handler_Value then
-         return Result;
-      else
-         return Create (Constant_Interface_Access(Make_Wrapper (Result)));
-      end if;
-   end Element;
+   is (Constant_Wrappers.To_Handler_Value (Element (Iter.Position)));
 
 end Protypo.Api.Engine_Values.Iterator_Wrappers;
