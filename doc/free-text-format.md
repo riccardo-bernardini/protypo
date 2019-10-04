@@ -44,8 +44,8 @@ The following template produces a TeX definition with a variable number of argum
 }#
 ```
 
-How `###k#` is processed?
-1. The first `#` is followed by another `#`, therefore both `#` are "eaten" a single `#` is sent to the output
+How `###counter#` is processed?
+1. The first `#` is followed by another `#`, therefore both `#` are "eaten" and a single `#` is sent to the output
 2. The next `#` is followed by `c`, therefore all the text between this escape and the successive (that is, `counter`) is evaluated as an expression.  In this specific case it gives the iteration number.
 
 Summarizing, the template above (say, for `nargs=4`) expands to
