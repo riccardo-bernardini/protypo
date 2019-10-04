@@ -17,7 +17,7 @@ package Protypo.Api.Engine_Values.Iterator_Wrappers is
 
    type Iterator_Wrapper_Access is access Iterator_Wrapper;
 
-   type Basic_Iterator_Access is access all Iterators.Forward_Iterator'Class;
+   type Basic_Iterator_Access is access all Iterators.Reversible_Iterator'Class;
 
    function Make_Wrapper (Iter : Basic_Iterator_Access)
                           return Iterator_Wrapper_Access;

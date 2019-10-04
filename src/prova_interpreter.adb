@@ -1,6 +1,7 @@
 with Protypo.Api.Interpreter;
 with Protypo.Api.Symbols;
 with Protypo.Api.Consumers.File_Writer;
+with Protypo.Api.Engine_Values.List_Wrappers;
 
 with Utilities;
 with User_Records;
@@ -21,6 +22,8 @@ procedure Prova_Interpreter is
    use User_Records;
    use User_Records.User_Record_Package;
 
+   type Multi_Aggregate is array (Positive range <>) of Aggregate_Type;
+
    function Source_File return String
    is (if Argument_Count = 0 then
           "test-data/interprete.txt"
@@ -34,28 +37,43 @@ procedure Prova_Interpreter is
    Consumer : constant Consumer_Access :=
                 File_Writer.Open (File_Writer.Standard_Error);
 
-   User     : constant Enumerated_Record_Access := Make_Record;
+   User_Dir : List_Wrappers.List;
 
+   Db : constant Multi_Aggregate :=
+          (1 => (First_Name => Create ("Pippo"),
+                 Last_Name  => Create ("Recupero"),
+                 Telephone  => Create ("3204365972")),
+           2 => (First_Name => Create ("Diego"),
+                 Last_Name  => Create ("della Vega"),
+                 Telephone  => Create ("zzzzzz")),
+           3 => (First_Name => Create ("Topolino"),
+                 Last_Name  => Create ("de Topis"),
+                 Telephone  => Create ("12345")),
+           4 => (First_Name => Create ("Paolino"),
+                 Last_Name  => Create ("Paperino"),
+                 Telephone  => Create ("1313")));
 begin
-   User.Fill ((First_Name => Create ("Pippo"),
-               Last_Name  => Create ("Recupero"),
-               Telephone  => Create ("3204365972")));
+   for K in Db'Range loop
+      User_Dir.Append
+        (Engine_Values.Create
+           (Record_Interface_Access (Make_Record (Db (K)))));
+   end loop;
 
---     User.Map.Insert ("first_name", Create ("Pippo"));
---     User.Map.Insert ("last_name", Create ("Recupero"));
---     User.Map.Insert ("telephone", Create ("3204365973"));
+   --     User.Map.Insert ("first_name", Create ("Pippo"));
+   --     User.Map.Insert ("last_name", Create ("Recupero"));
+   --     User.Map.Insert ("telephone", Create ("3204365973"));
 
-   Table.Create (Name          => "user",
-                 Initial_Value => Create (Record_Interface_Access(User)));
+   Table.Create (Name          => "users",
+                 Initial_Value => Create (User_Dir.Iterator));
 
    Compile (Target   => Code,
             Program  => Program);
---     Dump (Code);
+   --     Dump (Code);
 
    Run (Program      => Code,
         Symbol_Table => Table,
         Consumer     => Consumer);
-
+   Put_Line ("gigi");
    Set_Exit_Status (Success);
 exception
    when E : Protypo.Run_Time_Error =>
