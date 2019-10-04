@@ -5,6 +5,8 @@ use Readable_Sequences;
 package Protypo.Tokens is
    subtype Token_Position is Readable_Sequences.String_Sequences.Position_Type;
 
+   function Image (X : Token_Position) return String;
+
    type Token_Class is
      (Int,
       Real,
@@ -113,6 +115,8 @@ package Protypo.Tokens is
    function Line (Tk : Token) return Positive;
    function Char (Tk : Token) return Positive;
 private
+   use type String_Sequences.Position_Type;
+
    type Token_Builder is tagged
       record
          Has_Position : Boolean := False;
@@ -167,4 +171,13 @@ private
    function Char (Tk : Token) return Positive
    is (String_Sequences.Char (Tk.Position));
 
+
+   function Image (X : Token_Position) return String
+   is (if X = String_Sequences.No_Position then
+          "<unknown>"
+       else
+          "Line "
+       & String_Sequences.Line (X)'Image
+       & ", column: "
+       & String_Sequences.Char (X)'Image);
 end Protypo.Tokens;
