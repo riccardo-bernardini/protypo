@@ -45,7 +45,7 @@ titti:for k in range(3, 8) loop
       [...]
     end if;
   end loop;
-[\newtask{#k#}{2}
+[\newtask{#k#}{2} 
 ]
 end loop;
 [
