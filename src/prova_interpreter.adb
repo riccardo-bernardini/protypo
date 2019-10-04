@@ -1,5 +1,6 @@
 with Protypo.Api.Interpreter;
 with Protypo.Api.Symbols;
+with Protypo.Api.Engine_Values.Record_Wrappers;
 with Protypo.Api.Consumers.File_Writer;
 
 with Utilities;
@@ -12,6 +13,7 @@ procedure Prova_Interpreter is
    use Ada.Command_Line;
 
    use Protypo.Api.Interpreter;
+   use Protypo.Api.Engine_Values;
    use Protypo.Api.Consumers;
    use Protypo.Api;
 
@@ -28,7 +30,17 @@ procedure Prova_Interpreter is
    Consumer : constant Consumer_Access :=
                 File_Writer.Open (File_Writer.Standard_Error);
 
+   User     : constant Record_Wrappers.Record_Wrapper_Access :=
+                Record_Wrappers.Create_Wrapper;
+
 begin
+   User.Map.Insert ("first_name", Create ("Pippo"));
+   User.Map.Insert ("last_name", Create ("Recupero"));
+   User.Map.Insert ("telephone", Create ("3204365973"));
+
+   Table.Create (Name          => "user",
+                 Initial_Value => Create (Record_Interface_Access(User)));
+
    Compile (Target   => Code,
             Program  => Program);
 --     Dump (Code);

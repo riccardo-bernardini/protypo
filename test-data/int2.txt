@@ -1,7 +1,13 @@
 Questo è testo libero 3+4=#3+4#
-\newcommand{\gigi}[2]{##1,##2} 
+\newcommand{\gigi}[2]{##1,##2}
+
 #-- ciao
 #{
+
+function foo(saluto) is
+begin
+  [#saluto#, sono #user.first_name#.  Chiamami al numero #user.telephone#.]
+end foo;
 
 function fact(x) is
 begin
@@ -42,4 +48,8 @@ titti:for k in range(3, 8) loop
 [\newtask{#k#}{2}
 ]
 end loop;
+[
+]
+foo("Ciao");
+
 }#

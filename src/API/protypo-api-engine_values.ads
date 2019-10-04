@@ -124,7 +124,9 @@ package Protypo.API.Engine_Values is
    function Get (X     : Array_Interface;
                  Index : Engine_Value_Array)
                  return Engine_Value
-                 is abstract;
+                 is abstract
+     with Post'Class => Get'Result.Class in Handler_Classes;
+
 
 
    type Record_Interface is interface;
@@ -133,7 +135,10 @@ package Protypo.API.Engine_Values is
    function Get (X     : Record_Interface;
                  Field : String)
                  return Engine_Value
-                 is abstract;
+                 is abstract
+     with Post'Class => Get'Result.Class in Handler_Classes;
+
+   Unknown_Field : exception;
 
    type Constant_Interface is interface;
    type Constant_Interface_Access  is not null access all Constant_Interface'Class;
