@@ -157,7 +157,7 @@ package Protypo.API.Engine_Values is
    --                    Value : Engine_Value)
    --     is abstract;
 
-   type Iterator_Interface is interface;
+   type Iterator_Interface is limited interface;
    type Iterator_Interface_Access is not null access all Iterator_Interface'Class;
 
 
