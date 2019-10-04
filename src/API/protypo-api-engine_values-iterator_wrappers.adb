@@ -1,4 +1,5 @@
 pragma Ada_2012;
+with Protypo.Api.Engine_Values.Constant_Wrappers;
 
 package body Protypo.Api.Engine_Values.Iterator_Wrappers is
 
@@ -57,7 +58,17 @@ package body Protypo.Api.Engine_Values.Iterator_Wrappers is
    -- Element --
    -------------
 
-   function Element (Iter : Iterator_Wrapper) return Engine_Value
-   is (Element(Iter.Position));
+   function Element (Iter : Iterator_Wrapper) return Handler_Value
+   is
+      use Constant_Wrappers;
+
+      Result : constant Engine_Value := Element(Iter.Position);
+   begin
+      if Result in Handler_Value then
+         return Result;
+      else
+         return Create (Constant_Interface_Access(Make_Wrapper (Result)));
+      end if;
+   end Element;
 
 end Protypo.Api.Engine_Values.Iterator_Wrappers;

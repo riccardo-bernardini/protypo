@@ -28,7 +28,7 @@ package Protypo.Api.Engine_Values.Iterator_Wrappers is
 
    function End_Of_Iteration (Iter : Iterator_Wrapper) return Boolean;
 
-   function Element (Iter : Iterator_Wrapper) return Engine_Value;
+   function Element (Iter : Iterator_Wrapper) return Handler_Value;
 
 private
    type Iterator_Wrapper is

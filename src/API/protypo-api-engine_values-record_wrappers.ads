@@ -21,7 +21,7 @@ package Protypo.Api.Engine_Values.Record_Wrappers is
 
    function Get (X     : Record_Wrapper;
                  Field : String)
-                 return Engine_Value;
+                 return Handler_Value;
 
    function Create_Wrapper return Record_Wrapper_Access;
 

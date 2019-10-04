@@ -32,6 +32,9 @@ package Protypo.API.Engine_Values is
    subtype Reference_Value is Engine_Value (Reference_Handler);
    subtype Constant_Value  is Engine_Value (Constant_Handler);
 
+   subtype Handler_Value is Engine_Value
+     with Dynamic_Predicate => Handler_Value.Class in Handler_Classes;
+
    type Engine_Value_Array is array (Positive range <>) of Engine_Value;
 
    No_Value   : constant Engine_Value_Array;
@@ -123,7 +126,7 @@ package Protypo.API.Engine_Values is
 
    function Get (X     : Array_Interface;
                  Index : Engine_Value_Array)
-                 return Engine_Value
+                 return Handler_Value
                  is abstract
      with Post'Class => Get'Result.Class in Handler_Classes;
 
@@ -134,7 +137,7 @@ package Protypo.API.Engine_Values is
 
    function Get (X     : Record_Interface;
                  Field : String)
-                 return Engine_Value
+                 return Handler_Value
                  is abstract
      with Post'Class => Get'Result.Class in Handler_Classes;
 
@@ -169,7 +172,7 @@ package Protypo.API.Engine_Values is
                               return Boolean is abstract;
 
    function Element (Iter : Iterator_Interface)
-                     return Engine_Value is abstract
+                     return Handler_Value is abstract
      with Pre'Class => not Iter.End_Of_Iteration;
 
    type Function_Interface is interface;
