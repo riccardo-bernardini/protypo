@@ -8,6 +8,8 @@ package Protypo.Api.Engine_Values.Constant_Wrappers is
    function Read (X : Constant_Wrapper) return Engine_Value;
 
    function To_Handler_Value (Value : Engine_Value) return Handler_Value;
+   function To_Handler_Value (Value : Integer) return Handler_Value;
+   function To_Handler_Value (Value : String) return Handler_Value;
 private
    type Constant_Wrapper is new Constant_Interface
    with
@@ -27,4 +29,11 @@ private
 
    function Make_Wrapper (Value : String) return Constant_Wrapper_Access
    is (Make_Wrapper (Create (Value)));
+
+   function To_Handler_Value (Value : Integer) return Handler_Value
+   is (To_Handler_Value (Create (Value)));
+
+   function To_Handler_Value (Value : String) return Handler_Value
+   is (To_Handler_Value (Create (Value)));
+
 end Protypo.Api.Engine_Values.Constant_Wrappers;

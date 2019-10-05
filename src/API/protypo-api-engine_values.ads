@@ -37,6 +37,7 @@ package Protypo.API.Engine_Values is
    subtype Handler_Value is Engine_Value
      with Dynamic_Predicate => Handler_Value.Class in Handler_Classes;
 
+
    type Engine_Value_Array is array (Positive range <>) of Engine_Value;
 
    No_Value   : constant Engine_Value_Array;
@@ -242,7 +243,7 @@ package Protypo.API.Engine_Values is
    function Get_Constant (Val : Constant_Value) return Constant_Interface_Access;
 
 private
-   type Engine_Value_Vector is range 1 .. 2;
+--     type Engine_Value_Vector is range 1 .. 2;
 
    type Engine_Value (Class : Engine_Value_Class := Void) is
       record
