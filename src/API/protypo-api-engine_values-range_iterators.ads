@@ -1,6 +1,6 @@
 with Protypo.Api.Engine_Values.Constant_Wrappers;
 
-package Protypo.Code_Trees.Interpreter.Range_Iterators is
+package Protypo.Api.Engine_Values.Range_Iterators is
    type Range_Iterator is new Iterator_Interface with private;
 
    function Create (Start, Stop : Integer) return Iterator_Interface_Access;
@@ -31,4 +31,4 @@ private
 
    function Element (Iter : Range_Iterator) return Handler_Value
    is (Create (Constant_Interface_Access (Make_Wrapper (Iter.Current))));
-end Protypo.Code_Trees.Interpreter.Range_Iterators;
+end Protypo.Api.Engine_Values.Range_Iterators;

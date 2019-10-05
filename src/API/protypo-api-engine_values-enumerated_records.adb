@@ -1,5 +1,19 @@
 pragma Ada_2012;
 package body Protypo.Api.Engine_Values.Enumerated_Records is
+   --------------
+   -- To_Array --
+   --------------
+
+   function To_Array (Db : Multi_Aggregate) return Engine_Value_Array
+   is
+      Result : Engine_Value_Array (Db'Range);
+   begin
+      for K in Db'Range loop
+         Result (K) := Create (Record_Interface_Access (Make_Record (Db (K))));
+      end loop;
+
+      return Result;
+   end To_Array;
 
    -----------------
    -- Make_Record --

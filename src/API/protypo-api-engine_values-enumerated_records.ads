@@ -6,8 +6,23 @@ generic
    type Field_Name is (<>);
 package Protypo.Api.Engine_Values.Enumerated_Records is
    type Aggregate_Type is array (Field_Name) of Engine_Value;
+   -- Type that allows to specify an enumerated record similarly
+   -- to an Ada aggregate, for example,
+   --
+   --     (First_Name => Create ("Pippo"),
+   --      Last_Name  => Create ("Recupero"),
+   --      Telephone  => Create ("3204365972"))
 
    Void_Aggregate : constant Aggregate_Type := (others => Void_Value);
+
+   type Multi_Aggregate is array (Positive range <>) of Aggregate_Type;
+   -- Array of aggregate type.  It allows to write constant "databases"
+   -- of enumerated records
+
+   function To_Array (Db : Multi_Aggregate) return Engine_Value_Array;
+   -- Convert an array of aggregates into an Engine_Value_Array.
+   -- Very useful in initializing other wrappers
+
 
    type Enumerated_Record is new Record_Interface with private;
    type Enumerated_Record_Access is access Enumerated_Record;

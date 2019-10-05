@@ -1,17 +1,18 @@
 pragma Ada_2012;
 with Ada.Calendar.Formatting;
-with Ada.Strings.Fixed;        use Ada.Strings;
+with Ada.Strings.Fixed;
 
-with Protypo.Api.Engine_Values;  use Protypo.Api.Engine_Values;
+with Protypo.Api.Engine_Values.Range_Iterators;
 with Protypo.Code_Trees.Interpreter.Consumer_Handlers;
 with Protypo.Code_Trees.Interpreter.Statements;
-with Protypo.Code_Trees.Interpreter.Range_Iterators;
 with Protypo.Scanning;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Code_Trees.Interpreter is
+   use Ada.Strings;
+
    function To_String (X : Engine_Value) return String
       is (case X.Class is
              when Int    => Fixed.Trim (Get_Integer (X)'Image, Both),

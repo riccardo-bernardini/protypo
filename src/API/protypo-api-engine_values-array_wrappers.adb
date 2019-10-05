@@ -1,6 +1,9 @@
 pragma Ada_2012;
 with Protypo.Api.Engine_Values.Constant_Wrappers;
 with Ada.Strings.Equal_Case_Insensitive;
+
+with Protypo.Api.Engine_Values.Range_Iterators;
+
 package body Protypo.Api.Engine_Values.Array_Wrappers is
 
    type Array_Iterator is
@@ -121,10 +124,8 @@ package body Protypo.Api.Engine_Values.Array_Wrappers is
       elsif Equal_Case_Insensitive (Field, "range") then
          return To_Handler_Value
            (Create
-              (Iterator_Interface_Access'
-                   (new Range_Iterator'(Cursor    => X.Vector.First_Index,
-                                        Start     => X.Vector.First_Index,
-                                        Stop      => X.Vector.last_Index))));
+              (Range_Iterators.Create (Start     => X.Vector.First_Index,
+                                       Stop      => X.Vector.Last_Index)));
       else
          raise Unknown_Field with Field;
       end if;

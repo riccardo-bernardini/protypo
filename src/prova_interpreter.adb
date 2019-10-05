@@ -23,7 +23,6 @@ procedure Prova_Interpreter is
    use User_Records;
    use User_Records.User_Record_Package;
 
-   type Multi_Aggregate is array (Positive range <>) of Aggregate_Type;
 
    function Source_File return String
    is (if Argument_Count = 0 then
@@ -31,20 +30,6 @@ procedure Prova_Interpreter is
        else
           Argument (1));
 
-   --------------
-   -- To_Array --
-   --------------
-
-   function To_Array (Db : Multi_Aggregate) return Engine_Value_Array
-   is
-      Result : Engine_Value_Array (Db'Range);
-   begin
-      for K in Db'Range loop
-         Result (K) := Create (Record_Interface_Access (Make_Record (Db (K))));
-      end loop;
-
-      return Result;
-   end To_Array;
 
    Program  : constant String := Utilities.Slurp (Source_File);
    Code     : Compiled_Code;
