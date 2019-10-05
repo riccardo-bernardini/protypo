@@ -23,6 +23,7 @@ private package Protypo.Code_Trees.Interpreter.Names is
      (
       Array_Reference,
       Record_Reference,
+      Ambivalent_Reference,
       Variable_Reference,
       Constant_Reference,
       Function_Reference,
@@ -40,6 +41,9 @@ private package Protypo.Code_Trees.Interpreter.Names is
 
          when Record_Reference =>
             Record_Handler : Record_Interface_Access;
+
+         when Ambivalent_Reference =>
+            Ambivalent_Handler : Ambivalent_Interface_Access;
 
          when Variable_Reference =>
             Variable_Handler : Reference_Interface_Access;

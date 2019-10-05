@@ -21,11 +21,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
       -- "+" --
       ---------
 
-      function "+" (X : Engine_Value) return Name_Reference
-        with
-          Pre => X.Class in Handler_Classes;
-
-      function "+" (X : Engine_Value) return Name_Reference
+      function "+" (X : Handler_Value) return Name_Reference
       is
       begin
          if not (X.Class in Handler_Classes) then
@@ -40,6 +36,10 @@ package body Protypo.Code_Trees.Interpreter.Names is
             when Record_Handler =>
                return Name_Reference'(Class             => Record_Reference,
                                       Record_Handler    => Get_Record (X));
+
+            when Ambivalent_Handler =>
+               return Name_Reference'(Class              => Ambivalent_Reference,
+                                      Ambivalent_Handler => Get_Ambivalent (X));
 
             when Function_Handler =>
                return Name_Reference'(Class            => Function_Reference,
@@ -68,16 +68,22 @@ package body Protypo.Code_Trees.Interpreter.Names is
             declare
                Head : constant Name_Reference := Eval_Name (Status, Expr.Record_Var);
             begin
-               if Head.Class /= Record_Reference then
-                  raise Constraint_Error;
-               end if;
+               case Head.Class is
+                  when Record_Reference =>
+                     return + Head.Record_Handler.Get (To_String (Expr.Field_Name));
 
-               return + Head.Record_Handler.Get (To_String (Expr.Field_Name));
+                  when Ambivalent_Reference =>
+                     return + Head.Ambivalent_Handler.Get (To_String (Expr.Field_Name));
+
+                  when others =>
+                     raise Run_Time_Error with "Record access to non-record value";
+               end case;
             end;
          when Indexed     =>
             declare
                subtype Indexed_References is Value_Name_Class
-                 with Static_Predicate => Indexed_References in Array_Reference | Function_Reference;
+                 with Static_Predicate => Indexed_References
+                   in Array_Reference | Function_Reference | Ambivalent_Reference;
 
                Head    : constant Name_Reference := Eval_Name (Status, Expr.Indexed_Var);
                Indexes : constant Engine_Value_Vectors.Vector := Expressions.Eval_Vector (Status, Expr.Indexes);
@@ -96,6 +102,11 @@ package body Protypo.Code_Trees.Interpreter.Names is
                      return Name_Reference'(Class            => Function_Call,
                                             Function_Handler => Head.Function_Handler,
                                             Parameters       => Indexes);
+
+                  when Ambivalent_Reference =>
+
+                     return + Head.Ambivalent_Handler.Get (Expressions.To_Array (Indexes));
+
                end case;
             end;
 
@@ -110,10 +121,10 @@ package body Protypo.Code_Trees.Interpreter.Names is
                Val      : Engine_Value;
             begin
 
---                 Put_Line ("@@@ searching '" & ID & "'");
+               --                 Put_Line ("@@@ searching '" & ID & "'");
                if Position = No_Element then
 
---                    Put_Line ("@@@ not found '" & ID & "'");
+                  --                    Put_Line ("@@@ not found '" & ID & "'");
                   --
                   -- The name is not in the symbol table: create it
                   -- but leave it not initialized, it can be used only
@@ -135,7 +146,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
                   Val := Value (Position);
 
 
---                    Put_Line ("@@@ found '" & ID & "': " & Val.Class'Image);
+                  --                    Put_Line ("@@@ found '" & ID & "': " & Val.Class'Image);
 
                   if Val.Class in Handler_Classes then
                      return + Val;

@@ -8,13 +8,14 @@ package Protypo.API.Engine_Values is
       Text,
       Array_Handler,
       Record_Handler,
+      Ambivalent_Handler,
       Function_Handler,
       Reference_Handler,
       Constant_Handler,
       Iterator
      );
 
-   subtype Scalar_Classes is Engine_Value_Class  range Int .. Text;
+   subtype Scalar_Classes  is Engine_Value_Class  range Int .. Text;
    subtype Numeric_Classes is Scalar_Classes     range Int .. Real;
    subtype Handler_Classes is Engine_Value_Class range Array_Handler .. Constant_Handler;
 
@@ -22,15 +23,16 @@ package Protypo.API.Engine_Values is
 
    Void_Value : constant Engine_Value;
 
-   subtype Integer_Value   is Engine_Value (Int);
-   subtype Real_Value      is Engine_Value (Real);
-   subtype String_Value    is Engine_Value (Text);
-   subtype Array_Value     is Engine_Value (Array_Handler);
-   subtype Record_Value    is Engine_Value (Record_Handler);
-   subtype Iterator_Value  is Engine_Value (Iterator);
-   subtype Function_Value  is Engine_Value (Function_Handler);
-   subtype Reference_Value is Engine_Value (Reference_Handler);
-   subtype Constant_Value  is Engine_Value (Constant_Handler);
+   subtype Integer_Value    is Engine_Value (Int);
+   subtype Real_Value       is Engine_Value (Real);
+   subtype String_Value     is Engine_Value (Text);
+   subtype Array_Value      is Engine_Value (Array_Handler);
+   subtype Record_Value     is Engine_Value (Record_Handler);
+   subtype Ambivalent_Value is Engine_Value (Ambivalent_Handler);
+   subtype Iterator_Value   is Engine_Value (Iterator);
+   subtype Function_Value   is Engine_Value (Function_Handler);
+   subtype Reference_Value  is Engine_Value (Reference_Handler);
+   subtype Constant_Value   is Engine_Value (Constant_Handler);
 
    subtype Handler_Value is Engine_Value
      with Dynamic_Predicate => Handler_Value.Class in Handler_Classes;
@@ -131,6 +133,7 @@ package Protypo.API.Engine_Values is
      with Post'Class => Get'Result.Class in Handler_Classes;
 
 
+   Out_Of_Range : exception;
 
    type Record_Interface is interface;
    type Record_Interface_Access is not null access all Record_Interface'Class;
@@ -142,6 +145,12 @@ package Protypo.API.Engine_Values is
      with Post'Class => Get'Result.Class in Handler_Classes;
 
    Unknown_Field : exception;
+
+   type Ambivalent_Interface is interface
+     and Record_Interface
+     and Array_Interface;
+
+   type Ambivalent_Interface_Access is not null access all Ambivalent_Interface'Class;
 
    type Constant_Interface is interface;
    type Constant_Interface_Access  is not null access all Constant_Interface'Class;
@@ -226,6 +235,7 @@ package Protypo.API.Engine_Values is
    function Get_String (Val : String_Value) return String;
    function Get_Array (Val : Array_Value) return Array_Interface_Access;
    function Get_Record (Val : Record_Value) return Record_Interface_Access;
+   function Get_Ambivalent (Val : Ambivalent_Value) return Ambivalent_Interface_Access;
    function Get_Iterator (Val : Iterator_Value) return Iterator_Interface_Access;
    function Get_Function (Val : Function_Value) return Function_Interface_Access;
    function Get_Reference (Val : Reference_Value) return Reference_Interface_Access;
@@ -254,6 +264,9 @@ private
 
          when Record_Handler =>
             Record_Object : Record_Interface_Access;
+
+         when Ambivalent_Handler =>
+            Ambivalent_Object : Ambivalent_Interface_Access;
 
          when Iterator =>
             Iteration_Object : Iterator_Interface_Access;
@@ -347,6 +360,9 @@ private
 
    function Get_Record (Val : Record_Value) return Record_Interface_Access
    is (Val.Record_Object);
+
+   function Get_Ambivalent (Val : Ambivalent_Value) return Ambivalent_Interface_Access
+   is (Val.Ambivalent_Object);
 
    function Get_Iterator (Val : Iterator_Value) return Iterator_Interface_Access
    is (Val.Iteration_Object);
