@@ -1,7 +1,8 @@
 with Protypo.Api.Interpreter;
 with Protypo.Api.Symbols;
 with Protypo.Api.Consumers.File_Writer;
-with Protypo.Api.Engine_Values.List_Wrappers;
+--  with Protypo.Api.Engine_Values.List_Wrappers;
+with Protypo.Api.Engine_Values.Array_Wrappers;
 
 with Utilities;
 with User_Records;
@@ -30,13 +31,27 @@ procedure Prova_Interpreter is
        else
           Argument (1));
 
+   --------------
+   -- To_Array --
+   --------------
+
+   function To_Array (Db : Multi_Aggregate) return Engine_Value_Array
+   is
+      Result : Engine_Value_Array (Db'Range);
+   begin
+      for K in Db'Range loop
+         Result (K) := Create (Record_Interface_Access (Make_Record (Db (K))));
+      end loop;
+
+      return Result;
+   end To_Array;
+
    Program  : constant String := Utilities.Slurp (Source_File);
    Code     : Compiled_Code;
    Table    : Symbols.Table;
    Consumer : constant Consumer_Access :=
                 File_Writer.Open (File_Writer.Standard_Error);
 
-   User_Dir : List_Wrappers.List;
 
    Db : constant Multi_Aggregate :=
           (1 => (First_Name => Create ("Pippo"),
@@ -51,16 +66,15 @@ procedure Prova_Interpreter is
            4 => (First_Name => Create ("Paolino"),
                  Last_Name  => Create ("Paperino"),
                  Telephone  => Create ("1313")));
+
+   User_Dir : constant Array_Wrappers.Array_Wrapper_Access :=
+                Array_Wrappers.Make_Wrapper (To_Array (Db));
+
 begin
-   for K in Db'Range loop
-      User_Dir.Append
-        (Engine_Values.Create
-           (Record_Interface_Access (Make_Record (Db (K)))));
-   end loop;
 
 
    Table.Create (Name          => "users",
-                 Initial_Value => Create (User_Dir.Iterator));
+                 Initial_Value => Create (Ambivalent_Interface_Access (User_Dir)));
 
    Compile (Target   => Code,
             Program  => Program);

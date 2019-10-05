@@ -1,0 +1,8 @@
+N. users = #users.last-users.first+1# (#users.first#..#users.last#)
+
+#{
+  for user in users.iterate loop
+    [#user.first_name#, #user.last_name#, #user.telephone#
+]
+  end loop;
+}#

@@ -109,13 +109,22 @@ package body Protypo.Api.Engine_Values.Array_Wrappers is
          return To_Handler_Value (X.Vector.First_Index);
 
       elsif Equal_Case_Insensitive (Field, "last") then
-         return To_Handler_Value (X.Vector.First_Index);
+         return To_Handler_Value (X.Vector.Last_Index);
 
       elsif Equal_Case_Insensitive (Field, "iterate") then
-         return Create
-           (Iterator_Interface_Access'
-              (new Array_Iterator'(Cursor    => X.Vector.First_Index,
-                                   Container => X.Vector)));
+         return To_Handler_Value
+           (Create
+              (Iterator_Interface_Access'
+                   (new Array_Iterator'(Cursor    => X.Vector.First_Index,
+                                        Container => X.Vector))));
+
+      elsif Equal_Case_Insensitive (Field, "range") then
+         return To_Handler_Value
+           (Create
+              (Iterator_Interface_Access'
+                   (new Range_Iterator'(Cursor    => X.Vector.First_Index,
+                                        Start     => X.Vector.First_Index,
+                                        Stop      => X.Vector.last_Index))));
       else
          raise Unknown_Field with Field;
       end if;

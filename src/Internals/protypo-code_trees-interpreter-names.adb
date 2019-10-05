@@ -25,7 +25,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
       is
       begin
          if not (X.Class in Handler_Classes) then
-            raise Program_Error;
+            raise Program_Error with X.Class'Image & "is not handler class";
          end if;
 
          case Handler_Classes (X.Class) is

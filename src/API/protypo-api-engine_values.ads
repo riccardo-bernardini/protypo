@@ -214,6 +214,9 @@ package Protypo.API.Engine_Values is
    function Create (Val : Record_Interface_Access) return Engine_Value
      with Post => Create'Result.Class = Record_Handler;
 
+   function Create (Val : Ambivalent_Interface_Access) return Engine_Value
+     with Post => Create'Result.Class = Ambivalent_Handler;
+
    function Create (Val : Iterator_Interface_Access) return Engine_Value
      with Post => Create'Result.Class = Iterator;
 
@@ -324,6 +327,11 @@ private
    function Create (Val : Record_Interface_Access) return Engine_Value
    is (Engine_Value'(Class            => Record_Handler,
                      Record_Object    => Val));
+
+   function Create (Val : Ambivalent_Interface_Access) return Engine_Value
+   is (Engine_Value'(Class             => Ambivalent_Handler,
+                     Ambivalent_Object => Val));
+
 
    function Create (Val : Iterator_Interface_Access) return Engine_Value
    is (Engine_Value'(Class            => Iterator,
