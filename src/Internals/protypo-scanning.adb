@@ -32,7 +32,7 @@ package body Protypo.Scanning is
    begin
       while Parenthesis_Level > 0 loop
          if Input.End_Of_Sequence then
-            raise Constraint_Error with "Unexpected EOF";
+            raise Scanning_Error with "Unexpected EOF";
          end if;
 
          if Input.Read = Escape then
@@ -61,35 +61,9 @@ package body Protypo.Scanning is
       return Buffer.Dump;
    end Parenthesis_String;
 
---     -----------
---     -- Slurp --
---     -----------
---
---     function Slurp (Filename : String) return String is
---
---        subtype Content is String (1 .. Integer (Ada.Directories.Size (Filename)));
---        Result : Content;
---
---        package Content_IO is new Ada.Sequential_IO (Content);
---        Input  : Content_IO.File_Type;
---
---     begin
---        Content_IO.Open (File     => Input,
---                         Mode     => Content_IO.In_File,
---                         Name     => Filename);
---
---        Content_IO.Read (File => Input,
---                         Item => Result);
---
---        Content_IO.Close (Input);
---
---        return Result;
---     end Slurp;
-
 
    type Error_Reason is
-     (Unexpected_Short_End,
-      Unexpected_Token_In_Code,
+     (Unexpected_Token_In_Code,
       Unexpected_Code_End,
       Bad_Float);
 
@@ -97,19 +71,18 @@ package body Protypo.Scanning is
    -- Error --
    -----------
 
-   procedure Error (Reason : Error_Reason)
+   procedure Error (Reason   : Error_Reason;
+                    Position : String_Sequences.Position_Type)
    is
    begin
       raise Scanning_Error with (case Reason is
-                                    when Unexpected_Short_End     =>
-                                      "Unexpected end of short code",
                                     when Unexpected_Token_In_Code =>
                                       "Unexpected token code",
                                     when Unexpected_Code_End      =>
                                       "Unexpected end  code",
                                     when Bad_Float                =>
                                       "Bad Float"
-                                );
+                                ) & " at " & Tokens.Image (Position);
    end Error;
 
 
@@ -342,7 +315,7 @@ package body Protypo.Scanning is
             end if;
 
             if not Is_In (Input.Read, Decimal_Digit_Set) then
-               Error (Bad_Float);
+               Error (Bad_Float, String_Sequences.Position (Input));
             end if;
 
             while Is_In (Input.Read, Decimal_Digit_Set) loop
@@ -443,10 +416,10 @@ package body Protypo.Scanning is
                   Result.Append (Builder.Make_Token (Best_Match));
                   Input.Next (Best_Match_Len);
                else
-                  Put_Line ("[" & Input.Read & "]"
-                            & String_Sequences.Line (Input.Position)'Image
-                            & String_Sequences.Char (Input.Position)'Image);
-                  Error (Unexpected_Token_In_Code);
+--                    Put_Line ("[" & Input.Read & "]"
+--                              & String_Sequences.Line (Input.Position)'Image
+--                              & String_Sequences.Char (Input.Position)'Image);
+                  Error (Unexpected_Token_In_Code, String_Sequences.Position(Input));
                end if;
             end;
          end if;
@@ -456,7 +429,7 @@ package body Protypo.Scanning is
 
    exception
       when String_Sequences.Beyond_End =>
-         Error (Unexpected_Code_End);
+         Error (Unexpected_Code_End, String_Sequences.Position(Input));
    end Code_Scanner;
 
 

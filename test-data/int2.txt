@@ -6,7 +6,7 @@ Questo è testo libero 3+4=#3+4#
 
 function foo(saluto) is
 begin
-  for user in users.iterator loop
+  for user in users.iterate loop
     [#saluto#, sono #user.first_name#.  Chiamami al numero #user.telephone#. 
 ]
   end loop;

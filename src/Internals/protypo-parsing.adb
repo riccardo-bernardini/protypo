@@ -1,6 +1,6 @@
 pragma Ada_2012;
 with Ada.Text_IO;                           use Ada.Text_IO;
---  with Ada.Strings.Unbounded;                 use Ada.Strings.Unbounded;
+with Ada.Exceptions;
 
 with Protypo.Tokens;                        use Protypo.Tokens;
 
@@ -41,19 +41,25 @@ package body Protypo.Parsing is
    end Image;
 
    procedure Unexpected_Token (Found    : Token_Class;
-                               Expected : Token_Mask)
+                               Expected : Token_Mask;
+                               Position : Token_Position)
    is
    begin
-      Put_Line (Standard_Error, "Unexpected " & Found'Image & "instead of " & Image (Expected));
-      raise Constraint_Error;
+      raise Parsing_Error
+        with "Unexpected "
+        & Found'Image & " instead of " & Image (Expected)
+        & " at " & Image (Position);
    end Unexpected_Token;
 
    procedure Unexpected_Token (Found    : Token_Class;
-                               Expected : Token_Class)
+                               Expected : Token_Class;
+                               Position : Token_Position)
    is
    begin
-      Put_Line (Standard_Error, "Unexpected " & Found'Image & "instead of " & Expected'Image);
-      raise Constraint_Error;
+      raise Parsing_Error
+        with "Unexpected "
+        & Found'Image & " instead of " & Expected'Image
+        & " at " & Image (Position);
    end Unexpected_Token;
 
 
@@ -67,7 +73,7 @@ package body Protypo.Parsing is
    is
    begin
       if not Expected (Class (Input.Read)) then
-         Unexpected_Token (Class (Input.Read), Expected);
+         Unexpected_Token (Class (Input.Read), Expected, Position (Input.Read));
       end if;
    end Expect;
 
@@ -94,7 +100,12 @@ package body Protypo.Parsing is
    is
    begin
       if Class (Input.Read) /= Expected then
-         Unexpected_Token (Class (Input.Read), Expected);
+         raise Parsing_Error
+           with "Expecting  "
+           & Expected'Image
+           & " found "
+           &  Class (Input.Read)'Image
+           & " at " & Image (Position (Input.Read));
       end if;
 
       Input.Next;
@@ -133,7 +144,11 @@ package body Protypo.Parsing is
          Expect_And_Eat (Input, Dot);
 
          if Class (Input.Read) /= Identifier then
-            raise Constraint_Error;
+            raise Parsing_Error
+              with "Unexpected token "
+              &  Class (Input.Read)'Image
+              & " in FIELD part"
+              & " at " & Image (Position (Input.Read)) ;
          end if;
 
          Result := Code_Trees.Selector (Result, Value (Input.Next));
@@ -170,15 +185,14 @@ package body Protypo.Parsing is
           Primary_Head in Open_Parenthesis | Identifier | Text | Int | Real;
 
       Result : Code_Trees.Parsed_Code;
-      Mask   : Token_Mask := (others => False);
    begin
-      for K in Primary_Head loop
-         Mask (K) := True;
-      end loop;
 
       if not (Class (Input.Read) in Primary_Head) then
-         Unexpected_Token (Class (Input.Read), Mask);
-         raise Constraint_Error;
+         raise Parsing_Error
+           with "Unexpected token "
+           &  Class (Input.Read)'Image
+           & " in primary expression"
+           & " at " & Image (Position(Input.Read));
       end if;
 
       case Primary_Head (Class (Input.Read)) is
@@ -392,14 +406,6 @@ package body Protypo.Parsing is
 
       Values := Parse_Expression_List (Input);
 
-      --        Code_Trees.Dump (Values.Read);
-
-      if Names.Length /= Values.Length then
-         raise Constraint_Error;
-      end if;
-
-
-
       Expect_And_Eat (Input, End_Of_Statement);
 
 
@@ -509,8 +515,10 @@ package body Protypo.Parsing is
       Expect_And_Eat (Input, Kw_For);
 
       if Class (Input.Read) /= Identifier then
-         Unexpected_Token (Class (Input.Read), Identifier);
-         raise Constraint_Error;
+         raise Parsing_Error
+           with "Expecting FOR variable, found "
+           &  Class (Input.Read)'Image
+           & " at " & Image (Here);
       end if;
 
       declare
@@ -643,7 +651,11 @@ package body Protypo.Parsing is
          --
 
          if not (Follower in ID_Follower) then
-            raise Constraint_Error;
+            raise Parsing_Error
+              with "Unexpected token "
+              &  Class (Input.Read)'Image
+              & " after IDENTIFIER"
+              & " at " & Image (Here);
          end if;
 
          case ID_Follower (Follower) is
@@ -693,7 +705,11 @@ package body Protypo.Parsing is
                         return Parse_Assign (Input);
 
                      when others =>
-                        raise Constraint_Error with Class (Input.Read)'Image;
+                        raise Parsing_Error
+                          with "Unexpected token "
+                          &  Class (Input.Read)'Image
+                          & " after indexed identifier"
+                          & " at " & Image (Here);
                   end case;
 
                end;
@@ -710,7 +726,10 @@ package body Protypo.Parsing is
          loop
             if Class (Input.Read) /= Identifier then
                Put_Line (">>>" & Class (Input.Read)'Image);
-               raise Constraint_Error;
+               raise Parsing_Error
+                 with "Expected IDENTIFIER in ID list"
+                 & " found " & Class (Input.Read)'Image
+                 & " at " & Image (Position (Input.Read));
             end if;
 
             Parameter_Names.Append (Value (Input.Next));
@@ -723,7 +742,9 @@ package body Protypo.Parsing is
                Default.Append (Code_Trees.Empty_Tree);
 
                if In_Optional_Section then
-                  raise Constraint_Error with "optional parameter";
+                  raise Parsing_Error
+                    with "Mandatory parameter in optional parameter part"
+                    & " at " & Image (Position (Input.Read));
                end if;
             end if;
 
@@ -756,7 +777,10 @@ package body Protypo.Parsing is
          Input.Next;
 
          if Class (Input.Read) /= Identifier then
-            raise Constraint_Error;
+            raise Parsing_Error
+              with "Expected IDENTIFIER in function/procedure definition"
+              & " found " & Class (Input.Read)'Image
+              & " at " & Image (Here);
          else
             Name := To_Unbounded_String (Value (Input.Next));
          end if;
@@ -783,9 +807,8 @@ package body Protypo.Parsing is
                  and then
                  Value (Input.Read) = To_String (Name))
          then
-            Put_Line (">> " & Class (Input.Read)'Image);
-            Put_Line (">> [" & Value (Input.Read)  & "][" & To_String (Name) & "]");
-            raise Parsing_Error with "end " & To_String (Name) & "; expected";
+            raise Parsing_Error
+              with "end " & To_String (Name) & "; expected at " & Image (Here);
          else
             Input.Next;
          end if;
@@ -859,12 +882,16 @@ package body Protypo.Parsing is
                Real             | Kw_Xor           | Kw_Not              |
                Kw_Begin         | Kw_Is       =>
 
-               Unexpected_Token (Class (Input.Read), End_Of_Text);
+               Unexpected_Token (Class (Input.Read), End_Of_Text, Position (Input.Read));
                exit;
          end case;
       end loop;
 
       return Code_Trees.Statement_Sequence (Statement_Sequences.Dump (Result), Here);
+   exception
+      when E : Scanning.Scanning_Error =>
+         raise Parsing_Error with Ada.Exceptions.Exception_Message (E);
    end Parse_Statement_Sequence;
+
 
 end Protypo.Parsing;
