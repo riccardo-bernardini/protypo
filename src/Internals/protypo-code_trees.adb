@@ -156,15 +156,18 @@ package body Protypo.Code_Trees is
    ------------------------
 
    function Statement_Sequence
-     (Statements : Tree_Array)
+     (Statements : Tree_Array;
+      Position   : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
-      Result : constant Node_Access := new Node (Statement_Sequence);
+      Result : constant Node_Access := new Node'(Class           => Statement_Sequence,
+                                                 Source_Position => Position,
+                                                 Statements      => <>);
    begin
       for Statement of Statements loop
          if not (Statement.Pt.Class in Statement_Classes) then
-            Put_Line ("(A) " & Statement.Pt.Class'Image);
-            raise Program_Error;
+            raise Program_Error
+              with "Expected Statement_Classes, found " & Statement.Pt.Class'Image;
          end if;
 
          Result.Statements.Append (Statement.Pt);
@@ -173,26 +176,7 @@ package body Protypo.Code_Trees is
       return (Pt => Result);
    end Statement_Sequence;
 
-   --     ----------------------
-   --     -- Naked_Expression --
-   --     ----------------------
-   --
-   --     function Naked_Expression
-   --       (Statements : Tree_Array)
-   --        return Parsed_Code
-   --     is
-   --        Result : constant Node_Access := new Node (Naked);
-   --     begin
-   --        for Statement of Statements loop
-   --           if not (Statement.Pt.Class in Expression) then
-   --              raise Program_Error;
-   --           end if;
-   --
-   --           Result.Naked_Values.Append (Statement.Pt);
-   --        end loop;
-   --
-   --        return (Pt => Result);
-   --     end Naked_Expression;
+
 
    ----------------------
    -- Binary_Operation --

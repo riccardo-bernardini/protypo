@@ -140,8 +140,11 @@ package Protypo.API.Engine_Values is
    type Record_Interface is interface;
    type Record_Interface_Access is not null access all Record_Interface'Class;
 
+   function Is_Field (X : Record_Interface; Field : ID) return Boolean
+                      is abstract;
+
    function Get (X     : Record_Interface;
-                 Field : String)
+                 Field : ID)
                  return Handler_Value
                  is abstract
      with Post'Class => Get'Result.Class in Handler_Classes;

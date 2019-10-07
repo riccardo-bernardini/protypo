@@ -67,14 +67,22 @@ package body Protypo.Code_Trees.Interpreter.Names is
          when Selected    =>
             declare
                Head : constant Name_Reference := Eval_Name (Status, Expr.Record_Var);
+               Field : constant ID := To_String (Expr.Field_Name);
             begin
                case Head.Class is
                   when Record_Reference =>
-                     return + Head.Record_Handler.Get (To_String (Expr.Field_Name));
+                     if not Head.Record_Handler.Is_Field (Field) then
+                        raise Bad_Field  with "Unknown field '" & Field & "'";
+                     end if;
+
+                     return + Head.Record_Handler.Get (Field);
 
                   when Ambivalent_Reference =>
---                       Put_Line ("@@@ record");
-                     return + Head.Ambivalent_Handler.Get (To_String (Expr.Field_Name));
+                     if not Head.Ambivalent_Handler.Is_Field (Field) then
+                        raise Bad_Field  with "Unknown field '" & Field & "'";
+                     end if;
+
+                     return + Head.Ambivalent_Handler.Get (Field);
 
                   when others =>
                      raise Run_Time_Error with "Record access to non-record value";
@@ -159,6 +167,9 @@ package body Protypo.Code_Trees.Interpreter.Names is
                end if;
             end;
       end case;
+   exception
+      when Unknown_Field =>
+         raise Run_Time_Error with "Unknown field at " & Tokens.Image (Expr.Source_Position);
    end Eval_Name;
 
 end Protypo.Code_Trees.Interpreter.Names;

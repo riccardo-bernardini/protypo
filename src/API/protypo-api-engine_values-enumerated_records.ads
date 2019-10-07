@@ -39,12 +39,14 @@ package Protypo.Api.Engine_Values.Enumerated_Records is
                   Value : Engine_Value);
 
    function Get (Item  : Enumerated_Record;
-                 Field : String)
+                 Field : ID)
                  return Handler_Value;
+
+   function Is_Field (Item : Enumerated_Record; Field : ID) return Boolean;
 private
    package Record_Maps is
      new Ada.Containers.Indefinite_Ordered_Maps
-       (Key_Type     => String,
+       (Key_Type     => ID,
         Element_Type => Engine_Value,
         "<"          => Ada.Strings.Less_Case_Insensitive);
 
@@ -56,7 +58,7 @@ private
          Map : Record_Maps.Map;
       end record;
 
-   function Get (Item : Enumerated_Record; Field : String) return Handler_Value
+   function Get (Item : Enumerated_Record; Field : Id) return Handler_Value
    is (if Item.Map.Contains (Field) then
           Constant_Wrappers.To_Handler_Value (Item.Map (Field))
        else

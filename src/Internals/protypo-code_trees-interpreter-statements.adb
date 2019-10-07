@@ -119,7 +119,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                   raise Constraint_Error;
                end if;
 
---                 Put_Line ("[" & Program.Lhs.First_Index'Image & Program.Lhs.Last_Index'Image);
+               --                 Put_Line ("[" & Program.Lhs.First_Index'Image & Program.Lhs.Last_Index'Image);
 
 
                for Name of Program.Lhs loop
@@ -178,9 +178,9 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                Proc_Handler : Engine_Value;
 
             begin
---                 Put_Line ("@pc " & To_String (Program.Name));
+               --                 Put_Line ("@pc " & To_String (Program.Name));
                if Position = No_Element then
---                    Put_Line ("@pc 1");
+                  --                    Put_Line ("@pc 1");
                   raise Constraint_Error with
                     "Unknown function '" & To_String (Program.Name) & "'";
                end if;
@@ -279,10 +279,16 @@ package body Protypo.Code_Trees.Interpreter.Statements is
       end case;
 
    exception
-      when E : Bad_Iterator =>
+      when E : Bad_Iterator | Bad_Field =>
          raise Run_Time_Error with Ada.Exceptions.Exception_Message (E)
            & " at "
-           & Tokens.Image (Program.Source_Position, false);
+           & Tokens.Image (Program.Source_Position, False);
+
+      when E : Run_Time_Error =>
+         raise Run_Time_Error with Ada.Exceptions.Exception_Message (E)
+           & ", "
+           & Tokens.Image (Program.Source_Position, False);
+
    end Run;
 
 end Protypo.Code_Trees.Interpreter.Statements;

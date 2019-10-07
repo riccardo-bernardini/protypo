@@ -180,13 +180,5 @@ private
    function Image (X    : Token_Position;
                    Full : Boolean := True)
                    return String
-   is (if X = String_Sequences.No_Position then
-          "<unknown>"
-       else
-          "Line "
-       & String_Sequences.Line (X)'Image
-       & (if Full then
-             ", column: " & String_Sequences.Char (X)'Image
-          else
-             ""));
+   is (String_Sequences.Image (X, Full));
 end Protypo.Tokens;

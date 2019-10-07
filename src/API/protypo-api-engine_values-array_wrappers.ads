@@ -18,8 +18,10 @@ package Protypo.Api.Engine_Values.Array_Wrappers is
                  return Handler_Value;
 
    function Get (X     : Array_Wrapper;
-                 Field : String)
+                 Field : ID)
                  return Handler_Value;
+
+   function Is_Field (X : Array_Wrapper; Field : Id) return Boolean;
 private
    package Engine_Value_Vectors is
      new Ada.Containers.Vectors (Index_Type   => Array_Wrapper_Index,

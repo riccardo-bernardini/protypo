@@ -58,4 +58,16 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
                         New_Item => Value);
    end Set;
 
+
+   --------------
+   -- Is_Field --
+   --------------
+
+   function Is_Field (Item : Enumerated_Record; Field : ID) return Boolean
+   is
+   begin
+      return Item.Map.Contains (Field);
+   end Is_Field;
+
+
 end Protypo.Api.Engine_Values.Enumerated_Records;

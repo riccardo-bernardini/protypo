@@ -58,8 +58,8 @@ package Protypo.Code_Trees is
    function Class (X : Parsed_Code) return Non_Terminal;
 
    function If_Then_Else (Conditions     : Tree_Array;
-      Then_Branches  : Tree_Array;
-      Else_Branch    : Parsed_Code)
+                          Then_Branches  : Tree_Array;
+                          Else_Branch    : Parsed_Code)
                           return Parsed_Code
      with
        Pre =>
@@ -104,7 +104,8 @@ package Protypo.Code_Trees is
      Post => 
        Class (Definition'Result) = Defun;
    
-   function Statement_Sequence (Statements : Tree_Array)
+   function Statement_Sequence (Statements     : Tree_Array;
+                                Position       : Tokens.Token_Position := Tokens.No_Position)
                                 return Parsed_Code
      with
        Post => Class (Statement_Sequence'Result) = Statement_Sequence;
@@ -115,49 +116,49 @@ package Protypo.Code_Trees is
    --         Post => Class (Naked_Expression'Result) = Naked;
 
    function Binary_Operation (Left           : Parsed_Code;
-      Right          : Parsed_Code;
-      Operation      : Tokens.Binary_Operator;
-      Position       : Tokens.Token_Position := Tokens.No_Position)
+                              Right          : Parsed_Code;
+                              Operation      : Tokens.Binary_Operator;
+                              Position       : Tokens.Token_Position := Tokens.No_Position)
                               return Parsed_Code
      with
        Post => Class (Binary_Operation'Result) = Binary_Op;
 
    function Unary_Operation (X              : Parsed_Code;
-      Operation      : Tokens.Unary_Operator;
-      Position       : Tokens.Token_Position := Tokens.No_Position)
+                             Operation      : Tokens.Unary_Operator;
+                             Position       : Tokens.Token_Position := Tokens.No_Position)
                              return Parsed_Code
      with
        Post => Class (Unary_Operation'Result) = Unary_Op;
 
 
    function String_Constant (Val            : String;
-      Position       : Tokens.Token_Position := Tokens.No_Position)
+                             Position       : Tokens.Token_Position := Tokens.No_Position)
                              return Parsed_Code
      with
        Post => Class (String_Constant'Result) = Text_Constant;
 
    function Integer_Constant (Val            : String;
-      Position       : Tokens.Token_Position := Tokens.No_Position)
+                              Position       : Tokens.Token_Position := Tokens.No_Position)
                               return Parsed_Code
      with
        Post => Class (Integer_Constant'Result) = Int_Constant;
 
    function Float_Constant (Val            : String;
-      Position       : Tokens.Token_Position := Tokens.No_Position)
+                            Position       : Tokens.Token_Position := Tokens.No_Position)
                             return Parsed_Code
      with
        Post => Class (Float_Constant'Result) = Real_Constant;
 
 
    function Identifier (Id             : String;
-      Position       : Tokens.Token_Position := Tokens.No_Position)
+                        Position       : Tokens.Token_Position := Tokens.No_Position)
                         return Parsed_Code
      with
        Post => Class (Identifier'Result) = Identifier;
 
    function Indexed_Name (Function_Ref   : Parsed_Code;
-      Parameters     : Tree_Array;
-      Position       : Tokens.Token_Position := Tokens.No_Position)
+                          Parameters     : Tree_Array;
+                          Position       : Tokens.Token_Position := Tokens.No_Position)
                           return Parsed_Code
      with
        Post => Class (Indexed_Name'Result) = Indexed;
@@ -176,30 +177,30 @@ package Protypo.Code_Trees is
 
 
    function Selector (Ref            : Parsed_Code;
-      Field          : String;
-      Position       : Tokens.Token_Position := Tokens.No_Position)
+                      Field          : String;
+                      Position       : Tokens.Token_Position := Tokens.No_Position)
                       return Parsed_Code
      with
        Post => Class (Selector'Result) = Selected;
 
 
    function Loop_Exit (Label          : String;
-      Position       : Tokens.Token_Position := Tokens.No_Position)
+                       Position       : Tokens.Token_Position := Tokens.No_Position)
                        return Parsed_Code;
 
 
    function Basic_Loop (Loop_Body      : Parsed_Code;
-      Label          : String;
-      Position       : Tokens.Token_Position := Tokens.No_Position)
+                        Label          : String;
+                        Position       : Tokens.Token_Position := Tokens.No_Position)
                         return Parsed_Code
      with
        Post => Class (Basic_Loop'Result) = Loop_Block;
 
 
    function For_Loop (Variable       : String;
-      Iterator       : Parsed_Code;
-      Loop_Body      : Parsed_Code;
-      Position       : Tokens.Token_Position := Tokens.No_Position)
+                      Iterator       : Parsed_Code;
+                      Loop_Body      : Parsed_Code;
+                      Position       : Tokens.Token_Position := Tokens.No_Position)
                       return Parsed_Code
      with
        Post => Class (For_Loop'Result) = For_Block,
@@ -208,8 +209,8 @@ package Protypo.Code_Trees is
 
 
    function While_Loop (Condition      : Parsed_Code;
-      Loop_Body      : Parsed_Code;
-      Position       : Tokens.Token_Position := Tokens.No_Position)
+                        Loop_Body      : Parsed_Code;
+                        Position       : Tokens.Token_Position := Tokens.No_Position)
                         return Parsed_Code
      with
        Pre => Class (Loop_Body) = Loop_Block  and (Class (Condition) in Expression),
@@ -218,7 +219,7 @@ package Protypo.Code_Trees is
 
 
    function Return_To_Caller (Values         : Tree_Array;
-      Position       : Tokens.Token_Position := Tokens.No_Position)
+                              Position       : Tokens.Token_Position := Tokens.No_Position)
                               return Parsed_Code
      with
        Pre => (for all V of Values => Class (V) in Expression),

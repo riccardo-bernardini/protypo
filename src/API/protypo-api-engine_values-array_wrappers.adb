@@ -104,7 +104,7 @@ package body Protypo.Api.Engine_Values.Array_Wrappers is
    -- Get --
    ---------
 
-   function Get (X : Array_Wrapper; Field : String) return Handler_Value is
+   function Get (X : Array_Wrapper; Field : ID) return Handler_Value is
       use Ada.Strings;
       use Constant_Wrappers;
    begin
@@ -130,5 +130,21 @@ package body Protypo.Api.Engine_Values.Array_Wrappers is
          raise Unknown_Field with Field;
       end if;
    end Get;
+
+   --------------
+   -- Is_Field --
+   --------------
+
+   function Is_Field (X : Array_Wrapper; Field : Id) return Boolean
+   is
+      pragma Unreferenced (X);
+      use Ada.Strings;
+   begin
+      return Equal_Case_Insensitive (Field, "first")
+        or Equal_Case_Insensitive (Field, "last")
+        or Equal_Case_Insensitive (Field, "iterate")
+        or Equal_Case_Insensitive (Field, "range");
+   end Is_Field;
+
 
 end Protypo.Api.Engine_Values.Array_Wrappers;

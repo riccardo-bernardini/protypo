@@ -19,6 +19,9 @@ package Readable_Sequences.String_Sequences is
 
    No_Position : constant Position_Type;
 
+   function Image (Pos : Position_Type;
+                   Full : Boolean := True) return String;
+
    function Line (Pos : Position_Type) return Positive
      with Pre => Pos /= No_Position;
 
@@ -52,6 +55,18 @@ private
 
    function Char (Pos : Position_Type) return Positive
    is (Pos.Char);
+
+   function Image (Pos : Position_Type;
+                   Full : Boolean := True) return String
+   is (if Pos = No_Position then
+          "<unknown>"
+       else
+          "Line "
+       & Pos.Line'Image
+       & (if Full then
+             ", column: " & Pos.Char'Image
+          else
+             ""));
 
    package Position_Vectors is
      new Ada.Containers.Vectors (Index_Type   => Positive,

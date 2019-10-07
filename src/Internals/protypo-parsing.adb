@@ -392,7 +392,7 @@ package body Protypo.Parsing is
 
       Values := Parse_Expression_List (Input);
 
---        Code_Trees.Dump (Values.Read);
+      --        Code_Trees.Dump (Values.Read);
 
       if Names.Length /= Values.Length then
          raise Constraint_Error;
@@ -540,6 +540,7 @@ package body Protypo.Parsing is
    is
       Condition : Code_Trees.Parsed_Code;
       Loop_Body : Code_Trees.Parsed_Code;
+      Here      : constant Tokens.Token_Position := Tokens.Position (Input.Read);
    begin
       Expect_And_Eat (Input, Kw_While);
 
@@ -548,7 +549,8 @@ package body Protypo.Parsing is
       Loop_Body := Parse_Loop (Input, Label);
 
       return Code_Trees.While_Loop (Condition  => Condition,
-                                    Loop_Body  => Loop_Body);
+                                    Loop_Body  => Loop_Body,
+                                    Position   => Here);
    end Parse_While_Loop;
 
    ------------------
@@ -559,6 +561,7 @@ package body Protypo.Parsing is
                           return Code_Trees.Parsed_Code
    is
       Return_List : Statement_Sequences.Sequence;
+      Here        : constant Tokens.Token_Position := Tokens.Position (Input.Read);
    begin
       Expect_And_Eat (Input, Kw_Return);
 
@@ -570,7 +573,7 @@ package body Protypo.Parsing is
 
       Expect_And_Eat (Input, End_Of_Statement);
 
-      return Code_Trees.Return_To_Caller (Return_List.Dump);
+      return Code_Trees.Return_To_Caller (Return_List.Dump, Here);
 
    end Parse_Return;
 
@@ -618,7 +621,8 @@ package body Protypo.Parsing is
              Static_Predicate =>
                ID_Follower in End_Of_Statement | Assign | Open_Parenthesis | Dot;
 
-         Follower : constant Token_Class := Class (Input.Read (1));
+         Follower  : constant Token_Class := Class (Input.Read (1));
+         Here      : constant Tokens.Token_Position := Tokens.Position (Input.Read);
       begin
          --
          -- Here we are at the beginning of a statement and the current
@@ -646,7 +650,7 @@ package body Protypo.Parsing is
             when End_Of_Statement =>
 
                declare
-                  Result : Constant Code_Trees.Parsed_Code :=
+                  Result : constant Code_Trees.Parsed_Code :=
                              Code_Trees.Procedure_Call (Value (Input.Next));
                begin
                   Expect_And_Eat (Input, End_Of_Statement);
@@ -679,9 +683,9 @@ package body Protypo.Parsing is
                      when End_Of_Statement | End_Of_Text =>
                         Input.Clear_Position;
 
-                        Expect_And_Eat (Input, Class(Input.Read));
+                        Expect_And_Eat (Input, Class (Input.Read));
 
-                        return Code_Trees.Procedure_Call (ID, Parameters.Dump);
+                        return Code_Trees.Procedure_Call (ID, Parameters.Dump, Here);
 
                      when Assign | Dot =>
                         Input.Restore_Position;
@@ -747,6 +751,7 @@ package body Protypo.Parsing is
          Name            : Unbounded_String;
          Parameter_Names : Code_Trees.Parsed_Code;
          Function_Body   : Code_Trees.Parsed_Code;
+         Here            : constant Tokens.Token_Position := Tokens.Position (Input.Read);
       begin
          Input.Next;
 
@@ -780,7 +785,7 @@ package body Protypo.Parsing is
          then
             Put_Line (">> " & Class (Input.Read)'Image);
             Put_Line (">> [" & Value (Input.Read)  & "][" & To_String (Name) & "]");
-            raise Parsing_Error with "end " & To_String(Name) & "; expected";
+            raise Parsing_Error with "end " & To_String (Name) & "; expected";
          else
             Input.Next;
          end if;
@@ -790,15 +795,16 @@ package body Protypo.Parsing is
          return Code_Trees.Definition (Name           => To_String (Name),
                                        Parameter_List => Parameter_Names,
                                        Function_Body  => Function_Body,
-                                       Is_Function    => Is_Function);
+                                       Is_Function    => Is_Function,
+                                       Position       => Here);
       end Parse_Defun;
 
 
       Result : Statement_Sequences.Sequence;
 
-
+      Here   : constant Token_Position := Position (Input.Read);
    begin
---        Scanning.Dump (Input);
+      --        Scanning.Dump (Input);
 
       loop
          case Class (Input.Read) is
@@ -858,7 +864,7 @@ package body Protypo.Parsing is
          end case;
       end loop;
 
-      return Code_Trees.Statement_Sequence (Statement_Sequences.Dump (Result));
+      return Code_Trees.Statement_Sequence (Statement_Sequences.Dump (Result), Here);
    end Parse_Statement_Sequence;
 
 end Protypo.Parsing;
