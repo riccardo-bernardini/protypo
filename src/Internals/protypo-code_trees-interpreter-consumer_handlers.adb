@@ -108,9 +108,9 @@ package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is
       return No_Value;
    end Process;
 
-   function Default_Parameters (Fun : Consumer_Callback)
-                                return Engine_Value_Array
-   is (1 => Void_Value);
+   function Signature (Fun : Consumer_Callback)
+                                return Api.Engine_Values.Parameter_Signature
+   is (1 => Parameter_Spec'(Class   => Mandatory));
 
 
 end Protypo.Code_Trees.Interpreter.Consumer_Handlers;

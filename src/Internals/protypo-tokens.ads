@@ -7,7 +7,10 @@ package Protypo.Tokens is
 
    subtype Token_Position is Readable_Sequences.String_Sequences.Position_Type;
 
-   function Image (X : Token_Position) return String;
+   No_Position : constant Token_Position := Readable_Sequences.String_Sequences.No_Position;
+
+   function Image (X    : Token_Position;
+                   Full : Boolean := True) return String;
 
    type Token_Class is
      (Int,
@@ -174,12 +177,16 @@ private
    is (String_Sequences.Char (Tk.Position));
 
 
-   function Image (X : Token_Position) return String
+   function Image (X    : Token_Position;
+                   Full : Boolean := True)
+                   return String
    is (if X = String_Sequences.No_Position then
           "<unknown>"
        else
           "Line "
        & String_Sequences.Line (X)'Image
-       & ", column: "
-       & String_Sequences.Char (X)'Image);
+       & (if Full then
+             ", column: " & String_Sequences.Char (X)'Image
+          else
+             ""));
 end Protypo.Tokens;

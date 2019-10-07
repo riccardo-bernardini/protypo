@@ -1,17 +1,57 @@
 pragma Ada_2012;
 package body Protypo.API.Engine_Values is
+
+   function Is_Valid_Parameter_Signature (Signature : Parameter_Signature)
+                                          return Boolean
+   is
+      --
+      -- We check this with the following finite automata
+      --                non-void
+      --   Mandatory -------------->  Optional
+      --    ||  ^                       ||  ^
+      --    |+--| Void                  |+--| Non-void
+      --    |                           |
+      --    |  Varargin                 | Varargin
+      --    +-----------> Varargin <----+
+      --
+      -- Note that the next status is determined by the current
+      -- value class and that Varargin cannot go anywhere
+      --
+      Old : Parameter_Class := Mandatory;
+   begin
+      --
+      -- A signature is valid if and only if
+      --
+      -- * Any Mandatory is preceded by another Mandatory
+      -- * Nothing follows Varargin
+      --
+      for Param  of Signature loop
+         if Old = Varargin then
+            return False;
+         end if;
+
+         if Param.Class = Mandatory and Old /= Mandatory then
+            return False;
+         end if;
+
+         Old := Param.Class;
+      end loop;
+
+      return True;
+   end Is_Valid_Parameter_Signature;
+
    ------------------------
    -- Default_Parameters --
    ------------------------
 
-   function Default_Parameters (Fun : Callback_Based_Handler)
-                                return Engine_Value_Array
+   function Signature (Fun : Callback_Based_Handler)
+                       return Parameter_Signature
    is
-      Result : constant Engine_Value_Array (2 .. Fun.N_Parameters + 1) :=
-                 (others => Void_Value);
+      Result : constant Parameter_Signature (2 .. Fun.N_Parameters + 1) :=
+                 (others => Parameter_Spec'(Class => Mandatory));
    begin
       return Result;
-   end Default_Parameters;
+   end Signature;
 
    function Bool (X : Integer) return Integer
    is (if X /= 0 then 1 else 0);

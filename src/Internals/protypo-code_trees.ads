@@ -57,9 +57,9 @@ package Protypo.Code_Trees is
 
    function Class (X : Parsed_Code) return Non_Terminal;
 
-   function If_Then_Else (Conditions    : Tree_Array;
-                          Then_Branches : Tree_Array;
-                          Else_Branch   : Parsed_Code)
+   function If_Then_Else (Conditions     : Tree_Array;
+      Then_Branches  : Tree_Array;
+      Else_Branch    : Parsed_Code)
                           return Parsed_Code
      with
        Pre =>
@@ -79,8 +79,9 @@ package Protypo.Code_Trees is
          Post =>
            Class (Assignment'Result) = Assignment;
    
-   function Parameter_List (Names   : Id_List;
-                            Default : Tree_Array)
+   function Parameter_List (Names          : Id_List;
+                            Default        : Tree_Array;
+                            Position       : Tokens.Token_Position := Tokens.No_Position)
                             return Parsed_Code
      with 
        Pre => (for all Val of Default => Is_Empty (Val) or else (Class (Val) in Expression)),
@@ -91,7 +92,8 @@ package Protypo.Code_Trees is
    function Definition (Name           : String;
                         Parameter_List : Parsed_Code;
                         Function_Body  : Parsed_Code;
-                        Is_Function    : Boolean)
+                        Is_Function    : Boolean;
+                        Position       : Tokens.Token_Position := Tokens.No_Position)
                         return Parsed_Code
      with 
        Pre => 
@@ -112,45 +114,57 @@ package Protypo.Code_Trees is
    --       with
    --         Post => Class (Naked_Expression'Result) = Naked;
 
-   function Binary_Operation (Left      : Parsed_Code;
-                              Right     : Parsed_Code;
-                              Operation : Tokens.Binary_Operator)
+   function Binary_Operation (Left           : Parsed_Code;
+      Right          : Parsed_Code;
+      Operation      : Tokens.Binary_Operator;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
                               return Parsed_Code
      with
        Post => Class (Binary_Operation'Result) = Binary_Op;
 
-   function Unary_Operation (X         : Parsed_Code;
-                             Operation : Tokens.Unary_Operator)
+   function Unary_Operation (X              : Parsed_Code;
+      Operation      : Tokens.Unary_Operator;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
                              return Parsed_Code
      with
        Post => Class (Unary_Operation'Result) = Unary_Op;
 
 
-   function String_Constant (Val : String) return Parsed_Code
+   function String_Constant (Val            : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
+                             return Parsed_Code
      with
        Post => Class (String_Constant'Result) = Text_Constant;
 
-   function Integer_Constant (Val : String) return Parsed_Code
+   function Integer_Constant (Val            : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
+                              return Parsed_Code
      with
        Post => Class (Integer_Constant'Result) = Int_Constant;
 
-   function Float_Constant (Val : String) return Parsed_Code
+   function Float_Constant (Val            : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
+                            return Parsed_Code
      with
        Post => Class (Float_Constant'Result) = Real_Constant;
 
 
-   function Identifier (Id : String) return Parsed_Code
+   function Identifier (Id             : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
+                        return Parsed_Code
      with
        Post => Class (Identifier'Result) = Identifier;
 
-   function Indexed_Name (Function_Ref : Parsed_Code;
-                          Parameters   : Tree_Array)
+   function Indexed_Name (Function_Ref   : Parsed_Code;
+      Parameters     : Tree_Array;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
                           return Parsed_Code
      with
        Post => Class (Indexed_Name'Result) = Indexed;
 
    function Procedure_Call (Procedure_Name : String;
-                            Parameters     : Tree_Array)
+                            Parameters     : Tree_Array;
+                            Position       : Tokens.Token_Position := Tokens.No_Position)
                             return Parsed_Code
      with
        Post => Class (Procedure_Call'Result) = Procedure_Call;
@@ -161,27 +175,31 @@ package Protypo.Code_Trees is
        Post => Class (Procedure_Call'Result) = Procedure_Call;
 
 
-   function Selector (Ref   : Parsed_Code;
-                      Field : String)
+   function Selector (Ref            : Parsed_Code;
+      Field          : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
                       return Parsed_Code
      with
        Post => Class (Selector'Result) = Selected;
 
 
-   function Loop_Exit (Label     : String)
+   function Loop_Exit (Label          : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
                        return Parsed_Code;
 
 
-   function Basic_Loop (Loop_Body : Parsed_Code;
-                        Label     : String)
+   function Basic_Loop (Loop_Body      : Parsed_Code;
+      Label          : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
                         return Parsed_Code
      with
        Post => Class (Basic_Loop'Result) = Loop_Block;
 
 
-   function For_Loop (Variable  : String;
-                      Iterator  : Parsed_Code;
-                      Loop_Body : Parsed_Code)
+   function For_Loop (Variable       : String;
+      Iterator       : Parsed_Code;
+      Loop_Body      : Parsed_Code;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
                       return Parsed_Code
      with
        Post => Class (For_Loop'Result) = For_Block,
@@ -189,8 +207,9 @@ package Protypo.Code_Trees is
        Class (Loop_Body) = Loop_Block;
 
 
-   function While_Loop (Condition : Parsed_Code;
-                        Loop_Body : Parsed_Code)
+   function While_Loop (Condition      : Parsed_Code;
+      Loop_Body      : Parsed_Code;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
                         return Parsed_Code
      with
        Pre => Class (Loop_Body) = Loop_Block  and (Class (Condition) in Expression),
@@ -198,7 +217,8 @@ package Protypo.Code_Trees is
 
 
 
-   function Return_To_Caller (Values : Tree_Array)
+   function Return_To_Caller (Values         : Tree_Array;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
                               return Parsed_Code
      with
        Pre => (for all V of Values => Class (V) in Expression),
@@ -236,6 +256,8 @@ private
    
    type Node (Class : Non_Terminal) is
       record
+         Source_Position : Tokens.Token_Position;
+         
          case Class is
             when Parameter_Signature =>
                Signature : Parameter_Specs;
@@ -348,9 +370,10 @@ private
    
    function Empty_Parameter_List return Parsed_Code
    is (Pt => new Node
-         '(Class     => Parameter_Signature,
-           Signature => Parameter_Specs'(Names   => ID_Lists.Empty_Vector,
-                                         Default => Node_Vectors.Empty_Vector)));
+         '(Class           => Parameter_Signature,
+           Source_Position => Tokens.No_Position,
+           Signature       => Parameter_Specs'(Names   => ID_Lists.Empty_Vector,
+                                               Default => Node_Vectors.Empty_Vector)));
    
    function Is_Empty (X : Parsed_Code) return Boolean
    is (X.Pt = null);

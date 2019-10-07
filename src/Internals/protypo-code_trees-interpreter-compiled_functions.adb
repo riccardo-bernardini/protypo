@@ -60,21 +60,24 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
    -- Default_Parameters --
    ------------------------
 
-   function Default_Parameters (Fun : Compiled_Function)
-                                return Engine_Value_Array
+   function Signature (Fun : Compiled_Function)
+                                return Api.Engine_Values.Parameter_Signature
    is
-      Result : Engine_Value_Array (Fun.Parameters.Default.First_Index .. Fun.Parameters.Default.Last_Index);
+      Result : Api.Engine_Values.Parameter_Signature
+        (Fun.Parameters.Default.First_Index .. Fun.Parameters.Default.Last_Index);
    begin
       for K in Result'Range loop
          if Fun.Parameters.Default (K) /= null then
-            Result (K) := Expressions.Eval_Scalar (Fun.Status, Fun.Parameters.Default (K));
+            Result (K) := Parameter_Spec'
+              (Class   => Optional,
+               Default => Expressions.Eval_Scalar (Fun.Status, Fun.Parameters.Default (K)));
          else
-            Result (K) := Void_Value;
+            Result (K) := Parameter_Spec'(Class   => Mandatory);
          end if;
       end loop;
 
       return Result;
-   end Default_Parameters;
+   end Signature;
 
 
 end Protypo.Code_Trees.Interpreter.Compiled_Functions;

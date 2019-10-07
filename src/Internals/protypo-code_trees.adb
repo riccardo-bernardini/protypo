@@ -13,7 +13,8 @@ package body Protypo.Code_Trees is
    function Definition (Name           : String;
                         Parameter_List : Parsed_Code;
                         Function_Body  : Parsed_Code;
-                        Is_Function    : Boolean)
+                        Is_Function    : Boolean;
+                        Position       : Tokens.Token_Position := Tokens.No_Position)
                         return Parsed_Code
    is
       Result : constant Node_Access :=
@@ -21,7 +22,8 @@ package body Protypo.Code_Trees is
                            Is_Function     => Is_Function,
                            Definition_Name => To_Unbounded_String (Name),
                            Function_Body   => <>,
-                           Parameters      => <>);
+                           Parameters      => <>,
+                           Source_Position => Position);
    begin
       if Function_Body.Pt.Class /= Statement_Sequence then
          raise Program_Error;
@@ -40,8 +42,8 @@ package body Protypo.Code_Trees is
    -- To_Expression_Vector --
    --------------------------
 
-   function To_Expression_Vector (X             : Tree_Array;
-                                  Void_Accepted : Boolean := False)
+   function To_Expression_Vector (X              : Tree_Array;
+                                  Void_Accepted  : Boolean := False)
                                   return Node_Vectors.Vector
    is
       Result : Node_Vectors.Vector;
@@ -68,16 +70,18 @@ package body Protypo.Code_Trees is
    -- Parameter_List --
    --------------------
 
-   function Parameter_List (Names   : Id_List;
-                            Default : Tree_Array)
+   function Parameter_List (Names          : Id_List;
+                            Default        : Tree_Array;
+                            Position       : Tokens.Token_Position := Tokens.No_Position)
                             return Parsed_Code
    is
    begin
       return (Pt =>
-                 new Node'(Class     => Parameter_Signature,
-                           Signature => Parameter_Specs'
+                 new Node'(Class           => Parameter_Signature,
+                           Signature       => Parameter_Specs'
                              (Names   => Names,
-                              Default => To_Expression_Vector (Default, True))));
+                              Default => To_Expression_Vector (Default, True)),
+                           Source_Position => Position));
    end Parameter_List;
    -----------
    -- Class --
@@ -94,9 +98,9 @@ package body Protypo.Code_Trees is
    ------------------
 
    function If_Then_Else
-     (Conditions    : Tree_Array;
-      Then_Branches : Tree_Array;
-      Else_Branch   : Parsed_Code)
+     (Conditions     : Tree_Array;
+      Then_Branches  : Tree_Array;
+      Else_Branch    : Parsed_Code)
       return Parsed_Code
    is
       Result : constant Node_Access := new Node (If_Block);
@@ -195,15 +199,17 @@ package body Protypo.Code_Trees is
    ----------------------
 
    function Binary_Operation
-     (Left      : Parsed_Code;
-      Right     : Parsed_Code;
-      Operation : Tokens.Binary_Operator)
+     (Left           : Parsed_Code;
+      Right          : Parsed_Code;
+      Operation      : Tokens.Binary_Operator;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
-      Result : constant Node_Access := new Node'(Class    => Binary_Op,
-                                                 Left     => Left.Pt,
-                                                 Right    => Right.Pt,
-                                                 Operator => Operation);
+      Result : constant Node_Access := new Node'(Class           => Binary_Op,
+                                                 Left            => Left.Pt,
+                                                 Right           => Right.Pt,
+                                                 Operator        => Operation,
+                                                 Source_Position => Position);
    begin
       if not ((Left.Pt.Class in Expression) and (Right.Pt.Class in Expression)) then
          raise Program_Error;
@@ -217,13 +223,15 @@ package body Protypo.Code_Trees is
    ---------------------
 
    function Unary_Operation
-     (X         : Parsed_Code;
-      Operation : Tokens.Unary_Operator)
+     (X              : Parsed_Code;
+      Operation      : Tokens.Unary_Operator;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
-      Result : constant Node_Access := new Node'(Class    => Unary_Op,
-                                                 Operand  => X.Pt,
-                                                 Uni_Op   => Operation);
+      Result : constant Node_Access := new Node'(Class           => Unary_Op,
+                                                 Operand         => X.Pt,
+                                                 Uni_Op          => Operation,
+                                                 Source_Position => Position);
    begin
       if not (X.Pt.Class in Expression) then
          raise Program_Error;
@@ -237,11 +245,13 @@ package body Protypo.Code_Trees is
    ---------------------
 
    function String_Constant
-     (Val : String)
+     (Val            : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
-      Result : constant Node_Access := new Node'(Class    => Text_Constant,
-                                                 S        => To_Unbounded_String (Val));
+      Result : constant Node_Access := new Node'(Class           => Text_Constant,
+                                                 S               => To_Unbounded_String (Val),
+                                                 Source_Position => Position);
    begin
       return (Pt => Result);
    end String_Constant;
@@ -251,11 +261,13 @@ package body Protypo.Code_Trees is
    ----------------------
 
    function Integer_Constant
-     (Val : String)
+     (Val            : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
-      Result : constant Node_Access := new Node'(Class => Int_Constant,
-                                                 N     => Integer'Value (Val));
+      Result : constant Node_Access := new Node'(Class           => Int_Constant,
+                                                 N               => Integer'Value (Val),
+                                                 Source_Position => Position);
    begin
       return (Pt => Result);
    end Integer_Constant;
@@ -265,11 +277,13 @@ package body Protypo.Code_Trees is
    --------------------
 
    function Float_Constant
-     (Val : String)
+     (Val            : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
-      Result : constant Node_Access := new Node'(Class => Real_Constant,
-                                                 X     => Float'Value (Val));
+      Result : constant Node_Access := new Node'(Class           => Real_Constant,
+                                                 X               => Float'Value (Val),
+                                                 Source_Position => Position);
    begin
       return (Pt => Result);
    end Float_Constant;
@@ -279,11 +293,13 @@ package body Protypo.Code_Trees is
    ----------------
 
    function Identifier
-     (Id : String)
+     (Id             : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
-      Result : constant Node_Access := new Node'(Class    => Identifier,
-                                                 ID_Value => To_Unbounded_String (Id));
+      Result : constant Node_Access := new Node'(Class           => Identifier,
+                                                 ID_Value        => To_Unbounded_String (Id),
+                                                 Source_Position => Position);
    begin
       return (Pt => Result);
    end Identifier;
@@ -293,14 +309,16 @@ package body Protypo.Code_Trees is
    ------------------
 
    function Indexed_Name
-     (Function_Ref : Parsed_Code;
-      Parameters   : Tree_Array)
+     (Function_Ref   : Parsed_Code;
+      Parameters     : Tree_Array;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
       Result : constant Node_Access :=
-                 new Node'(Class       => Indexed,
-                           Indexed_Var => Function_Ref.Pt,
-                           Indexes     => To_Expression_Vector (Parameters));
+                 new Node'(Class           => Indexed,
+                           Indexed_Var     => Function_Ref.Pt,
+                           Indexes         => To_Expression_Vector (Parameters),
+                           Source_Position => Position);
    begin
       if not (Result.Indexed_Var.Class in Name) then
          raise Program_Error;
@@ -314,13 +332,15 @@ package body Protypo.Code_Trees is
    --------------------
 
    function Procedure_Call (Procedure_Name : String;
-                            Parameters     : Tree_Array)
+                            Parameters     : Tree_Array;
+                            Position       : Tokens.Token_Position := Tokens.No_Position)
                             return Parsed_Code
    is
    begin
       return (Pt => new Node'(Class       => Procedure_Call,
-                              Name        => To_Unbounded_String (Procedure_Name),
-                              Params      => To_Expression_Vector (Parameters)));
+                              Name            => To_Unbounded_String (Procedure_Name),
+                              Params          => To_Expression_Vector (Parameters),
+                              Source_Position => Position));
    end Procedure_Call;
 
    function Procedure_Call (Procedure_Name : String)
@@ -332,14 +352,16 @@ package body Protypo.Code_Trees is
    --------------
 
    function Selector
-     (Ref   : Parsed_Code;
-      Field : String)
+     (Ref            : Parsed_Code;
+      Field          : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
       Result : constant Node_Access :=
-                 new Node'(Class       => Selected,
-                           Record_Var  => Ref.Pt,
-                           Field_Name  => To_Unbounded_String (Field));
+                 new Node'(Class           => Selected,
+                           Record_Var      => Ref.Pt,
+                           Field_Name      => To_Unbounded_String (Field),
+                           Source_Position => Position);
    begin
       if not (Result.Record_Var.Class in Name) then
          raise Program_Error;
@@ -353,12 +375,14 @@ package body Protypo.Code_Trees is
    ---------------
 
    function Loop_Exit
-     (Label     : String)
+     (Label          : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
       Result : constant Node_Access :=
-                 new Node'(Class      => Exit_Statement,
-                           Loop_Label => To_Unbounded_String (Label));
+                 new Node'(Class           => Exit_Statement,
+                           Loop_Label      => To_Unbounded_String (Label),
+                           Source_Position => Position);
    begin
       return (Pt => Result);
    end Loop_Exit;
@@ -368,13 +392,15 @@ package body Protypo.Code_Trees is
    ----------------
 
    function Basic_Loop
-     (Loop_Body : Parsed_Code;
-      Label     : String)
+     (Loop_Body      : Parsed_Code;
+      Label          : String;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
-      Result : constant Node_Access := new Node'(Class      => Loop_Block,
-                                                 Loop_Body  => <>,
-                                                 Labl       => To_Unbounded_String (Label));
+      Result : constant Node_Access := new Node'(Class           => Loop_Block,
+                                                 Loop_Body       => <>,
+                                                 Labl            => To_Unbounded_String (Label),
+                                                 Source_Position => Position);
    begin
       if Loop_Body.Pt.Class /= Statement_Sequence then
          raise Program_Error;
@@ -385,19 +411,19 @@ package body Protypo.Code_Trees is
       return (Pt => Result);
    end Basic_Loop;
 
---     --------------
---     -- Get_Name --
---     --------------
---
---     function Get_Name (X : Parsed_Code) return Node_Access
---     is
---     begin
---        if not (X.Pt.Class in Name) then
---           raise Program_Error;
---        end if;
---
---        return X.Pt;
---     end Get_Name;
+   --     --------------
+   --     -- Get_Name --
+   --     --------------
+   --
+   --     function Get_Name (X : Parsed_Code) return Node_Access
+   --     is
+   --     begin
+   --        if not (X.Pt.Class in Name) then
+   --           raise Program_Error;
+   --        end if;
+   --
+   --        return X.Pt;
+   --     end Get_Name;
 
    --------------------
    -- Get_expression --
@@ -419,16 +445,18 @@ package body Protypo.Code_Trees is
    --------------
 
    function For_Loop
-     (Variable  : String;
-      Iterator  : Parsed_Code;
-      Loop_Body : Parsed_Code)
+     (Variable       : String;
+      Iterator       : Parsed_Code;
+      Loop_Body      : Parsed_Code;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
-      Result : constant Node_Access := new Node'(Class      => For_Block,
-                                                 Loop_Body  => <>,
-                                                 Labl       => <>,
-                                                 Variable   => To_Unbounded_String (Variable),
-                                                 Iterator   => Get_Expression (Iterator));
+      Result : constant Node_Access := new Node'(Class           => For_Block,
+                                                 Loop_Body       => <>,
+                                                 Labl            => <>,
+                                                 Variable        => To_Unbounded_String (Variable),
+                                                 Iterator        => Get_Expression (Iterator),
+                                                 Source_Position => Position);
    begin
       if Loop_Body.Pt.Class /= Loop_Block then
          raise Program_Error;
@@ -445,15 +473,17 @@ package body Protypo.Code_Trees is
    ----------------
 
    function While_Loop
-     (Condition : Parsed_Code;
-      Loop_Body : Parsed_Code)
+     (Condition      : Parsed_Code;
+      Loop_Body      : Parsed_Code;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
       Result : constant Node_Access :=
-                 new Node'(Class      => While_Block,
-                           Loop_Body  => <>,
-                           Labl       => <>,
-                           Condition  => Get_Expression (Condition));
+                 new Node'(Class           => While_Block,
+                           Loop_Body       => <>,
+                           Labl            => <>,
+                           Condition       => Get_Expression (Condition),
+                           Source_Position => Position);
    begin
       if Loop_Body.Pt.Class /= Loop_Block then
          raise Program_Error;
@@ -470,12 +500,14 @@ package body Protypo.Code_Trees is
    ----------------------
 
    function Return_To_Caller
-     (Values : Tree_Array)
+     (Values         : Tree_Array;
+      Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
    begin
       return (Pt => new Node'(Class         => Return_Statement,
-                              Return_Values => To_Expression_Vector (Values)));
+                              Return_Values   => To_Expression_Vector (Values),
+                              Source_Position => Position));
    end Return_To_Caller;
 
    ------------

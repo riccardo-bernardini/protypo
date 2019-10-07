@@ -22,7 +22,7 @@ package Protypo.API.Engine_Values is
 
    type Engine_Value (Class : Engine_Value_Class := Void) is private;
 
-   Void_Value : constant Engine_Value;
+   Void_Value     : constant Engine_Value;
 
    subtype Integer_Value    is Engine_Value (Int);
    subtype Real_Value       is Engine_Value (Real);
@@ -193,8 +193,43 @@ package Protypo.API.Engine_Values is
                      Parameter : Engine_Value_Array)
                      return Engine_Value_Array is abstract;
 
-   function Default_Parameters (Fun : Function_Interface)
-                                return Engine_Value_Array is abstract;
+   type Parameter_Class is (Mandatory, Optional, Varargin);
+
+   type Parameter_Spec (Class : Parameter_Class := Mandatory) is
+      record
+         case Class is
+            when Mandatory | Varargin =>
+               null;
+
+            when Optional =>
+               Default : Engine_Value;
+         end case;
+      end record;
+
+   type Parameter_Signature is array (Positive range <>) of Parameter_Spec;
+
+   function Is_Valid_Parameter_Signature (Signature : Parameter_Signature) return Boolean;
+
+   --
+   -- Return True if Signature is a valid parameter signature that can be returned
+   -- by Signature method.  A valid signature satisfies the following "regexp"
+   --
+   --   Void_Value* Non_Void_Value* Varargin_Value?
+   --
+   -- that is,
+   -- * there is a "head" (potentially empty) of void values that
+   -- mark the parameters that are mandatory and have no default;
+   --
+   -- * a (maybe empty) sequence of non void values follows, these are
+   -- default values of optional parameters
+   --
+   -- * the last entry can be Varargin_Value, showing that the
+   -- last parameter is an array (maybe empty) that collects all the
+   -- remaining parameters
+   --
+   function Signature (Fun : Function_Interface)
+                                return Parameter_Signature is abstract
+     with Post'Class => Is_Valid_Parameter_Signature (Signature'Result);
 
    type Callback_Function_Access is
    not null access function (Parameters : Engine_Value_Array) return Engine_Value_Array;
@@ -247,7 +282,7 @@ package Protypo.API.Engine_Values is
    function Get_Constant (Val : Constant_Value) return Constant_Interface_Access;
 
 private
---     type Engine_Value_Vector is range 1 .. 2;
+   --     type Engine_Value_Vector is range 1 .. 2;
 
    type Engine_Value (Class : Engine_Value_Class := Void) is
       record
@@ -287,8 +322,8 @@ private
          end case;
       end record;
 
-   Void_Value : constant Engine_Value := (Class => Void);
-   No_Value   : constant Engine_Value_Array (2 .. 1) := (others => Void_Value);
+   Void_Value     : constant Engine_Value := (Class => Void);
+   No_Value       : constant Engine_Value_Array (2 .. 1) := (others => Void_Value);
 
    type Callback_Based_Handler is
      new Function_Interface
@@ -303,8 +338,8 @@ private
                      return Engine_Value_Array
    is (Fun.Callback (Parameter));
 
-   function Default_Parameters (Fun : Callback_Based_Handler)
-                                return Engine_Value_Array;
+   function Signature (Fun : Callback_Based_Handler)
+                                return Parameter_Signature;
    --     is (Engine_Value_Array(2..Fun.N_Parameters+1)'(others => Void_Value));
 
 

@@ -9,8 +9,8 @@ private package Protypo.Code_Trees.Interpreter.Consumer_Handlers is
                                 Parameter : Engine_Value_Array)
                                 return Engine_Value_Array;
 
-   overriding function Default_Parameters (Fun : Consumer_Callback)
-                                           return Engine_Value_Array;
+   overriding function Signature (Fun : Consumer_Callback)
+                                           return Api.Engine_Values.Parameter_Signature;
 
    function Create (Consumer    : Api.Consumers.Consumer_Access;
                     With_Escape : Boolean;

@@ -317,6 +317,7 @@ package body Protypo.Parsing is
    is
       Result : Code_Trees.Parsed_Code;
       Op     : Logical_Operator;
+      Here   : constant Tokens.Token_Position := Tokens.Position (Input.Read);
    begin
       Result := Parse_Relation (Input);
 
@@ -327,7 +328,8 @@ package body Protypo.Parsing is
             Input.Next;
             Result := Code_Trees.Binary_Operation (Left      => Result,
                                                    Right     => Parse_Relation (Input),
-                                                   Operation => Op);
+                                                   Operation => Op,
+                                                   Position  => Here);
          end loop;
       end if;
 
@@ -502,6 +504,7 @@ package body Protypo.Parsing is
    is
       Iterator  : Code_Trees.Parsed_Code;
       Loop_Body : Code_Trees.Parsed_Code;
+      Here      : constant Tokens.Token_Position := Tokens.Position (Input.Read);
    begin
       Expect_And_Eat (Input, Kw_For);
 
@@ -521,7 +524,8 @@ package body Protypo.Parsing is
 
          return Code_Trees.For_Loop (Variable  => Variable,
                                      Iterator  => Iterator,
-                                     Loop_Body => Loop_Body);
+                                     Loop_Body => Loop_Body,
+                                     Position  => Here);
       end;
    end Parse_For_Loop;
 

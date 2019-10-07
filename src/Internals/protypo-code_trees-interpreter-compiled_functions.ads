@@ -18,8 +18,8 @@ private package Protypo.Code_Trees.Interpreter.Compiled_Functions is
                                 Parameter : Engine_Value_Array)
                                 return Engine_Value_Array;
 
-   overriding function Default_Parameters (Fun : Compiled_Function)
-                                           return Engine_Value_Array;
+   overriding function Signature (Fun : Compiled_Function)
+                                           return Api.Engine_Values.Parameter_Signature;
 
    --     function Create (Function_Body : Node_Vectors.Vector) return Integer;
 end Protypo.Code_Trees.Interpreter.Compiled_Functions;

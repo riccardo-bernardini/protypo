@@ -73,6 +73,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
                      return + Head.Record_Handler.Get (To_String (Expr.Field_Name));
 
                   when Ambivalent_Reference =>
+--                       Put_Line ("@@@ record");
                      return + Head.Ambivalent_Handler.Get (To_String (Expr.Field_Name));
 
                   when others =>
@@ -104,7 +105,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
                                             Parameters       => Indexes);
 
                   when Ambivalent_Reference =>
-
+--                       Put_Line ("@@@ index");
                      return + Head.Ambivalent_Handler.Get (Expressions.To_Array (Indexes));
 
                end case;
@@ -145,8 +146,6 @@ package body Protypo.Code_Trees.Interpreter.Names is
                   --
                   Val := Value (Position);
 
-
-                  --                    Put_Line ("@@@ found '" & ID & "': " & Val.Class'Image);
 
                   if Val.Class in Handler_Classes then
                      return + Val;

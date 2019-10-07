@@ -4,6 +4,8 @@ with Protypo.Code_Trees.Interpreter.Compiled_Functions;
 with Protypo.Code_Trees.Interpreter.Names;
 with Protypo.Code_Trees.Interpreter.Expressions;
 
+with Ada.Exceptions;
+
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_IO; use Ada.Text_IO;
 
@@ -276,6 +278,11 @@ package body Protypo.Code_Trees.Interpreter.Statements is
 
       end case;
 
+   exception
+      when E : Bad_Iterator =>
+         raise Run_Time_Error with Ada.Exceptions.Exception_Message (E)
+           & " at "
+           & Tokens.Image (Program.Source_Position, false);
    end Run;
 
 end Protypo.Code_Trees.Interpreter.Statements;
