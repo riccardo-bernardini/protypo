@@ -1,6 +1,6 @@
 pragma Ada_2012;
 with Ada.Text_IO;                           use Ada.Text_IO;
-with Ada.Strings.Unbounded;                 use Ada.Strings.Unbounded;
+--  with Ada.Strings.Unbounded;                 use Ada.Strings.Unbounded;
 
 with Protypo.Tokens;                        use Protypo.Tokens;
 
@@ -8,6 +8,7 @@ with Readable_Sequences.Generic_Sequences;  use Readable_Sequences;
 
 
 package body Protypo.Parsing is
+   use Ada.Strings.Unbounded;
 
    package Statement_Sequences is
      new Generic_Sequences (Element_Type  => Code_Trees.Parsed_Code,

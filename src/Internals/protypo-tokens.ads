@@ -1,8 +1,10 @@
-with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
+--  with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 
 with Readable_Sequences.String_Sequences;
 use Readable_Sequences;
 package Protypo.Tokens is
+   use Ada.Strings.Unbounded;
+
    subtype Token_Position is Readable_Sequences.String_Sequences.Position_Type;
 
    function Image (X : Token_Position) return String;

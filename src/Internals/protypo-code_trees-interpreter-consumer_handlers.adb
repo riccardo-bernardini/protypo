@@ -8,6 +8,7 @@ with Protypo.Code_Trees.Interpreter.Expressions;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_IO; use Ada.Text_IO;
+with Protypo.Api.Interpreters;
 
 package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is
 
@@ -26,7 +27,7 @@ package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is
                             Input  : String)
                             return Engine_Value
    is
-      Tk : Scanning.Token_List := Scanning.Tokenize ("#{" & Input & "}#", "");
+      Tk : Scanning.Token_List := Scanning.Tokenize (Api.Interpreters.Template_Type ("#{" & Input & "}#"), "");
       Code : constant Code_Trees.Parsed_Code := Parsing.Parse_Expression (Tk);
    begin
 --        Scanning.Dump (Tk);

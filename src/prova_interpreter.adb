@@ -1,10 +1,7 @@
-with Protypo.Api.Interpreter;
-with Protypo.Api.Symbols;
+with Protypo.Api.Interpreters;
 with Protypo.Api.Consumers.File_Writer;
---  with Protypo.Api.Engine_Values.List_Wrappers;
 with Protypo.Api.Engine_Values.Array_Wrappers;
 
-with Utilities;
 with User_Records;
 
 with Ada.Command_Line;
@@ -15,7 +12,7 @@ with Protypo.Api.Engine_Values;
 procedure Prova_Interpreter is
    use Ada.Command_Line;
 
-   use Protypo.Api.Interpreter;
+   use Protypo.Api.Interpreters;
    use Protypo.Api.Engine_Values;
    use Protypo.Api.Consumers;
    use Protypo.Api;
@@ -31,9 +28,8 @@ procedure Prova_Interpreter is
           Argument (1));
 
 
-   Program  : constant String := Utilities.Slurp (Source_File);
+   Program  : constant Template_Type := Slurp (Source_File);
    Code     : Compiled_Code;
-   Table    : Symbols.Table;
    Consumer : constant Consumer_Access :=
                 File_Writer.Open (File_Writer.Standard_Error);
 
@@ -55,18 +51,18 @@ procedure Prova_Interpreter is
    User_Dir : constant Array_Wrappers.Array_Wrapper_Access :=
                 Array_Wrappers.Make_Wrapper (To_Array (Db));
 
+   Engine   : Interpreter_Type;
+
 begin
 
-
-   Table.Create (Name          => "users",
-                 Initial_Value => Create (Ambivalent_Interface_Access (User_Dir)));
+   Engine.Define (Name  => "users",
+                  Value => Create (Ambivalent_Interface_Access (User_Dir)));
 
    Compile (Target   => Code,
             Program  => Program);
 
-   Run (Program      => Code,
-        Symbol_Table => Table,
-        Consumer     => Consumer);
+   Engine.Run (Program      => Code,
+               Consumer     => Consumer);
 
    Set_Exit_Status (Success);
 exception

@@ -6,29 +6,21 @@ package body Protypo.API.Consumers.File_Writer is
    -- Open --
    ----------
 
-   function Open (Filename : String) return Consumer_Access is
+   function Open (Target : Target_Name) return Consumer_Access is
       use Ada.Finalization;
 
       type Writer_Access is access Writer;
 
-      Target : constant Target_Type := (if Filename = Standard_Output then
-                                           Stdout
-
-                                        elsif Filename = Standard_Error then
-                                           Stderr
-
-                                        else
-                                           File);
 
       Result : constant Writer_Access := new Writer'(Limited_Controlled with
-                                                     Target        => Target,
+                                                     Target        => Target.Class,
                                                      Open          => True,
                                                      Output        => <>);
    begin
-      if Result.Target = File then
+      if Target.Class = File then
          Ada.Text_IO.Create (File => Result.Output,
                              Mode => Ada.Text_IO.Out_File,
-                             Name => Filename);
+                             Name => Target.Name);
       end if;
 
       return Result;

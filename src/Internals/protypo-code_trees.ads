@@ -1,12 +1,13 @@
 with Ada.Unchecked_Deallocation;
 with Ada.Containers.Vectors;
 with Ada.Containers.Indefinite_Vectors;
-with Ada.Strings.Unbounded;   use Ada.Strings.Unbounded;
 
 with Protypo.Tokens;
 
 private
 package Protypo.Code_Trees is
+   use Ada.Strings.Unbounded;
+   
    package ID_Lists is 
      new Ada.Containers.Indefinite_Vectors (Index_Type   => Positive,
                                             Element_Type => String);

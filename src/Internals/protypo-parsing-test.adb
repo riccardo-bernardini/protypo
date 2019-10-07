@@ -1,10 +1,9 @@
 with Protypo.Scanning;
 with Protypo.Code_Trees;
-
-with Utilities;
+with Protypo.Api.Interpreters;      use Protypo.Api.Interpreters;
 
 procedure Protypo.Parsing.Test is
-   S    : constant String := Utilities.Slurp ("test-data/parsing.txt");
+   S    : constant Template_Type := Slurp ("test-data/parsing.txt");
    Tk   : Scanning.Token_List := Scanning.Tokenize (S, "");
    Code : Code_Trees.Parsed_Code;
 --     pragma Unreferenced (Code);

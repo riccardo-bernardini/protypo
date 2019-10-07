@@ -5,8 +5,6 @@ with Ada.Characters.Latin_9;         use Ada.Characters.Latin_9;
 with Ada.Text_IO;                    use Ada.Text_IO;
 with Ada.Strings.Fixed;
 with Ada.Characters.Handling;
-with Ada.Sequential_IO;
-with Ada.Directories;
 
 
 with Readable_Sequences.String_Sequences;
@@ -15,7 +13,8 @@ use Readable_Sequences;
 with String_Sets;                    use String_Sets;
 
 package body Protypo.Scanning is
-
+   use Ada.Strings.Unbounded;
+   use Ada.Strings.Maps;
 
    ------------------------
    -- Parenthesis_String --
@@ -62,30 +61,30 @@ package body Protypo.Scanning is
       return Buffer.Dump;
    end Parenthesis_String;
 
-   -----------
-   -- Slurp --
-   -----------
-
-   function Slurp (Filename : String) return String is
-
-      subtype Content is String (1 .. Integer (Ada.Directories.Size (Filename)));
-      Result : Content;
-
-      package Content_IO is new Ada.Sequential_IO (Content);
-      Input  : Content_IO.File_Type;
-
-   begin
-      Content_IO.Open (File     => Input,
-                       Mode     => Content_IO.In_File,
-                       Name     => Filename);
-
-      Content_IO.Read (File => Input,
-                       Item => Result);
-
-      Content_IO.Close (Input);
-
-      return Result;
-   end Slurp;
+--     -----------
+--     -- Slurp --
+--     -----------
+--
+--     function Slurp (Filename : String) return String is
+--
+--        subtype Content is String (1 .. Integer (Ada.Directories.Size (Filename)));
+--        Result : Content;
+--
+--        package Content_IO is new Ada.Sequential_IO (Content);
+--        Input  : Content_IO.File_Type;
+--
+--     begin
+--        Content_IO.Open (File     => Input,
+--                         Mode     => Content_IO.In_File,
+--                         Name     => Filename);
+--
+--        Content_IO.Read (File => Input,
+--                         Item => Result);
+--
+--        Content_IO.Close (Input);
+--
+--        return Result;
+--     end Slurp;
 
 
    type Error_Reason is
@@ -373,20 +372,20 @@ package body Protypo.Scanning is
 
 
       procedure Scan_Embedded_Text is
-         Content : constant String := Parenthesis_String (Input  => input,
+         Content : constant String := Parenthesis_String (Input  => Input,
                                                           Open   => '[',
                                                           Close  => ']',
                                                           Escape => '\');
       begin
---           Buffer.Clear;
---
---           loop
---              if Peek_And_Eat (Input, "]") then
---                 exit when Input.Read /= ']';
---              end if;
---
---              Buffer.Append (Input.Next);
---           end loop;
+         --           Buffer.Clear;
+         --
+         --           loop
+         --              if Peek_And_Eat (Input, "]") then
+         --                 exit when Input.Read /= ']';
+         --              end if;
+         --
+         --              Buffer.Append (Input.Next);
+         --           end loop;
 
          Result.Append (Builder.Make_Token (Identifier, Consume_With_Escape_Procedure_Name));
          Result.Append (Make_Unanchored_Token (Open_Parenthesis));
@@ -527,7 +526,7 @@ package body Protypo.Scanning is
          if Directive = "include" then
             declare
                Included : constant Token_List :=
-                            Tokenize (Slurp (Parameter), Base_Dir);
+                            Tokenize (Api.Interpreters.Slurp (Parameter), Base_Dir);
             begin
                Result.Append (Included);
             end;
@@ -543,13 +542,13 @@ package body Protypo.Scanning is
    -- Tokenize --
    --------------
 
-   function Tokenize (Template : String;
+   function Tokenize (Template : Protypo.Api.Interpreters.Template_Type;
                       Base_Dir : String) return Token_List is
       use Tokens;
 
 
       Result  : Token_List := Token_Sequences.Create (Make_Unanchored_Token (End_Of_Text));
-      Input   : String_Sequences.Sequence := String_Sequences.Create (Template);
+      Input   : String_Sequences.Sequence := String_Sequences.Create (String (Template));
       Buffer  : String_Sequences.Sequence;
 
       procedure Handle_Escape

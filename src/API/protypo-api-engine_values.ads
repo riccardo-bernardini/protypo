@@ -1,5 +1,6 @@
-with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
 package Protypo.API.Engine_Values is
+   use Ada.Strings.Unbounded;
+
    type Engine_Value_Class is
      (
       Void,
