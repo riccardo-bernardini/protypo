@@ -55,4 +55,6 @@ end loop;
 ]
 foo("Ciao");
 
+y := 42;
+[#y#]
 }#

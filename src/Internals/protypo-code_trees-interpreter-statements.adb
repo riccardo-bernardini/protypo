@@ -35,7 +35,9 @@ package body Protypo.Code_Trees.Interpreter.Statements is
              when Int  => Get_Integer (X) /= 0,
              when Real => Get_Float (X) /= 0.0)
        else
-          raise Constraint_Error);
+          raise Run_Time_Error
+            with "Trying to convert non-numeric value ("
+       & X.Class'Image & ") to Boolean");
 
    ---------
    -- Run --
@@ -86,7 +88,9 @@ package body Protypo.Code_Trees.Interpreter.Statements is
       end Run_Loop_Body;
    begin
       if Program.Class not in Statement_Classes then
-         raise Program_Error;
+         raise Program_Error
+           with "Trying to execute a non-statment node ("
+             & Program.Class'Image & ")";
       end if;
 
 
@@ -116,7 +120,10 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                Values  := Expressions.Eval_Vector (Status, Program.Rvalues);
 
                if Program.Lhs.Length /= Values.Length then
-                  raise Constraint_Error;
+                  raise Run_Time_Error
+                    with "Assignment with "
+                    & Program.Lhs.Length'Image & " LHS terms and "
+                    & Values.Length'Image & " RHS terms";
                end if;
 
                --                 Put_Line ("[" & Program.Lhs.First_Index'Image & Program.Lhs.Last_Index'Image);
@@ -142,7 +149,9 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                   -- (with the variable values still unchanged) and finally
                   -- the assigment is done-
                   --
+--                    Put_Line ("@@@");
                   LHS.Append (Names.Eval_Name (Status, Name));
+--                    Put_Line ("@@@ 1");
 
                   if LHS.Last_Element.Class /= Names.Variable_Reference then
                      --
@@ -152,6 +161,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                      raise Constraint_Error;
                   end if;
                end loop;
+--                 Put_Line ("@@@ xx");
 
                declare
                   Shift : constant Integer := Values.First_Index - LHS.First_Index;
@@ -160,6 +170,9 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                   for K in LHS.First_Index .. Lhs.Last_Index loop
                      LHS (K).Variable_Handler.Write (Values (K + Shift));
                   end loop;
+
+--                    Put_Line ("@@@ uu");
+
                end;
             end;
          when Return_Statement =>

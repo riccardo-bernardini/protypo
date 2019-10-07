@@ -112,8 +112,9 @@ package body Symbol_Tables.Generic_Symbol_Table is
 
          if Pos /= Symbol_Maps.No_Element then
             Debug("found");
-            return Cursor'(Block           => Current_Trial,
-                           Internal_Cursor => Pos);
+            return Cursor'(Valid => True,
+                           Block => Current_Trial,
+                           Key   => To_Unbounded_String (String (name)));
          end if;
 
          Current_Trial := Current_Trial.Parent;
@@ -167,12 +168,12 @@ package body Symbol_Tables.Generic_Symbol_Table is
    begin
       Debug ("Creating '" & String (Name) & "' in block " & Table.Current.ID'Image);
 
-      Position.Block := Table.Current;
-
       Table.Current.Map.Insert (Key      => Name,
-                                New_Item => Value_Holders.Empty_Holder,
-                                Position => Position.Internal_Cursor,
-                                Inserted => Ignored);
+                                New_Item => Value_Holders.Empty_Holder);
+
+      Position := Cursor'(Valid => True,
+                          Block => Table.Current,
+                          Key   => To_Unbounded_String (String (Name)));
    end Create;
 
    ------------
@@ -180,14 +181,24 @@ package body Symbol_Tables.Generic_Symbol_Table is
    ------------
 
    procedure Update (Pos       : Cursor;
-                     New_Value : Symbol_Value) is
+                     New_Value : Symbol_Value)
+   is
+      use type Symbol_Maps.Cursor;
+
+      C : constant Symbol_Maps.Cursor :=
+            Pos.Block.Map.Find (Symbol_Name (To_String (Pos.Key)));
    begin
+      if C = Symbol_Maps.No_Element then
+         raise Constraint_Error with "Stale symbol table cursor";
+      end if;
+
       Debug ("Updating '"
              & String (Name (Pos))
              & "' in block "
              & Pos.Block.ID'Image
              & " to [" & Image (New_Value) & "]");
-      Pos.Block.Map.Replace_Element (Pos.Internal_Cursor, Value_Holders.To_Holder (New_Value));
+
+      Pos.Block.Map.Replace_Element (C, Value_Holders.To_Holder (New_Value));
    end Update;
 
    ----------------

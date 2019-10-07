@@ -2,6 +2,7 @@ with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Containers.Indefinite_Holders;
 with Ada.Finalization;
 
+with Ada.Strings.Unbounded;
 use Ada;
 
 generic
@@ -17,6 +18,8 @@ package Symbol_Tables.Generic_Symbol_Table is
 
    type Cursor is private;
    No_Element : constant Cursor;
+
+   function Image (X : Cursor) return String;
 
    type Table_Block is private;
    No_Block : constant Table_Block;
@@ -133,6 +136,8 @@ package Symbol_Tables.Generic_Symbol_Table is
    -- required.
 
 private
+   use Ada.Strings.Unbounded;
+
    package Value_Holders is
      new Ada.Containers.Indefinite_Holders (Symbol_Value);
 
@@ -163,14 +168,26 @@ private
          ID          : Block_ID;
       end record;
 
-   type Cursor is
+   type Cursor (Valid : Boolean := True) is
       record
-         Block           : Table_Block;
-         Internal_Cursor : Symbol_Maps.Cursor;
+         case Valid is
+            when True =>
+               Block : Table_Block;
+               Key   : Unbounded_String;
+
+            when False =>
+               null;
+         end case;
       end record;
 
-   No_Element : constant Cursor := Cursor'(Block           => No_Block,
-                                           Internal_Cursor => Symbol_Maps.No_Element);
+   No_Element : constant Cursor := Cursor'(Valid => False);
+
+
+   function Image (X : Cursor) return String
+   is (if X.Valid then
+          "[" & To_String (X.Key) & "@" & X.Block.ID'Image & "]"
+       else
+          "NO_ELEMENT");
 
    type Symbol_Table is
      new Finalization.Limited_Controlled
@@ -202,15 +219,15 @@ private
 
    function Value (Pos : Cursor) return Symbol_Value
    is (if Has_Value (Pos) then
-          Value_Holders.Element (Symbol_Maps.Element (Pos.Internal_Cursor))
+          Pos.Block.Map.Element (Symbol_Name (To_String (Pos.Key))).Element
        else
           raise Uninitialized_Value with String (Name (Pos)));
 
    function Has_Value (Pos : Cursor) return Boolean
-   is (not Symbol_Maps.Element (Pos.Internal_Cursor).Is_Empty);
+   is (Pos.Valid);
 
    function Name (Pos : Cursor) return Symbol_Name
-   is (Symbol_Maps.Key (Pos.Internal_Cursor));
+   is (Symbol_Name(To_String(Pos.Key)));
 
 
 end Symbol_Tables.Generic_Symbol_Table;

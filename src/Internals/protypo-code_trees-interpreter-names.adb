@@ -58,7 +58,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
 
 
    begin
-      --        Put_Line ("#1" & Expr.Class'Image);
+      --              Put_Line ("#1" & Expr.Class'Image);
       if not (Expr.Class in Name) then
          raise Program_Error;
       end if;
@@ -66,7 +66,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
       case Name (Expr.Class) is
          when Selected    =>
             declare
-               Head : constant Name_Reference := Eval_Name (Status, Expr.Record_Var);
+               Head  : constant Name_Reference := Eval_Name (Status, Expr.Record_Var);
                Field : constant ID := To_String (Expr.Field_Name);
             begin
                case Head.Class is
@@ -113,7 +113,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
                                             Parameters       => Indexes);
 
                   when Ambivalent_Reference =>
---                       Put_Line ("@@@ index");
+                     --                       Put_Line ("@@@ index");
                      return + Head.Ambivalent_Handler.Get (Expressions.To_Array (Indexes));
 
                end case;
@@ -130,10 +130,10 @@ package body Protypo.Code_Trees.Interpreter.Names is
                Val      : Engine_Value;
             begin
 
-               --                 Put_Line ("@@@ searching '" & ID & "'");
+--                 Put_Line ("@@@ searching '" & ID & "'");
                if Position = No_Element then
 
-                  --                    Put_Line ("@@@ not found '" & ID & "'");
+--                    Put_Line ("@@@ not found '" & ID & "'");
                   --
                   -- The name is not in the symbol table: create it
                   -- but leave it not initialized, it can be used only
@@ -142,9 +142,24 @@ package body Protypo.Code_Trees.Interpreter.Names is
                   Status.Symbol_Table.Create (Name          => ID,
                                               Position      => Position);
 
-                  return Name_Reference'
-                    (Class            => Variable_Reference,
-                     Variable_Handler => Symbol_Table_Reference (Position));
+--                    Put_Line ("@@@ inserted '" & ID & "' @" & Image (Position));
+                  if Position = No_Element then
+                     raise Program_Error with "something bad";
+                  end if;
+
+                  declare
+                     X : constant Reference_Interface_Access :=
+                           Symbol_Table_Reference (Position);
+
+                     Result : Name_Reference :=
+                                (Class            => Variable_Reference,
+                                 Variable_Handler => X);
+                  begin
+--                       Put_Line ("@@@ hh");
+                     Result.Variable_Handler := X;
+--                       Put_Line ("@@@ hhh");
+                     return Result;
+                  end;
                else
                   --
                   -- The name is in the symbol table.  If its value is an

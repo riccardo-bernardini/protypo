@@ -627,7 +627,8 @@ package body Protypo.Parsing is
          subtype ID_Follower is Unvalued_Token
            with
              Static_Predicate =>
-               ID_Follower in End_Of_Statement | Assign | Open_Parenthesis | Dot;
+               ID_Follower in
+                 End_Of_Statement | Assign | Open_Parenthesis | Dot | Comma;
 
          Follower  : constant Token_Class := Class (Input.Read (1));
          Here      : constant Tokens.Token_Position := Tokens.Position (Input.Read);
@@ -669,7 +670,7 @@ package body Protypo.Parsing is
                   return Result;
                end;
 
-            when Assign | Dot =>
+            when Assign | Dot | Comma =>
                return Parse_Assign (Input);
 
             when Open_Parenthesis =>
