@@ -190,42 +190,22 @@ is a *directive* used to control the parser.  More precisely, a directive is pro
 ```
 #(foo (1) and (2 (a)))
 ```
-the `command` is `foo` and `parameter` is `(1) and (2 (a))`.  If a single parenthesis is required, an escape Ada-like (i.e., by repeiting the parenthesis twice) is possible, e.g.,
+the `command` is `foo` and `parameter` is `(1) and (2 (a))`.  If a single parenthesis is required, it can be escaped with `\`, that is
 ```
-#(foo  only one (( parenthesis)
-#(foo  only one )) parenthesis)
+#(foo  only one \( parenthesis)
+#(foo  only one \) parenthesis)
 ```
-2. The directive string is trimmed by removing initial spaces.  The string until the first space is the command.
-3. The `parameter` is what remains, still left trimmed.
+(in general, if a \ is met, the \ is skipped and the following character sent output without interpreting it)
+2. The directive string is matched against the following regular expression
+```
+/^ *([^ ]*) +([^ ].*)$/
+```
+and the first sub-expression is the directive name, the second sub-expression is the directive parameter. In other words, the directive name is the first substring made of non-space characters, while the parameter is what remains after removing spaces after the directive name.
+
 ## Comments 
 
-We distinguish between three types of comments
-* In-code comments
-* Template comments
-* Target comments and *transparent* target comments
-
-The first type of comment is found in the code sections within `#{...}#`, they begin with -- and end at the end of line. 
-
-Template comments are found in the doc section, begin with `#--` at the beginning of the line and end the end of the line.  Template comments are just ignored, their presence has no influence on the result.
-
-Target comments are still found in the doc section. They are considered comments for the target language and are copied as they are in the output string. Inside target comments **start-of-code markers and marked names are ignored**.  If we want to be able to generate part of the target comment with code, we can write a *transparent* target comment that is a special case of target comment.  The marker for transparent target comments can be replaced by another string before storing it in the output string.
-
-The markers for template and target comments are configurable to be adapted to the specific target language.
-
-### Example
-
-In case of LaTeX as target language, transparent target comments begin with '%#\s' and it is replaced by '%'.  Therefore,
-
-```
-% This is just a comment #{ and this is ignored }# #this.too
-%# This is a transparent comment and #this.is.not.ignored (comment again)
-```
-is mapped to
-
-```
-"% This is just a comment #{ and this is ignored }# #this.too
-% This is a transparent comment and "; this.is.not.ignored; "(comment again)";
-```
+* In the free-text section comments begin with `#--` and end at the end of the line.  
+* In the code section comments  begin with `--` and end at the end of the line
 
 ## Types
 
