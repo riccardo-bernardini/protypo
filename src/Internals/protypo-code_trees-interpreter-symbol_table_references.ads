@@ -22,7 +22,4 @@ private
       end record;
 
 
-   function Symbol_Table_Reference (Position : Api.Symbols.Protypo_Tables.Cursor)
-                                    return Reference_Interface_Access
-   is (new Symbol_Reference'(Position => Position));
-end Protypo.Code_Trees.Interpreter.Symbol_Table_References;
+  end Protypo.Code_Trees.Interpreter.Symbol_Table_References;

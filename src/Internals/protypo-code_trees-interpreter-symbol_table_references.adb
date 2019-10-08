@@ -21,4 +21,16 @@ package body Protypo.Code_Trees.Interpreter.Symbol_Table_References is
               New_Value => Value);
    end Write;
 
+   ----------------------------
+   -- Symbol_Table_Reference --
+   ----------------------------
+
+   function Symbol_Table_Reference (Position : Api.Symbols.Protypo_Tables.Cursor)
+                                    return Reference_Interface_Access
+   is
+   begin
+
+      return Reference_Interface_Access'(new Symbol_Reference'(Position => Position));
+   end Symbol_Table_Reference;
+
 end Protypo.Code_Trees.Interpreter.Symbol_Table_References;

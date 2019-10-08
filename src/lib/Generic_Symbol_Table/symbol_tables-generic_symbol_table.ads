@@ -136,6 +136,15 @@ package Symbol_Tables.Generic_Symbol_Table is
    -- required.
 
 private
+   --
+   -- A symbol table is made of several blocks, ordered
+   --
+   -- Every block is organized with a two-step structure: the values
+   -- are stored into a vector, while we store the map key-> internal
+   -- index in a map.  Why this complication?  Because the pair
+   -- (block, index) is a stable cursor to the element that is not affected
+   -- by insertions.
+   --
    use Ada.Strings.Unbounded;
 
    package Value_Holders is
