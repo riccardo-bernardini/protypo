@@ -126,7 +126,7 @@ package Protypo.API.Engine_Values is
 
 
    type Array_Interface is interface;
-   type Array_Interface_Access is not null access all Array_Interface'Class;
+   type Array_Interface_Access is access all Array_Interface'Class;
 
    function Get (X     : Array_Interface;
                  Index : Engine_Value_Array)
@@ -138,7 +138,7 @@ package Protypo.API.Engine_Values is
    Out_Of_Range : exception;
 
    type Record_Interface is interface;
-   type Record_Interface_Access is not null access all Record_Interface'Class;
+   type Record_Interface_Access is access all Record_Interface'Class;
 
    function Is_Field (X : Record_Interface; Field : ID) return Boolean
                       is abstract;
@@ -155,15 +155,15 @@ package Protypo.API.Engine_Values is
      and Record_Interface
      and Array_Interface;
 
-   type Ambivalent_Interface_Access is not null access all Ambivalent_Interface'Class;
+   type Ambivalent_Interface_Access is  access all Ambivalent_Interface'Class;
 
    type Constant_Interface is interface;
-   type Constant_Interface_Access  is not null access all Constant_Interface'Class;
+   type Constant_Interface_Access  is  access all Constant_Interface'Class;
 
    function Read (X : Constant_Interface) return Engine_Value is abstract;
 
    type Reference_Interface is interface and Constant_Interface;
-   type Reference_Interface_Access is not null access all Reference_Interface'Class;
+   type Reference_Interface_Access is access all Reference_Interface'Class;
 
    procedure Write (What  : Reference_Interface;
                     Value : Engine_Value)
@@ -175,7 +175,7 @@ package Protypo.API.Engine_Values is
    --     is abstract;
 
    type Iterator_Interface is limited interface;
-   type Iterator_Interface_Access is not null access all Iterator_Interface'Class;
+   type Iterator_Interface_Access is access all Iterator_Interface'Class;
 
 
    procedure Reset (Iter : in out Iterator_Interface) is abstract;
@@ -190,7 +190,7 @@ package Protypo.API.Engine_Values is
      with Pre'Class => not Iter.End_Of_Iteration;
 
    type Function_Interface is interface;
-   type Function_Interface_Access is not null access all Function_Interface'Class;
+   type Function_Interface_Access is access all Function_Interface'Class;
 
    function Process (Fun       : Function_Interface;
                      Parameter : Engine_Value_Array)
