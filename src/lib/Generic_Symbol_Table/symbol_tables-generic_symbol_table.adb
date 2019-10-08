@@ -1,6 +1,5 @@
 pragma Ada_2012;
 
-with Ada.Unchecked_Deallocation;
 with Ada.Text_IO; use Ada.Text_IO;
 
 package body Symbol_Tables.Generic_Symbol_Table is
@@ -27,27 +26,59 @@ package body Symbol_Tables.Generic_Symbol_Table is
       end if;
    end Debug;
 
-   function Copy_Globals (T : Symbol_Table) return Symbol_Table
+   procedure Push (Stack : in out Namespace_Stack;
+                   Item  : Namespace_Block)
    is
    begin
-      return Result : Symbol_Table do
-         Result.Root.Map := T.Root.Map;
+      Stack.Append (Item);
+   end Push;
+
+   procedure Pop (Stack : in out Namespace_Stack)
+   is
+   begin
+      Stack.Delete_Last;
+   end Pop;
+
+
+
+   function Copy_Globals (T : Symbol_Table) return Symbol_Table
+   is
+      use Ada.Finalization;
+
+   begin
+      return Result : constant Symbol_Table :=
+        Symbol_Table'(Limited_Controlled with T => new Basic_Table,
+                      Counter                   => <>)
+      do
+         Result.T.Stack.Append (T.T.Stack.First_Element);
       end return;
    end Copy_Globals;
+
+   -------------
+   -- Next_Id --
+   -------------
+
+   function Next_Id (Table : in out Symbol_Table) return Namespace_ID
+   is
+   begin
+      Table.Counter := Table.Counter + 1;
+      return Table.Counter;
+   end Next_Id;
 
    ----------------
    -- Open_Block --
    ----------------
 
    procedure Open_Block (Table : in out Symbol_Table; Parent : Table_Block) is
-      New_Block : constant Table_Block := new Basic_Block'(Map         => <>,
-                                                           Parent      => Parent,
-                                                           Old_Current => Table.Current,
-                                                           ID          => Table.Counter + 1);
+      New_Block : constant Namespace_Block :=
+                    Namespace_Block'(Name_Map => Name_Maps.Empty_Map,
+                                     Values   => Value_Vectors.Empty_Vector,
+                                     Names    => Name_Vectors.Empty_Vector,
+                                     ID       => Next_Id (Table),
+                                     Parent   => Parent);
+
    begin
-      Debug ("Opening block " & New_Block.Id'Image & " child of " & Parent.Id'Image);
-      Table.Current := New_Block;
-      Table.Counter := New_Block.Id;
+      Push (Table.T.Stack, New_Block);
    end Open_Block;
 
 
@@ -76,21 +107,15 @@ package body Symbol_Tables.Generic_Symbol_Table is
 
    procedure Close_Block (Table : in out Symbol_Table)
    is
-      procedure Free is
-        new Ada.Unchecked_Deallocation (Object => Basic_Block,
-                                        Name   => Table_Block);
-      Old_Current : Table_Block;
+      use Ada.Containers;
    begin
-      Debug ("Closing block " & Table.Current.Id'Image);
+--        Debug ("Closing block " & Table.Current.Id'Image);
 
-      if Table.Current = Table.Root then
+      if Table.T.Stack.Length = 1 then
          raise Constraint_Error;
       end if;
 
-      Old_Current := Table.Current.Old_Current;
-      Free (Table.Current);
-
-      Table.Current := Old_Current;
+      Pop (Table.T.Stack);
    end Close_Block;
 
    ----------
@@ -98,29 +123,31 @@ package body Symbol_Tables.Generic_Symbol_Table is
    ----------
 
    function Find (Table : Symbol_Table; Name : Symbol_Name) return Cursor is
-      use type Symbol_Maps.Cursor;
+      use type Name_Maps.Cursor;
 
-      Pos           : Symbol_Maps.Cursor;
-      Current_Trial : Table_Block := Table.Current_Block;
+      Pos           : Name_Maps.Cursor;
+      Current_Trial : Namespace_Index := Table.T.Stack.Last_Index;
    begin
-      pragma Assert (Current_Trial /= No_Block);
+      loop
+         Debug ("Looking for '" & String (Name) & "' in block " & Current_Trial'Image);
 
-      while Current_Trial /= No_Block loop
-         Debug ("Looking for '" & String (Name) & "' in block " & Current_Trial.ID'Image);
+         Pos := Table.T.Stack (Current_Trial).Name_Map.Find (Name);
 
-         Pos := Current_Trial.Map.Find (Name);
-
-         if Pos /= Symbol_Maps.No_Element then
-            Debug("found");
-            return Cursor'(Valid => True,
-                           Block => Current_Trial,
-                           Key   => To_Unbounded_String (String (name)));
+         if Pos /= Name_Maps.No_Element then
+            Debug ("found");
+            return Cursor'(Namespace =>
+                             Table_Block'(Table => Table.t,
+                                          Index => Current_Trial,
+                                          ID    => Table.T.Stack (Current_Trial).Id),
+                           Idx       => Name_Maps.Element(Pos));
          end if;
 
-         Current_Trial := Current_Trial.Parent;
+         exit when Current_Trial = Root_Namespace;
+
+         Current_Trial := Table.T.Stack (Current_Trial).Parent.index;
       end loop;
 
-      Debug("Not found");
+      Debug ("Not found");
       return No_Element;
    end Find;
 
@@ -151,29 +178,27 @@ package body Symbol_Tables.Generic_Symbol_Table is
       Position      : out Cursor)
    is
       Ignored : Boolean;
+      Pos     : constant Namespace_Index := Table.T.Stack.Last_Index;
+      Idx     : Value_Index;
    begin
-      Table.Create (Name, Position);
-      Update (Position, Initial_Value);
-   end Create;
+      Debug ("Creating '"
+             & String (Name)
+             & "' in block ID="
+             & Table.T.Stack (Pos).Id'Image);
 
-   ------------
-   -- Create --
-   ------------
+      Table.T.Stack (Pos).Values.Append (Initial_Value);
 
-   procedure Create (Table         : in out Symbol_Table;
-                     Name          : Symbol_Name;
-                     Position      : out Cursor)
-   is
-      Ignored : Boolean;
-   begin
-      Debug ("Creating '" & String (Name) & "' in block " & Table.Current.ID'Image);
+      Table.T.Stack (Pos).Names.Append (Name);
 
-      Table.Current.Map.Insert (Key      => Name,
-                                New_Item => Value_Holders.Empty_Holder);
+      Idx := Table.T.Stack (Pos).Values.Last_Index;
 
-      Position := Cursor'(Valid => True,
-                          Block => Table.Current,
-                          Key   => To_Unbounded_String (String (Name)));
+      Table.T.Stack (Pos).Name_Map.Insert (Key      => Name,
+                                           New_Item => idx);
+
+      Position := Cursor'(Namespace => Table_Block'(Table => Table.T,
+                                                    Index => Pos,
+                                                    ID    => Table.T.Stack (Pos).Id),
+                          Idx       => Idx);
    end Create;
 
    ------------
@@ -183,22 +208,17 @@ package body Symbol_Tables.Generic_Symbol_Table is
    procedure Update (Pos       : Cursor;
                      New_Value : Symbol_Value)
    is
-      use type Symbol_Maps.Cursor;
 
-      C : constant Symbol_Maps.Cursor :=
-            Pos.Block.Map.Find (Symbol_Name (To_String (Pos.Key)));
    begin
-      if C = Symbol_Maps.No_Element then
-         raise Constraint_Error with "Stale symbol table cursor";
-      end if;
-
       Debug ("Updating '"
              & String (Name (Pos))
              & "' in block "
-             & Pos.Block.ID'Image
+             & Pos.Namespace.ID'Image
              & " to [" & Image (New_Value) & "]");
 
-      Pos.Block.Map.Replace_Element (C, Value_Holders.To_Holder (New_Value));
+      Pos
+        .Namespace.Table.Stack (Pos.Namespace.Index)
+        .Values.Replace_Element (Pos.Idx, New_Value);
    end Update;
 
    ----------------
@@ -207,13 +227,16 @@ package body Symbol_Tables.Generic_Symbol_Table is
 
    overriding procedure Initialize (Object : in out Symbol_Table) is
    begin
-      Object.Root := new Basic_Block'(Map         => <>,
-                                      Parent      => No_Block,
-                                      Old_Current => No_Block,
-                                      ID          => Block_ID'First);
 
-      Object.Current := Object.Root;
-      Object.Counter := Object.Root.ID;
+      Object.Counter := Root_ID;
+      Object.T := new Basic_Table'(Stack => Namespace_Stacks.Empty_Vector);
+
+      Push (Stack => Object.T.Stack,
+            Item  => Namespace_Block'(Name_Map => Name_Maps.Empty_Map,
+                                      Values   => Value_Vectors.Empty_Vector,
+                                      Names    => Name_Vectors.Empty_Vector,
+                                      ID       => Root_ID,
+                                      Parent   => No_Block));
    end Initialize;
 
 end Symbol_Tables.Generic_Symbol_Table;
