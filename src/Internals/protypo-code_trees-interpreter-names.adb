@@ -127,7 +127,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
 
                ID       : constant String := To_String (Expr.ID_Value);
                Position : Cursor := Status.Symbol_Table.Find (ID);
-               Val      : Engine_Value;
+               Val      : Engine_Value := Void_Value;
             begin
 
 --                 Put_Line ("@@@ searching '" & ID & "'");
