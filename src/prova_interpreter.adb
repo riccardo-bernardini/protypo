@@ -75,4 +75,8 @@ exception
       Put_Line (Standard_Error, "parsing error: " & Ada.Exceptions.Exception_Message (E));
 
       Set_Exit_Status (Failure);
+
+   when E : others =>
+      Put_Line (Standard_Error, "other: " & Ada.Exceptions.Exception_Message (E)
+                & Ada.Exceptions.Exception_Information (E));
 end Prova_Interpreter;

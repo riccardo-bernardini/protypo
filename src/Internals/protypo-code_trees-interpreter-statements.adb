@@ -10,6 +10,7 @@ pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Code_Trees.Interpreter.Statements is
+   use type Names.Name_Reference;
 
    ---------
    -- Run --
@@ -39,6 +40,10 @@ package body Protypo.Code_Trees.Interpreter.Statements is
             with "Trying to convert non-numeric value ("
        & X.Class'Image & ") to Boolean");
 
+   package LHS_Vectors is
+        new Ada.Containers.Vectors (Index_Type   => Positive,
+                                    Element_Type => Names.Name_Reference);
+
    ---------
    -- Run --
    ---------
@@ -47,11 +52,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                   Program : not null Node_Access)
    is
       use Compiled_Functions;
-      use type Names.Name_Reference;
 
-      package LHS_Vectors is
-        new Ada.Containers.Vectors (Index_Type   => Positive,
-                                    Element_Type => Names.Name_Reference);
 
       subtype Lhs_Array is LHS_Vectors.Vector;
 

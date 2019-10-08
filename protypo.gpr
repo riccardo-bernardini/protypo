@@ -9,7 +9,7 @@ project Protypo is
    end Builder;
 
    package Compiler is
-      for Switches ("ada") use ("-gnatwa", "-gnat12", "-g", "-gnatE", "-fstack-check");
+      for Switches ("ada") use ("-gnatwa", "-gnat12", "-g", "-gnatE", "-fstack-check", "-gnata");
    end Compiler;
 
    package Binder is

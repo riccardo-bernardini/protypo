@@ -12,6 +12,14 @@ begin
   end loop;
 end foo;
 
+function divmod(x; n) is
+begin
+  div := x / n;
+  mod := x - n*div;
+
+  return div, mod;
+end divmod;
+
 function fact(x) is
 begin
   if x < 1 then -- bingo
@@ -55,6 +63,15 @@ end loop;
 ]
 foo("Ciao");
 
-x, y := 4, 2;
-[#y#]
+
+x,y := 4,2;
+
+[#x#, #y#]
+
+x,y := y,x;
+
+[#x#, #y#]
+
+s, q, r := "zorro", divmod(37, 7);
+[#s#, #q#=5, #r#=2]
 }#
