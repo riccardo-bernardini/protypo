@@ -181,6 +181,8 @@ In template expansion there is often the necessity of using a  "boilerplate" sha
 #(include /path/to/file)
 ```
 
+### How directives are parsed
+
 When scanning the main text a string of the form
 ```
 #(commmand parameter)
@@ -201,7 +203,11 @@ the `command` is `foo` and `parameter` is `(1) and (2 (a))`.  If a single parent
 ```
 /^ *([^ ]*) +([^ ].*)$/
 ```
-and the first sub-expression is the directive name, the second sub-expression is the directive parameter. In other words, the directive name is the first substring made of non-space characters, while the parameter is what remains after removing spaces after the directive name.
+and the first sub-expression is the `command`, the second sub-expression is the `parameter`. In other words, the directive name is the first substring made of non-space characters, while the parameter is what remains after removing spaces after the directive name.
+
+### Recognized directives
+
+Currently only `include` is recognized.  Its behaviour is similar to C `#include` and it does a "physical" inclusion of the target file.  This because I expect that in many cases `include` will be used to include common boilerplates and such.  `include` does not include the same file twice. Maybe later I'll add something line `always_include`. 
 
 ## Comments 
 
