@@ -38,7 +38,7 @@ creates a new *template interpreter*.  With the instructions
    Engine.Define (Name  => "sin",
                   Value => Engine_Values.Create (Callbacks.Sin'Access));
 ```
-we define a variable `the_answer` (whose content is 42) and a function *sin* associated with a callback in `Callbacks`. The values we associate to names with `Define`are of type `Engine_Value` (more about this later) and the functions `Create` convert "ordinary" valuse (integer, access to functions, ...) to an equivalent `Engine_Value`. 
+we define a variable `the_answer` (whose content is 42) and a function *sin* associated with a callback in `Callbacks`. The values we associate to names with `Define`are of type `Engine_Value` (more about this later) and the functions `Create` convert an "ordinary" value (integer, access to function, ...) to an equivalent `Engine_Value`. 
 
 Finally, we call
 ```Ada
@@ -46,7 +46,15 @@ Finally, we call
                Consumer => File_Writer.Open (File_Writer.Standard_Error));
 ```
 the first parameter is the template to be expanded, while the second is the `Consumer` of the output produced by `Engine`. 
-
+A `Consumer` is a type that implements the interface
+```Ada
+   type Consumer_Interface is limited interface;
+   
+   procedure Process (Consumer  : in out Consumer_Interface;
+                      Parameter : String)
+   is abstract;
+```
+In other words, a `Consumer` is an object that provides a procedure `Process` that expects a `String` parameter.
 
 # The basic API
 
