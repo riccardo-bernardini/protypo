@@ -196,6 +196,7 @@ the `command` is `foo` and `parameter` is `(1) and (2 (a))`.  If a single parent
 #(foo  only one \) parenthesis)
 ```
 (in general, if a \ is met, the \ is skipped and the following character sent output without interpreting it)
+
 2. The directive string is matched against the following regular expression
 ```
 /^ *([^ ]*) +([^ ].*)$/
