@@ -54,7 +54,13 @@ A `Consumer` is a type that implements the interface
                       Parameter : String)
    is abstract;
 ```
-In other words, a `Consumer` is an object that provides a procedure `Process` that expects a `String` parameter.
+In other words, a `Consumer` is an object that provides a procedure `Process` that expects a `String` parameter. Every time the builtin function `@` is called (directly or, in most cases, indirectly as the result of free-text processing or of `[...]` construction) the parameter of the function, after expansion of `#...#`, is given to the `Process` procedure implemented by the `Consumer`.  Since it is expected that in most cases the output will be sent to a file, package `with Protypo.Api.Consumers.File_Writer` provides a pre-defined consumer that writes to file.  In the specific case of the example, it writes to the standard error.
+
+When `simple_example` is run, it prints to the standard error
+```console
+sin(1.5)= 9.97495E-01, 42= 42
+```
+
 
 # The basic API
 
