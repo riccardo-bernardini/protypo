@@ -1,3 +1,53 @@
+# An example
+
+Maybe the fastest way to introduce the basic ideas of the API is by means of an example.
+
+```Ada
+with Protypo.Api.Interpreters;            
+with Protypo.Api.Consumers.File_Writer;   
+with Protypo.Api.Engine_Values;           
+
+with Callbacks;
+
+procedure Simple_Example is
+   use Protypo.Api;
+   use Protypo.Api.Consumers;
+
+   Engine   : Interpreters.Interpreter_Type;
+
+begin 
+   Engine.Define (Name  => "the_answer",
+                  Value => Engine_Values.Create (42));
+
+   Engine.Define (Name  => "sin",
+                  Value => Engine_Values.Create (Callbacks.Sin'Access));
+
+   Engine.Run (Program  => "sin(1.5)=#sin(1.5)#, 42=#the_answer#",
+               Consumer => File_Writer.Open (File_Writer.Standard_Error));
+end Simple_Example;
+```
+Let's analyze the code line by line.  Declaration
+```Ada
+   Engine   : Interpreters.Interpreter_Type;
+```
+creates a new *template interpreter*.  With the instructions
+```Ada
+   Engine.Define (Name  => "the_answer",
+                  Value => Engine_Values.Create (42));
+
+   Engine.Define (Name  => "sin",
+                  Value => Engine_Values.Create (Callbacks.Sin'Access));
+```
+we define a variable `the_answer` (whose content is 42) and a function *sin* associated with a callback in `Callbacks`. The values we associate to names with `Define`are of type `Engine_Value` (more about this later) and the functions `Create` convert "ordinary" valuse (integer, access to functions, ...) to an equivalent `Engine_Value`. 
+
+Finally, we call
+```Ada
+  Engine.Run (Program  => "sin(1.5)=#sin(1.5)#, 42=#the_answer#",
+               Consumer => File_Writer.Open (File_Writer.Standard_Error));
+```
+the first parameter is the template to be expanded, while the second is the `Consumer` of the output produced by `Engine`. 
+
+
 # The basic API
 
 All the resources of interest to the library user (i.e., the programmer) are under the root package `protypo.API`; the main procedures are in `Protypo.API.Interpreter`  whose public part is
