@@ -1,3 +1,10 @@
+# Index
+* [An example](#an-example)
+* [The API](#the-api)
+   * [The interpreter](#the-interpreter)
+     * [Low level interface](#low-level-interface)
+   * [The `Engine_Value` type](#the-engine_value-type)
+
 # An example
 
 Maybe the fastest way to introduce the basic ideas of the API is by means of an example.
@@ -172,14 +179,14 @@ Procedure `Run` does a two-step process: first it compiles the template to an in
 > Why?  Well, the real reason is historical: this was the first interface to the interpreter.  It remains here in case it can get useful.
 
 By using 
-```
+```Ada
 function Compile (Program  : String;
                   Base_Dir : String := "") return Compiled_Code;
 ```
 we get the internally compiled version of the program given as the first argument.  The `Base_Dir` argument is used, for example, when searching for files to be included. By default the current directory of the program is used.
 
 The compiled code can be run using the procedure
-```
+```Ada
   procedure Run (Interpreter  : in out Interpreter_Type;
                   Program      : Compiled_Code;
                   Consumer     : Consumers.Consumer_Access);
