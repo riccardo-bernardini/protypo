@@ -10,7 +10,7 @@
      * [Constant and reference handlers](#constant_handler-and-reference_handler)
      * [Iterator handlers](#iterator_handler)
      * [Function handlers](#function_handler)
-       * [Callbacks](#syntactic-sugar:-using-callbacks)
+       * [Callbacks](#syntactic-sugar-using-callbacks)
      
 
 # An example
