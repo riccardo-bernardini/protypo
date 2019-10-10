@@ -283,6 +283,27 @@ In other words, a record handler must provide a function `Get` that expects a st
 
 ### `Ambivalent_Handler`
 
+An _ambivalent handler_ is just something that implements both array and record interfaces
+```Ada
+  type Ambivalent_Interface is interface
+     and Record_Interface
+     and Array_Interface;
 
+   type Ambivalent_Interface_Access is  access all Ambivalent_Interface'Class;
+```
+Strange as it may seem, this is used in the [Array_Wrapper](#array_wrapper) so that one can write (supposing `foo` is an array wrapper) both `foo(5)`, but also `foo.range` or `foo.first`.  This allows, for example to iterate on `foo` both with a "classical" `for`
+```Ada
+   for index in foo.range loop
+      foo(index) := index+1;
+   end loop;
+```
+or with a more "modern" iterator
+```Ada
+   sum := 0;
+   for item in foo.iterate loop
+      sum := sum + item;
+   end loop;
+```
+> The latter example shows that quering an array wrapper with field `iterate` gives an _iterator_ that can be used  to iterate over the array
 
 
