@@ -324,3 +324,23 @@ These are two handler that allows to access scalars. A _constant handler_ allows
 ```
 Note that actually `Reference_Interface` is a descendant of `Constant_Interface`. See the discussion under [Array_Handler](#array_handler) for the reasons of having these two handlers.
 
+### `Iterator_Handler`
+
+This is used to iterate in `for` loops. Its interface is 
+```Ada
+   type Iterator_Interface is limited interface;
+   type Iterator_Interface_Access is access all Iterator_Interface'Class;
+
+
+   procedure Reset (Iter : in out Iterator_Interface) is abstract;
+   procedure Next (Iter : in out Iterator_Interface) is abstract
+     with Pre'Class => not Iter.End_Of_Iteration;
+
+   function End_Of_Iteration (Iter : Iterator_Interface)
+                              return Boolean is abstract;
+
+   function Element (Iter : Iterator_Interface)
+                     return Handler_Value is abstract
+     with Pre'Class => not Iter.End_Of_Iteration;
+```
+This idea of iterator is inspired by Ada iterators, but with a major difference. In Ada the duty of iterating over the container and the duty of accessing elements are given to separated objects: the former is handled by a discendent of `Forward_Iterator` (or `Reversible_Iterator`) while the latter is assigned to a `Cursor`, with the iterator generating and manipulating the cursor. Here, for the sake of simplicity, everything is handled by the same object.
