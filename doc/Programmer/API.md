@@ -252,6 +252,10 @@ An _array handler_ is an object that implements the following interface
 
    Out_Of_Range : exception;
 ```
-that is, it must provide a function `Get` that accepts an array of `Engine_Value` and returns an `Engine_Value` **of handler type**, If there is the need of returning a scalar it must be _embedded_ in a `Constant_Handler` value. I'll explain the reason for this constraint later.
+that is, it must provide a function `Get` that accepts an array of `Engine_Value` and returns an `Engine_Value` **of handler type**, If there is the need of returning a scalar it must be _embedded_ in a [`Constant_Handler`](#costant_handler) value. I'll explain the reason for this constraint later.
 
-Function `Get` is called when the interpreter finds an array expression like `foo(4,5)`. More precisely, when the interpreter process `foo` it looks in the table of defined symbols
+> Function `Get` is called when the interpreter finds an array expression like `foo(4,5)`. More precisely, when the interpreter process `foo` it looks in the table of defined symbols; if the associate value is an array handler (as we suppose), it collects the expressions between parenthesis (4 and 5 in this case) in an `Engine_Value_Array` and calls `Get`.  Suppose now, for example, that `Get` returns a _record handler_.  If `foo(4,5)` is followed by a selector (e.g., `foo(4,5).name`) the record handler is queried with the field name `name` and so on...
+
+> Why the handler constraint? Because expressions like `foo(4,5)` can be found on the left hand side (LHS) of an assignment. Because of this, even if `foo(4,5)` contains a scalar, we cannot return it directly because it would be useless as LHS. Instead of the scalar we return a [variable handler](#variable_handler) that allows both reading and writing of the variable content (think about it like a kind of "address").
+
+### `Record_Handler` 
