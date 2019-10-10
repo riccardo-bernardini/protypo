@@ -10,9 +10,9 @@
 Maybe the fastest way to introduce the basic ideas of the API is by means of an example.
 
 ```Ada
-with Protypo.Api.Interpreters;            
-with Protypo.Api.Consumers.File_Writer;   
-with Protypo.Api.Engine_Values;           
+with Protypo.Api.Interpreters;
+with Protypo.Api.Consumers.File_Writer;
+with Protypo.Api.Engine_Values;
 
 with Callbacks;
 
@@ -127,7 +127,7 @@ package Protypo.API.Interpreters is
    ---------------
    
    function Slurp (Filename : String) return Template_Type;
-   -- Read a template from the specified file.  
+   -- Read a template from the specified file.
 
 private
    -- Ehi, it's private stuff! :-)
@@ -252,4 +252,6 @@ An _array handler_ is an object that implements the following interface
 
    Out_Of_Range : exception;
 ```
-that is, it must provide a function `Get` that accepts 
+that is, it must provide a function `Get` that accepts an array of `Engine_Value` and returns an `Engine_Value` **of handler type**, If there is the need of returning a scalar it must be _embedded_ in a `Constant_Handler` value. I'll explain the reason for this constraint later.
+
+Function `Get` is called when the interpreter finds an array expression like `foo(4,5)`. More precisely, when the interpreter process `foo` it looks in the table of defined symbols
