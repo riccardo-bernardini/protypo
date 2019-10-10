@@ -350,3 +350,72 @@ The interface should be fairly intuitive if you already saw Ada iterator. The me
 * `Next` move the next iteration step. After `Next` the value returned by `End_of_Iteration` can become `True`
 * `End_Of_Iteration` return `True` if we are beyond the end of iteration. In this state we should not call neither `Next` nor `Element`
 * `Element` return the element of the collection that corresponds to the current iteration
+> Builtin function `range` and fields `range` and `iterate` of an _array wrapper_ return iterators.
+
+### `Function_Handler`
+
+_Function handlers_ are used to implement programmer-defined functions. Their interfaces is a bit complex
+```Ada
+   -- Definition of parameter signature type to describe the interface of 
+   -- programmer-defined functions
+   type Parameter_Class is (Mandatory, Optional, Varargin);
+
+   type Parameter_Spec (Class : Parameter_Class := Mandatory) is
+      record
+         case Class is
+            when Mandatory | Varargin =>
+               null;
+
+            when Optional =>
+               Default : Engine_Value;
+         end case;
+      end record;
+
+   type Parameter_Signature is array (Positive range <>) of Parameter_Spec;
+
+   function Is_Valid_Parameter_Signature (Signature : Parameter_Signature) return Boolean;
+   --
+   -- Return True if Signature is a valid parameter signature that can be returned
+   -- by Signature method.  A valid signature satisfies the following "regexp"
+   --
+   --   Void_Value* Non_Void_Value* Varargin_Value?
+   --
+   -- that is,
+   -- * there is a "head" (potentially empty) of void values that
+   -- mark the parameters that are mandatory and have no default;
+   --
+   -- * a (maybe empty) sequence of non void values follows, these are
+   -- default values of optional parameters
+   --
+   -- * the last entry can be Varargin_Value, showing that the
+   -- last parameter is an array (maybe empty) that collects all the
+   -- remaining parameters
+   --
+  
+   -- Definition of the function handler interface --
+   --------------------------------------------------
+
+   type Function_Interface is interface;
+   type Function_Interface_Access is access all Function_Interface'Class;
+
+   function Process (Fun       : Function_Interface;
+                     Parameter : Engine_Value_Array)
+                     return Engine_Value_Array is abstract;
+
+
+   function Signature (Fun : Function_Interface)
+                                return Parameter_Signature is abstract
+     with Post'Class => Is_Valid_Parameter_Signature (Signature'Result);
+```
+Neglecting for a moment the `Parameter_Signature` type, the two functions that a function handler must provide  are
+```Ada 
+   function Process (Fun       : Function_Interface;
+                     Parameter : Engine_Value_Array)
+                     return Engine_Value_Array is abstract;
+
+
+   function Signature (Fun : Function_Interface)
+                                return Parameter_Signature is abstract
+     with Post'Class => Is_Valid_Parameter_Signature (Signature'Result);
+
+```
