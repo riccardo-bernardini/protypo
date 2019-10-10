@@ -11,6 +11,7 @@
      * [Iterator handlers](#iterator_handler)
      * [Function handlers](#function_handler)
        * [Callbacks](#syntactic-sugar-using-callbacks)
+   * [The wrappers](#wrappers)
      
 
 # An example
@@ -471,3 +472,66 @@ In order to simplify the definition of programmer-defined function a "shortcut" 
      with Post => Create'Result.Class = Function_Handler;
 ```
 A callback function is just a function with the same interface as `Process`; the `Create` function takes care of "wrapping" it in a suitable function handler.
+
+## Wrappers 
+
+The mechanism provided by the handlers is very flexible, but creating a handler can be slightly bothersome. Since  there are few types that are typically used, the library provides few _wrappers_ that make easier to export application variables to the template. Currently the available wrappers are
+* [Constant wrapper](#constant-wrapper)
+* [List wrapper](#list-wrapper)
+* [Range iterator](#range-iterator)
+* [Record and enumerated wrappers](#record-and-enumerated-wrappers)
+* [Array wrapper](#array-wrapper)
+
+### Constant wrapper
+This is maybe the simplest wrapper. The interface is as follows
+```Ada
+   type Constant_Wrapper is new Constant_Interface with private;
+   type Constant_Wrapper_Access is access Constant_Wrapper;
+
+   function Read (X : Constant_Wrapper) return Engine_Value;
+
+   function Make_Wrapper (Value : Engine_Value) return Constant_Wrapper_Access;
+   function Make_Wrapper (Value : Integer) return Constant_Wrapper_Access;
+   function Make_Wrapper (Value : String) return Constant_Wrapper_Access;
+   
+   function To_Handler_Value (Value : Engine_Value) return Handler_Value;
+   -- Equivalent to Create(Make_Wrapper(Value))
+   
+   function To_Handler_Value (Value : Integer) return Handler_Value;
+   -- Equivalent to Create(Make_Wrapper(Value))
+   
+   function To_Handler_Value (Value : String) return Handler_Value;
+   -- Equivalent to Create(Make_Wrapper(Value))
+   
+```
+Besides defining the `Read` function (as required by `Constant_Interface`) it defines few `Make_Wrapper` functions that create a `Constant_Wrapper` with the specified value. The functions `To_Handler_Value` are just syntactic sugar for the concatenation of `Make_Wrapper` with `Create`.
+
+### List wrapper
+```Ada
+   type List is tagged private;
+
+   procedure Append (Item  : in out List;
+                     Value : Engine_Value);
+
+   function Iterator (Item : List) return Iterator_Interface_Access;
+```
+This also is very simple: it allows to construct a list of `Engine_Value` (by appending new values to the list) and it exports an iterator that iterates on the list.
+
+### Range iterator
+```Ada
+   type Range_Iterator is new Iterator_Interface with private;
+
+   procedure Reset (Iter : in out Range_Iterator);
+   procedure Next (Iter : in out Range_Iterator);
+
+   function End_Of_Iteration (Iter : Range_Iterator) return Boolean;
+
+   function Element (Iter : Range_Iterator) return Handler_Value;
+
+   function Create (Start, Stop : Integer) return Iterator_Interface_Access;
+```
+This is an iterator that runs over the interval of integers specified to the function `Create`. 
+
+### Record and enumerated wrappers
+
+### Array wrapper 
