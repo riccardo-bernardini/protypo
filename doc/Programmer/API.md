@@ -192,3 +192,64 @@ The compiled code can be run using the procedure
                   Consumer     : Consumers.Consumer_Access);
    -- Run the pre-compiled code and send the result to the consumer
 ```
+
+## The `Engine_Value` type
+
+All the values manipulated by the interpreter are represented by type `Engine_Value` defined in `Protypo.API.Engine_Values` as  a type with discriminant
+
+```Ada
+  type Engine_Value (Class : Engine_Value_Class := Void) is private;
+```
+where `Engine_Value_Class` represent the specific "type" of the value.  The definition of `Engine_Value_Class` is
+```Ada
+ type Engine_Value_Class is
+     (
+      Void,
+      Int,
+      Real,
+      Text,
+      Array_Handler,
+      Record_Handler,
+      Ambivalent_Handler,
+      Function_Handler,
+      Reference_Handler,
+      Constant_Handler,
+      Iterator
+     );
+```
+The meaning of the different discriminant is as follows
+* `Void` represents... a void value.  Usually used internally and as a placeholder.
+* `Int`, `Real` and `Text` are called _scalar values_ and are the equivalent of Ada `Integer`, `Float` and `String`.
+* The remaining values `Array_Handler .. Iterator` are used to represents _handler_, kind of callbacks used by the interpreter to access values defined by the application.  They will be described in greater detail later.
+
+The distinction between _handler_, _scalar_ and _numeric_ classes is declared in the Ada code as
+```Ada
+   subtype Scalar_Classes  is Engine_Value_Class  range Int .. Text;
+   subtype Numeric_Classes is Scalar_Classes      range Int .. Real;
+   subtype Handler_Classes is Engine_Value_Class  range Array_Handler .. Constant_Handler;
+```
+This allows us to constraints function parameters and return values to belong to a specific class.
+
+In order to create `Engine_Value` with a given value, the package provides many functions `Create` that take a parameter (an integer, a float, an access to a callback object...) and return a properly formed `Engine_Value`.  For example, the `Engine_Value` with the Pi value can be created with
+```Ada
+Create(3.1415)
+```
+In order to convert `Engine_Value` back to Ada type the package provides functions like `Get_Integer`, `Get_Float`, `Get_String`, ...
+
+### `Array_Handler`
+
+An _array handler_ is an object that implements the following interface 
+```Ada
+   type Array_Interface is interface;
+   type Array_Interface_Access is access all Array_Interface'Class;
+
+   function Get (X     : Array_Interface;
+                 Index : Engine_Value_Array)
+                 return Handler_Value
+                 is abstract
+     with Post'Class => Get'Result.Class in Handler_Classes;
+
+
+   Out_Of_Range : exception;
+```
+that is, it must provide a function `Get` that accepts 
