@@ -419,3 +419,35 @@ Neglecting for a moment the `Parameter_Signature` type, the two functions that a
      with Post'Class => Is_Valid_Parameter_Signature (Signature'Result);
 
 ```
+Function `Process` accepts its parameters as an `Engine_Value_Array` and returns its result in an `Engine_Value_Array` (that can be empty if the function is actually a procedure, the constant `No_Value` is convenient way to return an empty result). Function `Signature` instead returns a `Parameter_Signature` that describes which parameters are mandatory, which optionals and if an arbitrary number of parameters are accepted.
+
+Let's examine more closely the type `Parameter_Signature`
+```Ada
+  type Parameter_Class is (Mandatory, Optional, Varargin);
+
+   type Parameter_Spec (Class : Parameter_Class := Mandatory) is
+      record
+         case Class is
+            when Mandatory | Varargin =>
+               null;
+
+            when Optional =>
+               Default : Engine_Value;
+         end case;
+      end record;
+
+   type Parameter_Signature is array (Positive range <>) of Parameter_Spec;
+```
+A `Parameter_Signature` is just an array of `Parameter_Spec`. There are three classes of `Parameter_Spec`s: `Mandatory` parameters, `Optional` parameters (with a default value) and `Varargin`. The latter spec is for the parameter (necessarily the last one) that "absorbs" the tail of remaining parameters.
+> In case you are curious, `Varargin` comes from Matlab that uses this auto-magical parameter to handle an arbitrary number of parameters.
+
+> Currently `Varargin` is not fully implemented, but it will be...
+
+Of course, in order for a `Parameter_Signature` to make sense the mandatory parameters must precede the optional ones and the `Varargin` parameter (if present) must necesseraly be the last one. The validity of a `Parameter_Spec` is checked by function 
+```Ada
+   function Is_Valid_Parameter_Signature (Signature : Parameter_Signature) return Boolean;
+```
+When the interpret finds a function call, first it collects the parameters of the call, successively calls `Signature` and it uses the result to handle default parameters and, possibly, the `Varargin`. Finally, it calls the function `Process`.
+
+> You maybe notice that `Process` does not return a single `Engine_Value`, but an array of `Engine_Value`. Since no mechanism is given for `out` (or `in out`) parameter modes, we compensate using the Matlab solution: a function can return more than one value.  Therefeore, `Process` must return an array.
+
