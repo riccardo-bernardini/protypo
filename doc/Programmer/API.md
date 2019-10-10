@@ -451,3 +451,15 @@ When the interpret finds a function call, first it collects the parameters of th
 
 > You maybe notice that `Process` does not return a single `Engine_Value`, but an array of `Engine_Value`. Since no mechanism is given for `out` (or `in out`) parameter modes, we compensate using the Matlab solution: a function can return more than one value.  Therefeore, `Process` must return an array.
 
+#### Syntactic sugar: using callbacks
+
+In order to simplify the definition of programmer-defined function a "shortcut" (based on the function handler above) is provided.
+```Ada 
+   type Callback_Function_Access is
+      not null access function (Parameters : Engine_Value_Array) return Engine_Value_Array;
+
+   function Create (Val          : Callback_Function_Access;
+                    N_Parameters : Natural := 1) return Engine_Value
+     with Post => Create'Result.Class = Function_Handler;
+```
+A callback function is just a function with the same interface as `Process`; the `Create` function takes care of "wrapping" it in a suitable function handler.
