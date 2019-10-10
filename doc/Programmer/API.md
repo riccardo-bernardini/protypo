@@ -255,11 +255,11 @@ An _array handler_ is an object that implements the following interface
 
    Out_Of_Range : exception;
 ```
-that is, it must provide a function `Get` that accepts an array of `Engine_Value` and returns an `Engine_Value` **of handler type**, If there is the need of returning a scalar it must be _embedded_ in a [`Constant_Handler`](#costant_handler) value. I'll explain the reason for this constraint later.
+that is, it must provide a function `Get` that accepts an array of `Engine_Value` and returns an `Engine_Value` **of handler type**, If there is the need of returning a scalar it must be _embedded_ in a [`Constant_Handler`](#costant_handler-and-reference_handler) value. I'll explain the reason for this constraint later.
 
 > Function `Get` is called when the interpreter finds an array expression like `foo(4,5)`. More precisely, when the interpreter process `foo` it looks in the table of defined symbols; if the associate value is an array handler (as we suppose), it collects the expressions between parenthesis (4 and 5 in this case) in an `Engine_Value_Array` and calls `Get`.  Suppose now, for example, that `Get` returns a _record handler_.  If `foo(4,5)` is followed by a selector (e.g., `foo(4,5).name`) the record handler is queried with the field name `name` and so on...
 
-> Why the handler constraint? Because expressions like `foo(4,5)` can be found on the left hand side (LHS) of an assignment. Because of this, even if `foo(4,5)` contains a scalar, we cannot return it directly because it would be useless as LHS. Instead of the scalar we return a [variable handler](#variable_handler) that allows both reading and writing of the variable content (think about it like a kind of "address").
+> Why the handler constraint? Because expressions like `foo(4,5)` can be found on the left hand side (LHS) of an assignment. Because of this, even if `foo(4,5)` contains a scalar, we cannot return it directly because it would be useless as LHS. Instead of the scalar we return a [variable handler](#costant_handler-and-reference_handler) that allows both reading and writing of the variable content (think about it like a kind of "address").
 
 ### `Record_Handler` 
 
@@ -291,7 +291,7 @@ An _ambivalent handler_ is just something that implements both array and record 
 
    type Ambivalent_Interface_Access is  access all Ambivalent_Interface'Class;
 ```
-Strange as it may seem, this is used in the [Array_Wrapper](#array_wrapper) so that one can write (supposing `foo` is an array wrapper) both `foo(5)`, but also `foo.range` or `foo.first`.  This allows, for example to iterate on `foo` both with a "classical" `for`
+Strange as it may seem, this is used in the [Array_Wrapper](#array_wrapper) so that one can write (supposing `foo` is an array wrapper) both `foo(5)` and `foo.range` or `foo.first`.  This allows, for example to iterate on `foo` both with a "classical" `for`
 ```Ada
    for index in foo.range loop
       foo(index) := index+1;
@@ -304,6 +304,23 @@ or with a more "modern" iterator
       sum := sum + item;
    end loop;
 ```
-> The latter example shows that quering an array wrapper with field `iterate` gives an _iterator_ that can be used  to iterate over the array
+> The latter example shows that quering an array wrapper with field `iterate` gives an _iterator_ that can be used  to iterate over the array.  To be honest, also `range` returns an iterator, but one that runs over the indexes of the array.
 
+### `Constant_Handler` and `Reference_Handler`
+
+These are two handler that allows to access scalars. A _constant handler_ allows read-only access, a _reference handler_ allows writing also. Their interfaces are as follows
+```Ada 
+   type Constant_Interface is interface;
+   type Constant_Interface_Access  is  access all Constant_Interface'Class;
+
+   function Read (X : Constant_Interface) return Engine_Value is abstract;
+
+   type Reference_Interface is interface and Constant_Interface;
+   type Reference_Interface_Access is access all Reference_Interface'Class;
+
+   procedure Write (What  : Reference_Interface;
+                    Value : Engine_Value)
+   is abstract;
+```
+Note that actually `Reference_Interface` is a descendant of `Constant_Interface`. See the discussion under [Array_Handler](#array_handler) for the reasons of having these two handlers.
 
