@@ -54,51 +54,134 @@ A `Consumer` is a type that implements the interface
                       Parameter : String)
    is abstract;
 ```
-In other words, a `Consumer` is an object that provides a procedure `Process` that expects a `String` parameter. Every time the builtin function `@` is called (directly or, in most cases, indirectly as the result of free-text processing or of `[...]` construction) the parameter of the function, after expansion of `#...#`, is given to the `Process` procedure implemented by the `Consumer`.  Since it is expected that in most cases the output will be sent to a file, package `with Protypo.Api.Consumers.File_Writer` provides a pre-defined consumer that writes to file.  In the specific case of the example, it writes to the standard error.
+In other words, a `Consumer` is an object that provides a procedure `Process` that expects a `String` parameter. Every time the builtin function `@` is called (directly or, in most cases, indirectly as the result of free-text processing or of `[...]` construction) the parameter of the function, after expansion of `#...#`, is given to the `Process` procedure implemented by the `Consumer`.  Since it is expected that in most cases the output will be sent to a file, package `Protypo.Api.Consumers.File_Writer` provides a pre-defined consumer that writes to file.  In the specific case of the example, it writes to the standard error.
 
 When `simple_example` is run, it prints to the standard error
 ```console
 sin(1.5)= 9.97495E-01, 42= 42
 ```
+# The API
 
+All the resources of interest to the programmer are under the root package `protypo.API`. 
+There are two main section of the API that are of interest to the programmer: the *interpreter* that does template expansion and the `Engine_Value` type that represents the values used inside the interpreter. 
 
-# The basic API
+## The interpreter
 
-All the resources of interest to the library user (i.e., the programmer) are under the root package `protypo.API`; the main procedures are in `Protypo.API.Interpreter`  whose public part is
+The interpreter interface can be found in the package `Protypo.API.Interpreters`  whose public part contains
 
-```
-package Protypo.API.Interpreter is
+```Ada
+with Protypo.API.Consumers;
+with Protypo.API.Symbols;
+with Protypo.Api.Engine_Values;
+with Protypo.Api.Consumers.File_Writer;
+
+package Protypo.API.Interpreters is
+   type Template_Type is new String;
+
+   type Interpreter_Type is tagged limited  private;
+
+   procedure Define (Interpreter : in out Interpreter_Type;
+                     Name        : ID;
+                     Value       : Engine_Values.Engine_Value);
+   -- Define a new symbol in the global namespace of the interpreter
+
+   procedure Run (Interpreter  : in out Interpreter_Type;
+                  Program      : Template_Type;
+                  Consumer     : Consumers.Consumer_Access);
+   -- Run the specified template and send the result to the consumer
+
+   procedure Expand_Template (Interpreter     : in out Interpreter_Type;
+                              Input_Filename  : String;
+                              Target_Filenane : String);
+   -- Expand the given template and write the result to the specified
+   -- target.  To write to standard output use "-"
+   
+   -- Low-level access --
+   ----------------------
+   
    type Compiled_Code is limited private;
 
-   function Compile (Program  : String;
+   
+   function Compile (Program  : Template_Type;
                      Base_Dir : String := "") return Compiled_Code;
 
-   procedure Run (Program      : Compiled_Code;
-                  Symbol_Table : Symbols.Table;
-                  Consumer     : in out Consumers.Consumer_Interface'Class);
+   procedure Compile (Target   : out Compiled_Code;
+                      Program  : Template_Type;
+                      Base_Dir : String := "");
 
-   procedure Run (Program      : String;
-                  Symbol_Table : Symbols.Table;
-                  Consumer     : in out Consumers.Consumer_Interface'Class);
+   
+   procedure Run (Interpreter  : in out Interpreter_Type;
+                  Program      : Compiled_Code;
+                  Consumer     : Consumers.Consumer_Access);
+   -- Run the pre-compiled code and send the result to the consumer
 
-   procedure Expand_Template (Template        : String;
-                              Symbol_Table    : Symbols.Table;
-                              Target_Filenane : String);
+
+   -- Utilities --
+   ---------------
+   
+   function Slurp (Filename : String) return Template_Type;
+   -- Read a template from the specified file.  
+
 private
-  -- something
-end Protypo.API.Interpreter;
+   -- Ehi, it's private stuff! :-)
+end Protypo.API.Interpreters;
 ```
-The first function
+Let's see together the main points.  Type definitions 
+```Ada
+   type Template_Type is new String;
+
+   type Interpreter_Type is tagged limited  private;
+```
+define a special string type representing a template to be expanded and the interpreter that will do the expansion.  For covenience we provide the function
+```Ada
+ function Slurp (Filename : String) return Template_Type;
+   -- Read a template from the specified file.
+```
+that reads a whole file and returns it as a template. 
+In order to define a variable/function recognized by the interpreter we can use the procedure
+```Ada
+   procedure Define (Interpreter : in out Interpreter_Type;
+                     Name        : ID;
+                     Value       : Engine_Values.Engine_Value);
+   -- Define a new symbol in the global namespace of the interpreter
+```
+that associates the specified `Value` with `Name`. The type of `Name` (`ID`) is defined in `Protypo` and it represents a string that satisfies the usual "identifier constraints" (only letter, digits, underscore and the first character is a letter). 
+> The association is done in a _global namespace_, so that they will be visible in every function/procedure defined in the template.
+
+>This association name-value is how we pass data to the template. For example, if we have a template letter that we want to personalize with the recipient name we could define variables `name` and `surname` and write in the template `Dear #name# #surname#,...`
+The template can be processed using procedure 
+```Ada
+   procedure Run (Interpreter  : in out Interpreter_Type;
+                  Program      : Template_Type;
+                  Consumer     : Consumers.Consumer_Access);
+   -- Run the specified template and send the result to the consumer
+```
+where `Consumer` implements the consumer interface (see above).  Since we expect that the most common case will be reading the template from a file and writing the result to another one, a nice syntactic sugar is provided
+
+```Ada
+   procedure Expand_Template (Interpreter     : in out Interpreter_Type;
+                              Input_Filename  : String;
+                              Target_Filenane : String);
+   -- Expand the given template and write the result to the specified
+   -- target.  To write to standard output use "-"
+```
+
+### Low-level interface
+
+Procedure `Run` does a two-step process: first it compiles the template to an internal form and successively interpret the internal form.  It is possible to do these two steps separately.
+> Why?  Well, the real reason is historical: this was the first interface to the interpreter.  It remains here in case it can get useful.
+
+By using 
 ```
 function Compile (Program  : String;
                   Base_Dir : String := "") return Compiled_Code;
 ```
-returns an internally compiled version of the program given as the first argument.  The `Base_Dir` argument is used, for example, when searching for files to be included. By default the current directory of the program is used.
+we get the internally compiled version of the program given as the first argument.  The `Base_Dir` argument is used, for example, when searching for files to be included. By default the current directory of the program is used.
 
 The compiled code can be run using the procedure
 ```
-   procedure Run (Program      : Compiled_Code;
-                  Symbol_Table : Symbols.Table;
-                  Consumer     : in out Consumers.Consumer_Interface'Class);
+  procedure Run (Interpreter  : in out Interpreter_Type;
+                  Program      : Compiled_Code;
+                  Consumer     : Consumers.Consumer_Access);
+   -- Run the pre-compiled code and send the result to the consumer
 ```
-`Symbol_Table` is a table filled with pre-defined variables and functions.  Consumer is a handler that will receive the strings generated by the running program.
