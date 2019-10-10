@@ -4,6 +4,14 @@
    * [The interpreter](#the-interpreter)
      * [Low level interface](#low-level-interface)
    * [The `Engine_Value` type](#the-engine_value-type)
+     * [Array handlers](#array_handler)
+     * [Record handlers](#record_handler)
+     * [Ambivalent handlers](#ambivalent_handler)
+     * [Constant and reference handlers](#constant_handler-and-reference_handler)
+     * [Iterator handlers](#iterator_handler)
+     * [Function handlers](#function_handler)
+       * [Callbacks](#syntactic-sugar:-using-callbacks)
+     
 
 # An example
 
