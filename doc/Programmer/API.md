@@ -227,6 +227,9 @@ The distinction between _handler_, _scalar_ and _numeric_ classes is declared in
    subtype Scalar_Classes  is Engine_Value_Class  range Int .. Text;
    subtype Numeric_Classes is Scalar_Classes      range Int .. Real;
    subtype Handler_Classes is Engine_Value_Class  range Array_Handler .. Constant_Handler;
+
+   subtype Handler_Value is Engine_Value
+     with Dynamic_Predicate => Handler_Value.Class in Handler_Classes;
 ```
 This allows us to constraints function parameters and return values to belong to a specific class.
 
@@ -259,3 +262,27 @@ that is, it must provide a function `Get` that accepts an array of `Engine_Value
 > Why the handler constraint? Because expressions like `foo(4,5)` can be found on the left hand side (LHS) of an assignment. Because of this, even if `foo(4,5)` contains a scalar, we cannot return it directly because it would be useless as LHS. Instead of the scalar we return a [variable handler](#variable_handler) that allows both reading and writing of the variable content (think about it like a kind of "address").
 
 ### `Record_Handler` 
+
+A _record handler_ implements the following interface
+```Ada
+   type Record_Interface is interface;
+   type Record_Interface_Access is access all Record_Interface'Class;
+
+   function Is_Field (X : Record_Interface; Field : ID) return Boolean
+                      is abstract;
+
+   function Get (X     : Record_Interface;
+                 Field : ID)
+                 return Handler_Value
+                 is abstract
+     with Post'Class => Get'Result.Class in Handler_Classes;
+
+   Unknown_Field : exception;
+```
+In other words, a record handler must provide a function `Get` that expects a string with `ID` syntax and return an `Engine_Value` of handler type. The record handler must also export a function `Is_Field` that is used to check if the ID is actually a field.  The same remarks done for [Array_Handler](#array_handler) about the necessity of returning a _handler_ value as result still apply here. See the wrapper [Enumerated_Records](#enumerated_records) for an example of record handler.
+
+### `Ambivalent_Handler`
+
+
+
+
