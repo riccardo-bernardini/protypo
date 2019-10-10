@@ -1,7 +1,6 @@
 with Protypo.API.Consumers;
 with Protypo.API.Symbols;
 with Protypo.Api.Engine_Values;
-with Protypo.Api.Consumers.File_Writer;
 
 private with Protypo.Code_Trees;
 
@@ -41,11 +40,14 @@ package Protypo.API.Interpreters is
    -- Run the pre-compiled code and send the result to the consumer
 
 
+   Standard_Output : constant String := "-";
+
    procedure Expand_Template (Interpreter     : in out Interpreter_Type;
-                              Template        : Template_Type;
-                              Target_Filenane : Consumers.File_Writer.Target_Name);
+                              Input_Filename  : String;
+                              Target_Filenane : String);
    -- Expand the given template and write the result to the specified
-   -- target.
+   -- target.  To write to standard output use "-" (or the
+   -- Standar_Output constant)
 
    function Slurp (Filename : String) return Template_Type;
    -- Read a template from the specified file.  Useful in conjuction with
