@@ -344,3 +344,9 @@ This is used to iterate in `for` loops. Its interface is
      with Pre'Class => not Iter.End_Of_Iteration;
 ```
 This idea of iterator is inspired by Ada iterators, but with a major difference. In Ada the duty of iterating over the container and the duty of accessing elements are given to separated objects: the former is handled by a discendent of `Forward_Iterator` (or `Reversible_Iterator`) while the latter is assigned to a `Cursor`, with the iterator generating and manipulating the cursor. Here, for the sake of simplicity, everything is handled by the same object.
+
+The interface should be fairly intuitive if you already saw Ada iterator. The meaning of the different subprograms is 
+* `Reset` this procedure should reset the iterator to the beginning of the iteration. By calling `Element` right after `Reset` returns the first element of the collection
+* `Next` move the next iteration step. After `Next` the value returned by `End_of_Iteration` can become `True`
+* `End_Of_Iteration` return `True` if we are beyond the end of iteration. In this state we should not call neither `Next` nor `Element`
+* `Element` return the element of the collection that corresponds to the current iteration
