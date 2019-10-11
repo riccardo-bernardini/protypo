@@ -28,7 +28,7 @@ package Protypo.Api.Engine_Values.Basic_Array_Wrappers is
 private
    package Engine_Value_Vectors is
      new Ada.Containers.Vectors (Index_Type   => Array_Wrapper_Index,
-                                 Element_Type => Engine_Value);
+                                 Element_Type => Handler_Value);
 
    type Vector_Access is access Engine_Value_Vectors.Vector;
 

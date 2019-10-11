@@ -67,6 +67,11 @@ package Protypo.API.Engine_Values is
    -- Function used in contract to express the fact that X and Y are
    -- compatible, that is, they are both text or numeric.
 
+   function Identity (X : Engine_Value) return Engine_Value
+   is (X);
+   -- Strange this function, uh?  Well, it is convenient to instantiate
+   -- generic wrapper packages. See, for example, Array_Wrappers
+
    function "-" (X : Engine_Value) return Engine_Value
      with Pre => Is_Numeric (X),
      Post => X.Class = "-"'Result.Class;
