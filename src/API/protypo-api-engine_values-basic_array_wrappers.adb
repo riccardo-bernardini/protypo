@@ -2,6 +2,7 @@ pragma Ada_2012;
 with Protypo.Api.Engine_Values.Constant_Wrappers;
 
 with Protypo.Api.Engine_Values.Range_Iterators;
+with Protypo.Api.Field_Names;
 
 pragma Warnings(Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_IO; use Ada.Text_IO;
@@ -19,8 +20,15 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
       Field_Length
      );
 
+   package Field_Names_Package is
+     new Field_Names (Field_Enumerator => Field_Name,
+                      Prefix           => "Field_");
+
    function To_Field (X : String) return Field_Name
-   is (Field_Name'Value ("Field_" & X));
+   is (Field_Names_Package.To_Field (X));
+
+--     function To_Field (X : String) return Field_Name
+--     is (Field_Name'Value ("Field_" & X));
 
 
    type Array_Iterator is
@@ -178,24 +186,28 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
       end case;
    end Get;
 
-   --------------
-   -- Is_Field --
-   --------------
-
    function Is_Field (X : Array_Wrapper; Field : Id) return Boolean
-   is
-      pragma Unreferenced (X);
-      Ignored : Field_Name;
-   begin
-      Ignored := To_Field (Field);
-      return True;
-      -- Yes, I know, it is not the best practice to use exceptions
-      -- to do flow control, but this is the easiest way
-   exception
-      when Constraint_Error =>
-         return False;
-   end Is_Field;
---        return Equal_Case_Insensitive (Field, "first")
+   is (Field_Names_Package.Is_Field (Field));
+
+
+--     --------------
+--     -- Is_Field --
+--     --------------
+--
+--     function Is_Field (X : Array_Wrapper; Field : Id) return Boolean
+--     is
+--        pragma Unreferenced (X);
+--        Ignored : Field_Name;
+--     begin
+--        Ignored := To_Field (Field);
+--        return True;
+--        -- Yes, I know, it is not the best practice to use exceptions
+--        -- to do flow control, but this is the easiest way
+--     exception
+--        when Constraint_Error =>
+--           return False;
+--     end Is_Field;
+--  --        return Equal_Case_Insensitive (Field, "first")
 --          or Equal_Case_Insensitive (Field, "last")
 --          or Equal_Case_Insensitive (Field, "length")
 --          or Equal_Case_Insensitive (Field, "iterate")
