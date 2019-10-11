@@ -2,6 +2,8 @@ pragma Ada_2012;
 with Protypo.Api.Engine_Values.Constant_Wrappers;
 
 with Protypo.Api.Engine_Values.Range_Iterators;
+
+pragma Warnings(Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
@@ -103,9 +105,6 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
       Value     :        Engine_Value)
    is
    begin
-      Put_Line (Index'Image &
-                  Container.Vector.First_Index'Image &
-                  Container.Vector.Last_Index'image);
       Container.Vector.Insert (Index, Value);
    end Set;
 

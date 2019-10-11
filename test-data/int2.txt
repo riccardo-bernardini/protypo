@@ -7,12 +7,14 @@ Questo è testo libero 3+4=#3+4#
 function average(data) is
 begin
   result := 0.0;
+  counter := 0;
 
-  for item in data.iterate loop
+  for item in data loop
     result := result + item;
+    counter := counter+1;
   end loop;
 
-  return result / data.length;
+  return result / counter;
 end average;
 
 function foo(saluto) is
@@ -94,5 +96,12 @@ for idx in scores.range loop
 ]
 end loop;
 
-[#average(scores)#]
+[#average(scores.iterate)#]
+
+w, z := splitbit(33);
+s, t := splitbit(42, 5);
+[
+#z#=1, #w#=16
+#s#=8, #t#=2
+]
 }#

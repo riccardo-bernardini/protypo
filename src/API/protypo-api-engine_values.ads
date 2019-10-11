@@ -1,3 +1,5 @@
+with Ada.Containers.Doubly_Linked_Lists;
+
 package Protypo.API.Engine_Values is
    use Ada.Strings.Unbounded;
 
@@ -189,13 +191,6 @@ package Protypo.API.Engine_Values is
                      return Handler_Value is abstract
      with Pre'Class => not Iter.End_Of_Iteration;
 
-   type Function_Interface is interface;
-   type Function_Interface_Access is access all Function_Interface'Class;
-
-   function Process (Fun       : Function_Interface;
-                     Parameter : Engine_Value_Array)
-                     return Engine_Value_Array is abstract;
-
    type Parameter_Class is (Mandatory, Optional, Varargin);
 
    type Parameter_Spec (Class : Parameter_Class := Mandatory) is
@@ -213,6 +208,28 @@ package Protypo.API.Engine_Values is
 
    function Is_Valid_Parameter_Signature (Signature : Parameter_Signature) return Boolean;
 
+   type Parameter_List is private;
+   -- This is type that can help writing callbacks.  A parameter list
+   -- is created using the Engine_Value_Array given to the callback
+   -- and it is possible to read its element one at time, using Shift
+   -- (that removes the first element too, kind of shift in Ruby, bash, ...)
+   -- or Peek (that does not change the list)
+
+   function Create (Params : Engine_Value_Array) return Parameter_List
+     with Post => Length (Create'Result) = Params'Length;
+
+   function Length (List : Parameter_List) return Natural;
+
+   function Is_Empty (List : Parameter_List) return Boolean
+   is (Length (List) = 0);
+
+   function Shift (List : in out Parameter_List) return Engine_Value
+     with Post => (if Is_Empty (List'Old)
+                       then Shift'Result = Void_Value
+                         else Length (List) = Length (List'Old)-1);
+
+   function Peek (List : Parameter_List) return Engine_Value
+     with Post => (if Is_Empty(List) then Peek'Result = Void_Value);
    --
    -- Return True if Signature is a valid parameter signature that can be returned
    -- by Signature method.  A valid signature satisfies the following "regexp"
@@ -230,8 +247,16 @@ package Protypo.API.Engine_Values is
    -- last parameter is an array (maybe empty) that collects all the
    -- remaining parameters
    --
+
+   type Function_Interface is interface;
+   type Function_Interface_Access is access all Function_Interface'Class;
+
+   function Process (Fun       : Function_Interface;
+                     Parameter : Engine_Value_Array)
+                     return Engine_Value_Array is abstract;
+
    function Signature (Fun : Function_Interface)
-                                return Parameter_Signature is abstract
+                       return Parameter_Signature is abstract
      with Post'Class => Is_Valid_Parameter_Signature (Signature'Result);
 
    type Callback_Function_Access is
@@ -266,6 +291,14 @@ package Protypo.API.Engine_Values is
                     N_Parameters : Natural := 1) return Engine_Value
      with Post => Create'Result.Class = Function_Handler;
 
+   function Create (Val            : Callback_Function_Access;
+                    Min_Parameters : Natural;
+                    Max_Parameters : Natural;
+                    With_Varargin  : Boolean := False) return Engine_Value
+     with
+       Pre => Max_Parameters >= Min_Parameters,
+       Post => Create'Result.Class = Function_Handler;
+
    function Create (Val : Reference_Interface_Access) return Engine_Value
      with Post => Create'Result.Class = Reference_Handler;
 
@@ -274,8 +307,14 @@ package Protypo.API.Engine_Values is
 
 
    function Get_Integer (Val : Integer_Value) return Integer;
+   function Get_Integer (Val : Engine_Value; Default : Integer) return Integer;
+
    function Get_Float (Val : Real_Value) return Float;
+   function Get_Float (Val : Engine_Value; Default : Float) return Float;
+
    function Get_String (Val : String_Value) return String;
+   function Get_String (Val : Engine_Value; Default : String) return String;
+
    function Get_Array (Val : Array_Value) return Array_Interface_Access;
    function Get_Record (Val : Record_Value) return Record_Interface_Access;
    function Get_Ambivalent (Val : Ambivalent_Value) return Ambivalent_Interface_Access;
@@ -332,9 +371,12 @@ private
      new Function_Interface
    with
       record
-         Callback     : Callback_Function_Access;
-         N_Parameters : Natural;
+         Callback       : Callback_Function_Access;
+         Min_Parameters : Natural;
+         Max_Parameters : Natural;
+         With_Varargin  : Boolean;
       end record;
+
 
    function Process (Fun       : Callback_Based_Handler;
                      Parameter : Engine_Value_Array)
@@ -342,7 +384,7 @@ private
    is (Fun.Callback (Parameter));
 
    function Signature (Fun : Callback_Based_Handler)
-                                return Parameter_Signature;
+                       return Parameter_Signature;
    --     is (Engine_Value_Array(2..Fun.N_Parameters+1)'(others => Void_Value));
 
 
@@ -384,7 +426,18 @@ private
                     N_Parameters : Natural := 1)
                     return Engine_Value
    is (Create (new Callback_Based_Handler'(Callback => Val,
-                                           N_Parameters => N_Parameters)));
+                                           Min_Parameters => N_Parameters,
+                                           Max_Parameters => N_Parameters,
+                                           With_Varargin  => False)));
+
+   function Create (Val            : Callback_Function_Access;
+                    Min_Parameters : Natural;
+                    Max_Parameters : Natural;
+                    With_Varargin  : Boolean := False) return Engine_Value
+   is (Create (new Callback_Based_Handler'(Callback => Val,
+                                           Min_Parameters => Min_Parameters,
+                                           Max_Parameters => Max_Parameters,
+                                           With_Varargin  => With_Varargin)));
 
    function Create (Val : Reference_Interface_Access) return Engine_Value
    is (Engine_Value'(Class            => Reference_Handler,
@@ -397,11 +450,48 @@ private
    function Get_Integer (Val : Integer_Value) return Integer
    is (Val.Int_Val);
 
+   function Get_Integer (Val : Engine_Value; Default : Integer) return Integer
+   is (case Val.Class is
+          when Void   =>
+             Default,
+
+          when Int    =>
+             Val.Int_Val,
+
+          when others =>
+             raise Constraint_Error);
+
    function Get_Float (Val : Real_Value) return Float
    is (Val.Real_Val);
 
+   function Get_Float (Val : Engine_Value; Default : Float) return Float
+   is (case Val.Class is
+          when Void   =>
+             Default,
+
+          when Int    =>
+             Float (Val.Int_Val),
+
+          when Real   =>
+             Val.Real_Val,
+
+          when others =>
+             raise Constraint_Error);
+
    function Get_String (Val : String_Value) return String
    is (To_String (Val.Text_Val));
+
+   function Get_string (Val : Engine_Value; Default : String) return String
+   is (case Val.Class is
+          when Void   =>
+             Default,
+
+          when Text    =>
+             Get_String (Val),
+
+          when others =>
+             raise Constraint_Error);
+
 
    function Get_Array (Val : Array_Value) return Array_Interface_Access
    is (Val.Array_Object);
@@ -439,5 +529,28 @@ private
 
    function ">=" (Left, Right : Engine_Value) return Engine_Value
    is (not (Left < Right));
+
+
+   package Parameter_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Engine_Value);
+
+   type Parameter_List is
+      record
+         L : Parameter_Lists.List;
+      end record;
+
+   function Length (List : Parameter_List) return Natural
+   is (Natural (List.L.Length));
+
+   ----------
+   -- Peek --
+   ----------
+
+   function Peek (List : Parameter_List) return Engine_Value
+   is (if Is_Empty (List)
+       then
+          Void_Value
+       else
+          List.L.First_Element);
 
 end Protypo.API.Engine_Values;

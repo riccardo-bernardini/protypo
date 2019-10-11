@@ -71,6 +71,11 @@ begin
    Engine.Define (Name => "scores",
                   Value => Scores);
 
+   Engine.Define (Name  => "splitbit",
+                  Value => Create (Val            => User_Records.Split_Bit'Access,
+                                   Min_Parameters => 1,
+                                   Max_Parameters => 2));
+
    Compile (Target   => Code,
             Program  => Program);
 
