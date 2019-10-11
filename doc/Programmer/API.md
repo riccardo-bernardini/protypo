@@ -12,6 +12,12 @@
      * [Function handlers](#function_handler)
        * [Callbacks](#syntactic-sugar-using-callbacks)
    * [The wrappers](#wrappers)
+     * [Constant wrapper](#constant-wrapper)  
+     * [List wrapper](#list-wrapper)
+     * [Range iterator](#range-iterator)
+     * [Record and enumerated wrappers](#record-and-enumerated-wrappers)
+     * [Array wrapper](#array-wrapper)
+
      
 
 # An example
