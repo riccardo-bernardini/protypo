@@ -476,8 +476,74 @@ In order to simplify the definition of programmer-defined function a "shortcut" 
    function Create (Val          : Callback_Function_Access;
                     N_Parameters : Natural := 1) return Engine_Value
      with Post => Create'Result.Class = Function_Handler;
+
+   function Create (Val            : Callback_Function_Access;
+                    Min_Parameters : Natural;
+                    Max_Parameters : Natural;
+                    With_Varargin  : Boolean := False) return Engine_Value
+   
 ```
-A callback function is just a function with the same interface as `Process`; the `Create` function takes care of "wrapping" it in a suitable function handler.
+A callback function is just a function with the same interface as `Process`; the `Create` function takes care of "wrapping" it in a suitable function handler. The second form defines a function that has `Min_Parameters` mandatory parameters, `Max_Parameters-Min_Parameters` optional parameters (whose default value is `Void_Value`) and the last argument is a _varargin_ if `Varargin` is true.
+
+In order to ease the processing of callback parameters the following type and functions are provided
+```Ada 
+   type Parameter_List is private;
+   -- This is type that can help writing callbacks.  A parameter list
+   -- is created using the Engine_Value_Array given to the callback
+   -- and it is possible to read its element one at time, using Shift
+   -- (that removes the first element too, kind of shift in Ruby, bash, ...)
+   -- or Peek (that does not change the list)
+
+   function Create (Params : Engine_Value_Array) return Parameter_List
+     with Post => Length (Create'Result) = Params'Length;
+
+   function Length (List : Parameter_List) return Natural;
+
+   function Is_Empty (List : Parameter_List) return Boolean
+   is (Length (List) = 0);
+
+   function Shift (List : in out Parameter_List) return Engine_Value
+     with Post => (if Is_Empty (List'Old)
+                       then Shift'Result = Void_Value
+                         else Length (List) = Length (List'Old)-1);
+   -- Return the first parameter and remove it from the list.  If the
+   -- list is empty, return Void_Value
+
+   function Peek (List : Parameter_List) return Engine_Value
+     with Post => (if Is_Empty (List) then Peek'Result = Void_Value);
+   -- Return the first parameter
+```
+##### Example of callback-defined function
+This is an example of how to define a function that accepts two parameters and returns quotient and remainder of the integer division. The second parameter is 2 by default. This is how the callback is defined
+
+```Ada
+   function Div_Mod
+     (Params : Protypo.Api.Engine_Values.Engine_Value_Array)
+      return Protypo.Api.Engine_Values.Engine_Value_Array
+   is
+      use Protypo.Api.Engine_Values;
+
+      Parameters : Parameter_List := Create (Params);
+
+      X : constant Integer := Get_Integer (Shift (Parameters));
+      Y : constant Integer := Get_Integer (Shift (Parameters), 2); -- Default handling
+
+      Result : Engine_Value_Array(1..2);
+
+   begin
+      Result (1) := Create (X / Y);
+      Result (2) := Create (X mod Y);
+      return Result;
+   end Div_Mod;
+
+```
+This is how it is included in the interpreter (we suppose `Engine` is declared as `Engine : Interpreter_Type`).
+```Ada
+   Engine.Define (Name  => "divmod",
+                  Value => Create (Val            => Div_Mod'Access,
+                                   Min_Parameters => 1,
+                                   Max_Parameters => 2));
+```
 
 ## Wrappers 
 
