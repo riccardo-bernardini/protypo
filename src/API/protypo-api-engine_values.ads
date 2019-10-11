@@ -207,6 +207,23 @@ package Protypo.API.Engine_Values is
    type Parameter_Signature is array (Positive range <>) of Parameter_Spec;
 
    function Is_Valid_Parameter_Signature (Signature : Parameter_Signature) return Boolean;
+   --
+   -- Return True if Signature is a valid parameter signature that can be returned
+   -- by Signature method.  A valid signature satisfies the following "regexp"
+   --
+   --   Void_Value* Non_Void_Value* Varargin_Value?
+   --
+   -- that is,
+   -- * there is a "head" (potentially empty) of void values that
+   -- mark the parameters that are mandatory and have no default;
+   --
+   -- * a (maybe empty) sequence of non void values follows, these are
+   -- default values of optional parameters
+   --
+   -- * the last entry can be Varargin_Value, showing that the
+   -- last parameter is an array (maybe empty) that collects all the
+   -- remaining parameters
+   --
 
    type Parameter_List is private;
    -- This is type that can help writing callbacks.  A parameter list
@@ -227,26 +244,13 @@ package Protypo.API.Engine_Values is
      with Post => (if Is_Empty (List'Old)
                        then Shift'Result = Void_Value
                          else Length (List) = Length (List'Old)-1);
+   -- Return the first parameter and remove it from the list.  If the
+   -- list is empty, return Void_Value
 
    function Peek (List : Parameter_List) return Engine_Value
-     with Post => (if Is_Empty(List) then Peek'Result = Void_Value);
-   --
-   -- Return True if Signature is a valid parameter signature that can be returned
-   -- by Signature method.  A valid signature satisfies the following "regexp"
-   --
-   --   Void_Value* Non_Void_Value* Varargin_Value?
-   --
-   -- that is,
-   -- * there is a "head" (potentially empty) of void values that
-   -- mark the parameters that are mandatory and have no default;
-   --
-   -- * a (maybe empty) sequence of non void values follows, these are
-   -- default values of optional parameters
-   --
-   -- * the last entry can be Varargin_Value, showing that the
-   -- last parameter is an array (maybe empty) that collects all the
-   -- remaining parameters
-   --
+     with Post => (if Is_Empty (List) then Peek'Result = Void_Value);
+   -- Return the first parameter
+
 
    type Function_Interface is interface;
    type Function_Interface_Access is access all Function_Interface'Class;

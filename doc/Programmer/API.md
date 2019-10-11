@@ -15,7 +15,9 @@
      * [Constant wrapper](#constant-wrapper)  
      * [List wrapper](#list-wrapper)
      * [Range iterator](#range-iterator)
-     * [Record and enumerated wrappers](#record-and-enumerated-wrappers)
+     * [Record wrappers](#record-wrappers)
+       * [Map Based] (#map-based)
+       * [Enumeration Based] (#map-based)
      * [Array wrapper](#array-wrapper)
 
      
@@ -551,7 +553,7 @@ The mechanism provided by the handlers is very flexible, but creating a handler 
 * [Constant wrapper](#constant-wrapper)
 * [List wrapper](#list-wrapper)
 * [Range iterator](#range-iterator)
-* [Record and enumerated wrappers](#record-and-enumerated-wrappers)
+* [Record and enumerated wrappers](#record-wrappers)
 * [Array wrapper](#array-wrapper)
 
 ### Constant wrapper
@@ -604,6 +606,65 @@ This also is very simple: it allows to construct a list of `Engine_Value` (by ap
 ```
 This is an iterator that runs over the interval of integers specified to the function `Create`. 
 
-### Record and enumerated wrappers
+### Record wrappers
+
+Two different types of record wrappers are provided: _map based_ and _enumeration based_.
+
+#### Map based 
+
+This kind of wrapper implements a record handler by using a map from string to `Engine_Value`. The interface is as follows
+
+```Ada
+package Protypo.Api.Engine_Values.Record_Wrappers is
+   package Record_Maps is
+     new Ada.Containers.Indefinite_Ordered_Maps
+       (Key_Type     => ID,
+        Element_Type => Engine_Value,
+        "<"          => Ada.Strings.Less_Case_Insensitive);
+
+   subtype Record_Map is Record_Maps.Map;
+
+
+   
+   type Record_Wrapper is new Record_Interface with private;
+   type Record_Wrapper_Access is access Record_Wrapper;
+
+   function Create_Wrapper return Record_Wrapper_Access;
+
+   
+   
+   type Record_Map_Reference (Ref : access Record_Map) is limited private
+     with Implicit_Dereference => Ref;
+
+   function Map (Item : in out Record_Wrapper) return Record_Map_Reference;
+
+
+   
+   overriding function Get (X     : Record_Wrapper;
+                            Field : ID)
+                            return Handler_Value;
+
+   overriding function Is_Field (X     : Record_Wrapper;
+                                 Field : ID)
+                                 return Boolean;
+private
+
+  -- Ehi, do not peek! :-)
+
+end Protypo.Api.Engine_Values.Record_Wrappers;
+```
+Function
+```Ada
+function Create_Wrapper return Record_Wrapper_Access;
+```
+creates a new `Record_Wrapper` that has an internal map of type `Record_Map`. The internal map can be manipolated by means of function
+```Ada
+
+   function Map (Item : in out Record_Wrapper) return Record_Map_Reference;
+```
+that returns a reference to the internal map.  This kind of record is very "dynamic" and it can add or remove fields at run-time.
+
+#### Enumeration based
+
 
 ### Array wrapper 

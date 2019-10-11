@@ -3,7 +3,7 @@ package body Protypo.Api.Engine_Values.Record_Wrappers is
 
    type Record_Access_Handler is
      new Constant_Interface
-       with
+   with
       record
          Pos : Record_Maps.Cursor;
       end record;
@@ -33,7 +33,7 @@ package body Protypo.Api.Engine_Values.Record_Wrappers is
 
    function Get
      (X     : Record_Wrapper;
-                 Field : String)
+      Field : ID)
       return Handler_Value
    is
       Result : Engine_Value;
