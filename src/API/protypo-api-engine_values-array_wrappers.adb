@@ -8,7 +8,8 @@ package body Protypo.Api.Engine_Values.Array_Wrappers is
 
    function Make_Wrapper (Init : Array_Type) return Ambivalent_Interface_Access
    is
-      Result : constant Wrapper_Access := new Array_Wrapper;
+      Result : constant Wrapper_Access :=
+                 new Array_Wrapper'(A => Basic_Array_Wrappers.Make_Wrapper);
    begin
       for Idx in Init'Range loop
          Result.Set (Index => Idx,

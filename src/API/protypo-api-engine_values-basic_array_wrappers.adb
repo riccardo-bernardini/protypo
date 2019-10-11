@@ -1,10 +1,25 @@
 pragma Ada_2012;
 with Protypo.Api.Engine_Values.Constant_Wrappers;
-with Ada.Strings.Equal_Case_Insensitive;
 
 with Protypo.Api.Engine_Values.Range_Iterators;
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
+   -- Type that represents the name of the fields that we export
+   -- every name is preceded by "Field_" in order to avoid clashes
+   -- with keywords (e.g., 'range')
+   type Field_Name is
+     (
+      Field_First,
+      Field_Last,
+      Field_Range,
+      Field_Iterate,
+      Field_Length
+     );
+
+   function To_Field (X : String) return Field_Name
+   is (Field_Name'Value ("Field_" & X));
+
 
    type Array_Iterator is
      new Iterator_Interface
@@ -34,11 +49,29 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
       end if;
    end Next;
 
+   function Force_Handler (Item : Engine_Value) return Handler_Value
+   is (case Item.Class is
+          when Handler_Classes =>
+             Item,
+
+          when Int             =>
+             Constant_Wrappers.To_Handler_Value(Get_Integer(Item)),
+
+          when Real             =>
+             Constant_Wrappers.To_Handler_Value (Get_Float (Item)),
+
+          when Text             =>
+             Constant_Wrappers.To_Handler_Value (Get_String (Item)),
+
+          when Void | Iterator   =>
+             raise Constraint_Error);
+
+
    overriding function End_Of_Iteration (Iter : Array_Iterator) return Boolean
    is (Iter.Cursor > Iter.Container.Last_Index);
 
    overriding function Element (Iter : Array_Iterator) return Handler_Value
-   is (Iter.Container.all (Iter.Cursor));
+   is (Force_Handler (Iter.Container.all (Iter.Cursor)));
 
    ------------------
    -- Make_Wrapper --
@@ -70,7 +103,10 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
       Value     :        Engine_Value)
    is
    begin
-      Container.Vector.all (Index) := Value;
+      Put_Line (Index'Image &
+                  Container.Vector.First_Index'Image &
+                  Container.Vector.Last_Index'image);
+      Container.Vector.Insert (Index, Value);
    end Set;
 
    ---------
@@ -105,30 +141,31 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
    ---------
 
    function Get (X : Array_Wrapper; Field : ID) return Handler_Value is
-      use Ada.Strings;
       use Constant_Wrappers;
    begin
-      if Equal_Case_Insensitive (Field, "first") then
-         return To_Handler_Value (X.Vector.First_Index);
+      case To_Field (Field) is
+         when Field_First =>
+            return To_Handler_Value (X.Vector.First_Index);
 
-      elsif Equal_Case_Insensitive (Field, "last") then
-         return To_Handler_Value (X.Vector.Last_Index);
+         when Field_Last =>
+            return To_Handler_Value (X.Vector.Last_Index);
 
-      elsif Equal_Case_Insensitive (Field, "iterate") then
-         return To_Handler_Value
-           (Create
-              (Iterator_Interface_Access'
-                   (new Array_Iterator'(Cursor    => X.Vector.First_Index,
-                                        Container => X.Vector))));
+         when Field_Length =>
+            return To_Handler_Value (Integer (X.Vector.Length));
 
-      elsif Equal_Case_Insensitive (Field, "range") then
-         return To_Handler_Value
-           (Create
-              (Range_Iterators.Create (Start     => X.Vector.First_Index,
-                                       Stop      => X.Vector.Last_Index)));
-      else
-         raise Unknown_Field with Field;
-      end if;
+         when Field_Iterate =>
+            return To_Handler_Value
+              (Create
+                 (Iterator_Interface_Access'
+                      (new Array_Iterator'(Cursor    => X.Vector.First_Index,
+                                           Container => X.Vector))));
+
+         when Field_Range =>
+            return To_Handler_Value
+              (Create
+                 (Range_Iterators.Create (Start     => X.Vector.First_Index,
+                                          Stop      => X.Vector.Last_Index)));
+      end case;
    end Get;
 
    --------------
@@ -138,13 +175,21 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
    function Is_Field (X : Array_Wrapper; Field : Id) return Boolean
    is
       pragma Unreferenced (X);
-      use Ada.Strings;
+      Ignored : Field_Name;
    begin
-      return Equal_Case_Insensitive (Field, "first")
-        or Equal_Case_Insensitive (Field, "last")
-        or Equal_Case_Insensitive (Field, "iterate")
-        or Equal_Case_Insensitive (Field, "range");
+      Ignored := To_Field (Field);
+      return True;
+      -- Yes, I know, it is not the best practice to use exceptions
+      -- to do flow control, but this is the easiest way
+   exception
+      when Constraint_Error =>
+         return False;
    end Is_Field;
+--        return Equal_Case_Insensitive (Field, "first")
+--          or Equal_Case_Insensitive (Field, "last")
+--          or Equal_Case_Insensitive (Field, "length")
+--          or Equal_Case_Insensitive (Field, "iterate")
+--          or Equal_Case_Insensitive (Field, "range");
 
 
 end Protypo.Api.Engine_Values.Basic_Array_Wrappers;

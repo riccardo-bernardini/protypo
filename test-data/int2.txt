@@ -4,6 +4,17 @@ Questo è testo libero 3+4=#3+4#
 #-- ciao
 #{
 
+function average(data) is
+begin
+  result := 0.0;
+
+  for item in data.iterate loop
+    result := result + item;
+  end loop;
+
+  return result / data.length;
+end average;
+
 function foo(saluto) is
 begin
   for user in users.iterate loop
@@ -77,4 +88,11 @@ x,y := y,x;
 s, q, r := "zorro", divmod(37, 7);
 [#s#, #q#=5, #r#=2
 ]
+
+for idx in scores.range loop
+  [scores(#idx#)=#scores(idx)#
+]
+end loop;
+
+[#average(scores)#]
 }#

@@ -195,10 +195,10 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
             declare
                Ref : constant Names.Name_Reference := Names.Eval_Name (Status, Expr);
             begin
---                 Put_Line ("@@@" & Ref.Class'Image);
-               if not (Ref.Class in Evaluable_Classes) then
-                  raise Unvaluable_Expression with Ref.Class'image;
-               end if;
+--  --                 Put_Line ("@@@" & Ref.Class'Image);
+--                 if not (Ref.Class in Evaluable_Classes) then
+--                    raise Unvaluable_Expression with Ref.Class'image;
+--                 end if;
 
                return To_Vector (To_Value (Ref));
             end;
@@ -346,11 +346,11 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
    function To_Value (Ref : Names.Name_Reference) return Engine_Value_Array
    is
    begin
-      if not (Ref.Class in Evaluable_Classes) then
-         raise Program_Error;
-      end if;
+--        if not (Ref.Class in Evaluable_Classes) then
+--           raise Program_Error;
+--        end if;
 
-      case Evaluable_Classes (Ref.Class) is
+      case Ref.Class is
          when Names.Constant_Reference =>
             return Engine_Value_Array'(1 => Ref.Costant_Handler.Read);
 
@@ -366,6 +366,16 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
                  (Class            => Names.Function_Call,
                   Function_Handler => Ref.Function_Handler,
                   Parameters       => Engine_Value_Vectors.Empty_Vector));
+
+         when Names.Array_Reference =>
+            return Engine_Value_Array'(1 => Create (Ref.Array_Handler));
+
+         when Names.Record_Reference =>
+            return Engine_Value_Array'(1 => Create (Ref.Record_Handler));
+
+         when Names.Ambivalent_Reference =>
+            return Engine_Value_Array'(1 => Create (Ref.Ambivalent_Handler));
+
       end case;
    end To_Value;
 

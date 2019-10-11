@@ -3,6 +3,7 @@ with Protypo.Api.Consumers.File_Writer;
 with Protypo.Api.Engine_Values.Basic_Array_Wrappers;
 
 with User_Records;
+with Integer_Arrays;
 
 with Ada.Command_Line;
 with Ada.Text_IO; use Ada.Text_IO;
@@ -10,6 +11,9 @@ with Ada.Exceptions;
 with Protypo.Api.Engine_Values;
 
 procedure Prova_Interpreter is
+   use Protypo.Api.Engine_Values;
+
+
    use Ada.Command_Line;
 
    use Protypo.Api.Interpreters;
@@ -48,6 +52,12 @@ procedure Prova_Interpreter is
                  Last_Name  => Create ("Paperino"),
                  Telephone  => Create ("1313")));
 
+   Scores : constant Engine_Value :=
+              Integer_Arrays.Wrappers.Create (Value => (1 => 18,
+                                                        2 => 33,
+                                                        3 => 42,
+                                                        4 => -5));
+
    User_Dir : constant Basic_Array_Wrappers.Array_Wrapper_Access :=
                 Basic_Array_Wrappers.Make_Wrapper (To_Array (Db));
 
@@ -57,6 +67,9 @@ begin
 
    Engine.Define (Name  => "users",
                   Value => Create (Ambivalent_Interface_Access (User_Dir)));
+
+   Engine.Define (Name => "scores",
+                  Value => Scores);
 
    Compile (Target   => Code,
             Program  => Program);

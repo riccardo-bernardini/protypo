@@ -46,8 +46,7 @@ package Protypo.Code_Trees.Interpreter.Expressions is
            in Names.Function_Call      | Names.Constant_Reference |
               Names.Variable_Reference | Names.Function_Reference;
 
-   function To_Value (Ref : Names.Name_Reference) return Engine_Value_Array
-     with Pre => Ref.Class in Evaluable_Classes;
+   function To_Value (Ref : Names.Name_Reference) return Engine_Value_Array;
    -- Access a reference and return the value "pointed at."  Note that only
    -- a subset of the possible "name values" have a scalar value associated
 

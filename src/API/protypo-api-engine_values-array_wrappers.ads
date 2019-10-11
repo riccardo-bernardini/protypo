@@ -37,10 +37,8 @@ private
      new Ambivalent_Interface
    with
       record
-         A : Basic_Array_Wrappers.Array_Wrapper;
+         A : Basic_Array_Wrappers.Array_Wrapper_Access;
       end record;
-
-
 
    function Get (X     : Array_Wrapper;
                  Index : Engine_Value_Array)
