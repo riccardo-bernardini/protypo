@@ -1,6 +1,6 @@
 with Protypo.Api.Interpreters;
 with Protypo.Api.Consumers.File_Writer;
-with Protypo.Api.Engine_Values.Array_Wrappers;
+with Protypo.Api.Engine_Values.Basic_Array_Wrappers;
 
 with User_Records;
 
@@ -48,8 +48,8 @@ procedure Prova_Interpreter is
                  Last_Name  => Create ("Paperino"),
                  Telephone  => Create ("1313")));
 
-   User_Dir : constant Array_Wrappers.Array_Wrapper_Access :=
-                Array_Wrappers.Make_Wrapper (To_Array (Db));
+   User_Dir : constant Basic_Array_Wrappers.Array_Wrapper_Access :=
+                Basic_Array_Wrappers.Make_Wrapper (To_Array (Db));
 
    Engine   : Interpreter_Type;
 
