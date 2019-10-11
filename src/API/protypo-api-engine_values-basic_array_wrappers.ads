@@ -13,6 +13,9 @@ package Protypo.Api.Engine_Values.Basic_Array_Wrappers is
                   Index     : Array_Wrapper_Index;
                   Value     : Engine_Value);
 
+   procedure Append (Container : in out Array_Wrapper;
+                     Item      : Engine_Value);
+
    function Get (X     : Array_Wrapper;
                  Index : Engine_Value_Array)
                  return Handler_Value;

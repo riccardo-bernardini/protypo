@@ -13,12 +13,22 @@ package body Protypo.Api.Engine_Values.Array_Wrappers is
    begin
       for Idx in Init'Range loop
          Result.Set (Index => Idx,
-                     Value => Create (Init (Idx)));
+                     Value => Init (Idx));
       end loop;
 
       return Ambivalent_Interface_Access (Result);
    end Make_Wrapper;
 
+   ------------
+   -- Append --
+   ------------
+
+   procedure Append (Container : in out Array_Wrapper;
+                     Value     : Element_Type)
+   is
+   begin
+      Container.A.Append (Create (Value));
+   end Append;
 
    ---------
    -- Set --
@@ -26,11 +36,11 @@ package body Protypo.Api.Engine_Values.Array_Wrappers is
 
    procedure Set
      (Container : in out Array_Wrapper; Index : Index_Type;
-      Value     :        Engine_Value)
+      Value     :        Element_Type)
    is
    begin
       Container.A.Set (Index => Index,
-                       Value => Value);
+                       Value => Create (Value));
    end Set;
 
 

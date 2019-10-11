@@ -19,9 +19,11 @@ package Protypo.Api.Engine_Values.Enumerated_Records is
    -- Array of aggregate type.  It allows to write constant "databases"
    -- of enumerated records
 
-   function To_Array (Db : Multi_Aggregate) return Engine_Value_Array;
-   -- Convert an array of aggregates into an Engine_Value_Array.
-   -- Very useful in initializing other wrappers
+   function To_Array (Db : Multi_Aggregate) return Engine_Value_Array
+     with Post => (for all Item of To_Array'Result => Item.Class = Record_Handler);
+   -- Convert an array of aggregates into an Engine_Value_Array whose
+   -- entries are Enumerated_Records.
+   -- Very useful in initializing other wrappers (e.g., from Array_Wrappers)
 
 
    type Enumerated_Record is new Record_Interface with private;
@@ -30,6 +32,8 @@ package Protypo.Api.Engine_Values.Enumerated_Records is
 
    function Make_Record (Init : Aggregate_Type := Void_Aggregate)
                          return Enumerated_Record_Access;
+
+   function Make_Value (Init : Aggregate_Type) return Engine_Value;
 
    procedure Fill (Item   : in out Enumerated_Record;
                    Values : Aggregate_Type);

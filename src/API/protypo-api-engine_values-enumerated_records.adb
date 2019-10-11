@@ -1,4 +1,8 @@
 pragma Ada_2012;
+--------------------------------------------------
+-- Protypo.Api.Engine_Values.Enumerated_Records --
+--------------------------------------------------
+
 package body Protypo.Api.Engine_Values.Enumerated_Records is
    --------------
    -- To_Array --
@@ -29,6 +33,13 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
       Result.Fill (Init);
       return Result;
    end Make_Record;
+
+   ----------------
+   -- Make_Value --
+   ----------------
+
+   function Make_Value (Init : Aggregate_Type) return Engine_Value
+   is (Create (Record_Interface_Access (Make_Record (Init))));
 
    ----------
    -- Fill --

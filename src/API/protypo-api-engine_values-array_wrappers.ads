@@ -21,7 +21,11 @@ package Protypo.Api.Engine_Values.Array_Wrappers is
 
    procedure Set (Container : in out Array_Wrapper;
                   Index     : Index_Type;
-                  Value     : Engine_Value);
+                  Value     : Element_Type);
+
+   procedure Append (Container : in out Array_Wrapper;
+                     Value     : Element_Type);
+
 
    function Get (X     : Array_Wrapper;
                  Index : Engine_Value_Array)

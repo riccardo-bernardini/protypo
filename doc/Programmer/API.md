@@ -666,5 +666,80 @@ that returns a reference to the internal map.  This kind of record is very "dyna
 
 #### Enumeration based
 
+In an _enumeration based record wrapper_ the names of the fields are given by an enumerated type.  This fixes the field names at compile time, but it allows for a very clean interface. The interface is as follows
+```Ada 
+generic
+   type Field_Name is (<>); -- Enumerated type that gives the name of fields
+package Protypo.Api.Engine_Values.Enumerated_Records is
+   type Aggregate_Type is array (Field_Name) of Engine_Value;
+   -- Type that allows to specify an enumerated record similarly
+   -- to an Ada aggregate, for example,
+   --
+   --     (First_Name => Create ("Pippo"),
+   --      Last_Name  => Create ("Recupero"),
+   --      Telephone  => Create ("3204365972"))
+
+   Void_Aggregate : constant Aggregate_Type := (others => Void_Value);
+
+   type Multi_Aggregate is array (Positive range <>) of Aggregate_Type;
+   -- Array of aggregate type.  It allows to write constant "databases"
+   -- of enumerated records
+
+   function To_Array (Db : Multi_Aggregate) return Engine_Value_Array
+     with Post => (for all Item of To_Array'Result => Item.Class = Record_Handler);
+   -- Convert an array of aggregates into an Engine_Value_Array whose
+   -- entries are Enumerated_Records.
+   -- Very useful in initializing other wrappers (e.g., from Array_Wrappers)
+
+
+   type Enumerated_Record is new Record_Interface with private;
+   type Enumerated_Record_Access is access Enumerated_Record;
+
+
+   function Make_Record (Init : Aggregate_Type := Void_Aggregate)
+                         return Enumerated_Record_Access;
+
+   procedure Fill (Item   : in out Enumerated_Record;
+                   Values : Aggregate_Type);
+
+   procedure Set (Item  : in out Enumerated_Record;
+                  Field : Field_Name;
+                  Value : Engine_Value);
+
+   function Get (Item  : Enumerated_Record;
+                 Field : ID)
+                 return Handler_Value;
+
+   function Is_Field (Item : Enumerated_Record; Field : ID) return Boolean;
+private
+  -- 
+end Protypo.Api.Engine_Values.Enumerated_Records;
+
+```
+An `Enumerated_Record` is created with the function of 
+```Ada
+function Make_Record (Init : Aggregate_Type := Void_Aggregate)
+                         return Enumerated_Record_Access;
+```
+that accepts an initial value of type `Aggregate_Type` which is simply an array of `Engine_Value` indexed by the field names
+```Ada
+ type Aggregate_Type is array (Field_Name) of Engine_Value;
+```
+This allows for a very Ada-like notation. Supposing one has a user record with name, surname and phone and that the corresponding package (instantiation of the generic `Protypo.Api.Engine_Values.Enumerated_Records`) is `User_Records`, one can write
+```Ada
+    User : User_Records.Enumerated_Record := User_Records.Make_Record((Name    => "John",
+                                                                       Surname => "Smith",
+                                                                       Phone   => "123456789"));
+```
+Often records are collected in lists or arrays. In order to use them in the engine it is necessary to convert them to a `Engine_Value_Array`. For this case the package provides the function
+```Ada
+   type Multi_Aggregate is array (Positive range <>) of Aggregate_Type;
+   -- Array of aggregate type.  It allows to write constant "databases"
+   -- of enumerated records
+
+   function To_Array (Db : Multi_Aggregate) return Engine_Value_Array
+     with Post => (for all Item of To_Array'Result => Item.Class = Record_Handler);
+``` 
+that converts the an array of `Aggregate_Type` in an `Engine_Value_Array` that contains the corresponding `Enumerated_Record`.
 
 ### Array wrapper 

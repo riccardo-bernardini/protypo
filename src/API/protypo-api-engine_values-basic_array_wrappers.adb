@@ -108,6 +108,17 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
       Container.Vector.Insert (Index, Value);
    end Set;
 
+   ------------
+   -- Append --
+   ------------
+
+   procedure Append (Container : in out Array_Wrapper;
+                     Item      : Engine_Value)
+   is
+   begin
+      Container.Vector.Append (Item);
+   end Append;
+
    ---------
    -- Get --
    ---------
