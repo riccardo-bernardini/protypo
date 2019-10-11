@@ -1,4 +1,5 @@
 # Index
+* [Summary](#summary)
 * [An example](#an-example)
 * [The API](#the-api)
    * [The interpreter](#the-interpreter)
@@ -19,8 +20,20 @@
        * [Map Based](#map-based)
        * [Enumeration Based](#map-based)
      * [Array wrapper](#array-wrapper)
+       * [Basic array wrapper](#basic-array-wrapper)
+       * [Generic array wrapper](#generic-array-wrapper)
 
-     
+# Summary
+
+This document describes, to a fair level of detail, the main features of the API available to the programmer that wants to use the library in an application. The finer details are omitted, but they are easily deduced by the _specs_ files under `Protypo.API` (all the API resources are descendants of `Protypo.API`).
+
+Our _battleplan_ is as follows
+1. First we give a "taste" of the API by means of [a tutorial example](#an-example)
+1. Successively we enter into the details of the API that can be partitioned into three wide areas
+   1. [The interpreter](#the-interpreter), that is, the object that interprets the template and carries out the expansion
+   1. [The `Engine_Value` type](#the-engine_value-type) that represents the "data" that the interpreter processes. An `Engine_Value` can represents several types of data (Integer, Float, arrays, records, ...) that will be described in the detail
+   1. [The builtin wrappers](#wrappers).  They are structure that ease the duty of converting application data (expressed in Ada type) into `Engine_Value`s suitable for the interpreter.
+
 
 # An example
 
@@ -553,7 +566,7 @@ The mechanism provided by the handlers is very flexible, but creating a handler 
 * [Constant wrapper](#constant-wrapper)
 * [List wrapper](#list-wrapper)
 * [Range iterator](#range-iterator)
-* [Record and enumerated wrappers](#record-wrappers)
+* [Record wrappers](#record-wrappers)
 * [Array wrapper](#array-wrapper)
 
 ### Constant wrapper
@@ -743,3 +756,11 @@ Often records are collected in lists or arrays. In order to use them in the engi
 that converts the an array of `Aggregate_Type` in an `Engine_Value_Array` that contains the corresponding `Enumerated_Record`.
 
 ### Array wrapper 
+
+Also for the array structure two wrappers are provided: _basic array wrapper_ and a _generic array wrapper_, the latter is built upon the former. 
+
+> Hmmm.... Maybe I should choose better names
+
+#### Basic array wrapper
+
+#### Generic array wrapper
