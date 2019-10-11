@@ -12,12 +12,12 @@
      * [Function handlers](#function_handler)
        * [Callbacks](#syntactic-sugar-using-callbacks)
    * [The wrappers](#wrappers)
-     * [Constant wrapper](#constant-wrapper)  
+     * [Constant wrapper](#constant-wrapper)
      * [List wrapper](#list-wrapper)
      * [Range iterator](#range-iterator)
      * [Record wrappers](#record-wrappers)
-       * [Map Based] (#map-based)
-       * [Enumeration Based] (#map-based)
+       * [Map Based](#map-based)
+       * [Enumeration Based](#map-based)
      * [Array wrapper](#array-wrapper)
 
      
