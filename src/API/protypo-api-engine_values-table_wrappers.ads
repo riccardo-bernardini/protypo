@@ -1,30 +1,32 @@
-with Ada.Containers.Indefinite_Vectors;
+--  with Ada.Containers.Indefinite_Vectors;
+
+with Protypo.Api.Engine_Values.Value_Vectors;
 
 package Protypo.Api.Engine_Values.Table_Wrappers is
    type Table_Wrapper (<>) is new Ambivalent_Interface with private;
    type Table_Wrapper_Access is access Table_Wrapper;
 
-   type Name_Array is array (Positive range <>) of Unbounded_String;
+   type Title_Array is array (Positive range <>) of Unbounded_String;
    type Label_Array is array (Positive range <>) of Unbounded_ID;
 
    function Make_Table (N_Columns : Positive) return Table_Wrapper_Access
      with Post => Make_Table'Result.N_Columns = N_Columns
      and Make_Table'Result.N_Rows = 0;
 
-   function Make_Table (Column_Names : Name_Array) return Table_Wrapper_Access
+   function Make_Table (Column_Names : Title_Array) return Table_Wrapper_Access
      with Post => Make_Table'Result.N_Columns = Column_Names'Length
      and Make_Table'Result.N_Rows = 0;
 
-   function Make_Table (labels : Label_Array) return Table_Wrapper_Access
-     with Post => Make_Table'Result.N_Columns = labels'Length
+   function Make_Table (Labels : Label_Array) return Table_Wrapper_Access
+     with Post => Make_Table'Result.N_Columns = Labels'Length
      and Make_Table'Result.N_Rows = 0;
 
-   function Make_Table (Column_Names : Name_Array;
+   function Make_Table (Column_Names : Title_Array;
                         Labels       : Label_Array) return Table_Wrapper_Access
      with
        Pre => Column_Names'Length = Labels'Length,
        Post => Make_Table'Result.N_Columns = Column_Names'Length
-     and Make_Table'Result.N_Rows = 0;
+       and Make_Table'Result.N_Rows = 0;
 
    function N_Columns (Item : Table_Wrapper) return Positive;
 
@@ -53,38 +55,47 @@ package Protypo.Api.Engine_Values.Table_Wrappers is
    function Is_Field (X : Table_Wrapper; Field : Id) return Boolean;
 
 private
-   package Engine_Value_Array_Vectors is
-     new Ada.Containers.Indefinite_Vectors (Index_Type   => Positive,
-                                            Element_Type => Engine_Value);
+   package Engine_Value_Vectors is
+     new Value_Vectors (Index_Type => Positive);
+
+   type Row_Wrapper (N_Columns : Positive) is
+     new Engine_Value_Vectors.Vector_Handler
+   with
+      record
+         Labels : Label_Array (1 .. N_Columns);
+
+      end record;
+
 
    type Table_Wrapper (N_Columns : Positive)  is new Ambivalent_Interface with
       record
-         Names  : Name_Array (1 .. N_Columns);
-         Labels : Label_Array (1 .. N_Columns);
-         Rows   : Engine_Value_Array_Vectors.Vector;
+         Names  : Title_Array (1 .. N_Columns);
+         Rows   : Row_Wrapper (N_Columns);
       end record;
 
-   function Default_Titles (N_Columns : Positive) return Name_Array
+   function Default_Titles (N_Columns : Positive) return Title_Array
      with Post => Default_Titles'Result'Length = N_Columns;
 
    function Default_Labels (N_Columns : Positive) return Label_Array
      with Post => Default_Labels'Result'Length = N_Columns;
 
 
-   function Make_Table (Column_Names : Name_Array;
+   function Make_Table (Column_Names : Title_Array;
                         Labels       : Label_Array) return Table_Wrapper_Access
    is (new Table_Wrapper'(N_Columns => Column_Names'Length,
                           Names     => Column_Names,
-                          Labels    => Labels,
-                          Rows      => Engine_Value_Array_Vectors.Empty_Vector));
+--                            Labels    => Labels,
+                          Rows      => (Engine_Value_Vectors.Vector_Handler with
+                                          N_Columns => Column_Names'Length,
+                                        Labels    => Labels)));
 
    function Make_Table (N_Columns : Positive) return Table_Wrapper_Access
    is (Make_Table (Default_Titles (N_Columns), Default_Labels (N_Columns)));
 
-   function Make_Table (Column_Names : Name_Array) return Table_Wrapper_Access
+   function Make_Table (Column_Names : Title_Array) return Table_Wrapper_Access
    is (Make_Table (Column_Names, Default_Labels (Column_Names'Length)));
 
-   function Make_Table (labels : Label_Array) return Table_Wrapper_Access
+   function Make_Table (Labels : Label_Array) return Table_Wrapper_Access
    is (Make_Table (Default_Titles (Labels'Length), Labels));
 
 
@@ -92,6 +103,6 @@ private
    is (Item.N_Columns);
 
    function N_Rows (Item : Table_Wrapper) return Natural
-   is (Natural (Item.Rows.Length));
+   is (Natural (Item.Rows.Vector.length));
 
 end Protypo.Api.Engine_Values.Table_Wrappers;
