@@ -47,4 +47,10 @@ package Protypo is
    function To_Id (X : Unbounded_ID) return Id
    is (ID (To_String (x)));
 
+   function "<" (X, Y : Unbounded_ID) return Boolean
+   is (To_Id (X) < To_Id (Y));
+
+   function "=" (X, Y : Unbounded_ID) return Boolean
+   is (To_Id (X) = To_Id (Y));
+
 end Protypo;
