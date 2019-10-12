@@ -113,7 +113,7 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
       Value     :        Engine_Value)
    is
    begin
-      Container.Vector.Insert (Index, Value);
+      Container.Vector.Insert (Index, Force_Handler (Value));
    end Set;
 
    ------------

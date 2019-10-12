@@ -1,4 +1,6 @@
 pragma Ada_2012;
+with Ada.Strings.Fixed;
+
 with Protypo.Api.Engine_Values.Array_Wrappers;
 
 package body Protypo.Api.Engine_Values.Table_Wrappers is
@@ -6,6 +8,37 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
      new Array_Wrappers (Element_Type => Engine_Value,
                          Array_Type   => Engine_Value_Array,
                          Create       => identity);
+
+   --------------------
+   -- Default_Titles --
+   --------------------
+
+   function Default_Titles (N_Columns : Positive) return Name_Array
+   is
+      Result : constant Name_Array (1 .. N_Columns) :=
+                 (others => Null_Unbounded_String);
+   begin
+      return Result;
+   end Default_Titles;
+
+   --------------------
+   -- Default_Labels --
+   --------------------
+
+   function Default_Labels (N_Columns : Positive) return Label_Array
+   is
+      use Ada.Strings;
+      use Ada.Strings.Fixed;
+
+      Result : Label_Array (1 .. N_Columns);
+   begin
+      for I in Result'Range loop
+         Result (I) := To_Unbounded_String ("C" & Trim (I'Image, Both));
+      end loop;
+
+      return Result;
+   end Default_Labels;
+
 
    ------------
    -- Append --
