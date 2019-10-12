@@ -7,9 +7,8 @@ with Protypo.Api.Field_Names;
 package body Protypo.Api.Engine_Values.Table_Wrappers is
    type Field_Name is
      (
-      All_Rows,
-      Title,
-      All_Titles,
+      Rows,
+      Titles,
       N_Rows,
       N_Columns
      );
@@ -50,6 +49,24 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
 
       return Result;
    end Default_Labels;
+
+
+   ------------
+   -- Create --
+   ------------
+
+   function Create (Titles : Title_Array)
+                    return Engine_Value_Vectors.Vector_Handler_Access
+   is
+      Result : constant Engine_Value_Vectors.Vector_Handler_Access :=
+                 new Engine_Value_Vectors.Vector_Handler;
+   begin
+      for K in Titles'Range loop
+         Result.Vector.Append (Create (To_String (Titles (K))));
+      end loop;
+
+      return Result;
+   end Create;
 
    --------------
    -- Make_Map --
@@ -118,14 +135,11 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
 
    begin
       case My_Fields.To_Field (Field) is
-         when All_Rows =>
+         when Rows =>
             return Create (Ambivalent_Interface_Access (X.Rows));
 
-         when Title =>
-            return Void_Value;
-
-         when All_Titles =>
-            return Void_Value;
+         when Titles =>
+            return Create (Ambivalent_Interface_Access (X.Titles));
 
          when N_Rows =>
             return Create (Integer (X.Rows.Vector.Length));
