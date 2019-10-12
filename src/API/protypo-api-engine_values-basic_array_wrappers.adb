@@ -24,7 +24,7 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
      new Field_Names (Field_Enumerator => Field_Name,
                       Prefix           => "Field_");
 
-   function To_Field (X : String) return Field_Name
+   function To_Field (X : ID) return Field_Name
    is (Field_Names_Package.To_Field (X));
 
 --     function To_Field (X : String) return Field_Name

@@ -1,5 +1,9 @@
 with Ada.Strings.Maps.Constants;
 with Ada.Strings.Unbounded;
+
+with Ada.Strings.Equal_Case_Insensitive;
+with Ada.Strings.Less_Case_Insensitive;
+
 package Protypo is
    use Ada;
 
@@ -22,10 +26,25 @@ package Protypo is
          (Strings.Maps.Is_In (ID (ID'First), Begin_Id_Set)) and then
          (for all C of ID => Strings.Maps.Is_In (C, Id_Charset)));
 
-   subtype ID is String
-     with Dynamic_Predicate => Is_Valid_Id (ID);
+   type ID is new String
+     with Dynamic_Predicate => Is_Valid_Id (String(ID));
 
-   subtype Unbounded_ID is Strings.Unbounded.Unbounded_String
-     with Dynamic_Predicate => Is_Valid_Id (Strings.Unbounded.To_String (Unbounded_ID));
+   function "<" (X, Y : Id) return Boolean
+   is (Strings.Less_Case_Insensitive (String (X), String (Y)));
+
+   function "=" (X, Y : Id) return Boolean
+   is (Strings.Equal_Case_Insensitive (String (X), String (Y)));
+
+   type Unbounded_ID is new Strings.Unbounded.Unbounded_String
+     with Dynamic_Predicate =>
+       Is_Valid_Id
+         (Strings.Unbounded.To_String
+            (Strings.Unbounded.Unbounded_String (Unbounded_ID)));
+
+   function To_String (X : Unbounded_ID) return string
+   is (Strings.Unbounded.To_String(Strings.Unbounded.Unbounded_String (x)));
+
+   function To_Id (X : Unbounded_ID) return Id
+   is (ID (To_String (x)));
 
 end Protypo;

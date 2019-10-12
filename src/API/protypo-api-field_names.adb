@@ -5,7 +5,7 @@ package body Protypo.Api.Field_Names is
    -- Is_Field --
    --------------
 
-   function Is_Field (X : String) return Boolean is
+   function Is_Field (X : ID) return Boolean is
       Ignored : Field_Enumerator;
    begin
       Ignored := To_Field (x);
@@ -20,8 +20,8 @@ package body Protypo.Api.Field_Names is
    -- To_Field --
    --------------
 
-   function To_Field (X : String) return Field_Enumerator
-   is (Field_Enumerator'Value (Prefix & X));
+   function To_Field (X : ID) return Field_Enumerator
+   is (Field_Enumerator'Value (Prefix & String (X)));
 
 
 end Protypo.Api.Field_Names;

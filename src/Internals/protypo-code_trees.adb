@@ -663,7 +663,7 @@ package body Protypo.Code_Trees is
       is
       begin
          for Name of Item.Names loop
-            Put_Line (Tabbing (Level + 1) & Name);
+            Put_Line (Tabbing (Level + 1) & String (Name));
          end loop;
          Dump (Item.Default, Level + 1);
       end Dump;

@@ -1,4 +1,5 @@
 with Ada.Containers.Vectors;
+with Ada.Finalization;
 
 generic
    type Index_Type is range <>;
@@ -8,10 +9,15 @@ package Protypo.Api.Engine_Values.Value_Vectors is
      new Ada.Containers.Vectors (Index_Type   => Index_Type,
                                  Element_Type => Engine_Value);
 
-   type Vector_Handler is new Ambivalent_Interface with private;
+   type Vector_Handler is
+     new Ada.Finalization.Controlled
+     and Ambivalent_Interface
+   with
+     private;
+
    type Vector_Handler_Access is access Vector_Handler;
 
-   function Make_Handler return Vector_Handler_Access;
+--     function Make_Handler return Vector_Handler_Access;
 
    type Vector_Reference (Ref : access Vectors.Vector) is limited private
      with Implicit_Dereference => Ref;
@@ -33,15 +39,18 @@ private
    type Vector_Reference (Ref : access Vectors.Vector) is limited null record;
    type Vector_Access is access Vectors.Vector;
 
-   type Vector_Handler is new Ambivalent_Interface
+   type Vector_Handler is
+     new Ada.Finalization.Controlled
+     and Ambivalent_Interface
    with
       record
          Vect : Vector_Access;
       end record;
 
+   overriding procedure Initialize(Object : in out Vector_Handler);
 
-   function Make_Handler return Vector_Handler_Access
-   is (new Vector_Handler'(Vect => new Vectors.Vector'(Vectors.Empty_Vector)));
+--     function Make_Handler return Vector_Handler_Access
+--     is (new Vector_Handler'(Vect => new Vectors.Vector'(Vectors.Empty_Vector)));
 
    function Vector (Item : Vector_Handler) return Vector_Reference
    is (Vector_Reference'(Ref => Item.Vect));

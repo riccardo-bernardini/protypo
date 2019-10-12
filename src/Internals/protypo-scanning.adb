@@ -360,7 +360,7 @@ package body Protypo.Scanning is
          --              Buffer.Append (Input.Next);
          --           end loop;
 
-         Result.Append (Builder.Make_Token (Identifier, Consume_With_Escape_Procedure_Name));
+         Result.Append (Builder.Make_Token (Identifier, String(Consume_With_Escape_Procedure_Name)));
          Result.Append (Make_Unanchored_Token (Open_Parenthesis));
          Result.Append (Make_Unanchored_Token (Text, Content));
          Result.Append (Make_Unanchored_Token (Close_Parenthesis));
@@ -452,7 +452,7 @@ package body Protypo.Scanning is
 
    begin
       if Buffer.Length > 0 then
-         Result.Append (Make_Unanchored_Token (Identifier, Consume_Procedure_Name));
+         Result.Append (Make_Unanchored_Token (Identifier, String(Consume_Procedure_Name)));
          Result.Append (Make_Unanchored_Token (Open_Parenthesis));
          Result.Append (Make_Unanchored_Token (Text, Buffer.Dump));
          Result.Append (Make_Unanchored_Token (Close_Parenthesis));

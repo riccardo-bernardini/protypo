@@ -733,7 +733,7 @@ package body Protypo.Parsing is
                  & " at " & Image (Position (Input.Read));
             end if;
 
-            Parameter_Names.Append (Value (Input.Next));
+            Parameter_Names.Append (ID(Value (Input.Next)));
 
             if Class (Input.Read) = Assign then
                Input.Next;

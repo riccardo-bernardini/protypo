@@ -66,7 +66,7 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
            Table.N_Rows'Image & " columns";
       end if;
 
-      Table.Rows.Append (Row_Wrappers.Create (Row));
+      Table.Rows.Vector.Append (Row_Wrappers.Create (Row));
    end Append;
 
    ---------
@@ -85,7 +85,7 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
          raise Constraint_Error with "Bad index for table";
       end if;
 
-      return X.Rows (Get_Integer (Index (Index'First)));
+      return X.Rows.Vector.Ref.all (Get_Integer (Index (Index'First)));
    end Get;
 
    ---------
@@ -94,13 +94,24 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
 
    function Get (X : Table_Wrapper; Field : ID) return Handler_Value is
 
+
    begin
       case My_Fields.To_Field (Field) is
          when All_Rows =>
+            return Void_Value;
+
          when Title =>
+            return Void_Value;
+
          when All_Titles =>
+            return Void_Value;
+
          when N_Rows =>
+            return Void_Value;
+
          when N_Columns =>
+            return Void_Value;
+
       end case;
    end Get;
 
@@ -110,5 +121,26 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
 
    function Is_Field (X : Table_Wrapper; Field : Id) return Boolean
    is (My_Fields.Is_Field (Field));
+
+   overriding function Get (X     : Row_Wrapper;
+                            Field : ID)
+                            return Handler_Value
+   is
+   begin
+      if not X.Label_To_Column.Contains (Field) then
+         return Engine_Value_Vectors.Vector_Handler (X).Get (Field);
+      else
+         return X.Vector.Element (X.Label_To_Column (Field));
+      end if;
+   end Get;
+
+   --------------
+   -- Is_Field --
+   --------------
+
+   overriding function Is_Field (X : Row_Wrapper; Field : Id) return Boolean
+   is (X.Label_To_Column.Contains (Field) or else
+       Engine_Value_Vectors.Vector_Handler(X).Is_Field(Field));
+
 
 end Protypo.Api.Engine_Values.Table_Wrappers;

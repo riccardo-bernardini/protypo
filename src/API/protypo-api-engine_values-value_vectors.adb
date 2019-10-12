@@ -145,4 +145,15 @@ package body Protypo.Api.Engine_Values.Value_Vectors is
    function Is_Field (X : Vector_Handler; Field : Id) return Boolean
    is (Field_Names_Package.Is_Field (Field));
 
+
+   ----------------
+   -- Initialize --
+   ----------------
+
+   overriding procedure Initialize (Object : in out Vector_Handler)
+   is
+   begin
+      Object.Vect := new Vectors.Vector'(Vectors.Empty_Vector);
+   end Initialize;
+
 end Protypo.Api.Engine_Values.Value_Vectors;

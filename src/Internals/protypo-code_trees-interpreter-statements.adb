@@ -102,7 +102,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
          when Defun       =>
             Status.Symbol_Table.Create
               (Name          =>
-                  To_String (Program.Definition_Name),
+                  ID(To_String (Program.Definition_Name)),
                Initial_Value =>
                   Create (new Compiled_Function'(Function_Body => Program.Function_Body,
                                                  Parameters    => Program.Parameters,
@@ -187,7 +187,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                use Api.Symbols.Protypo_Tables;
 
                Position : constant Cursor :=
-                            Status.Symbol_Table.Find (To_String (Program.Name));
+                            Status.Symbol_Table.Find (ID (To_String (Program.Name)));
 
                Proc_Handler : Engine_Value;
 
@@ -256,7 +256,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                Iterator_Ref : constant Iterator_Interface_Access :=
                                 Expressions.Eval_Iterator (Status, Program.Iterator);
 
-               Variable : constant String := To_String (Program.Variable);
+               Variable : constant ID := ID (To_String (Program.Variable));
 
                Position : Protypo_Tables.Cursor;
             begin

@@ -1,5 +1,4 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
-with Ada.Strings.Less_Case_Insensitive;
 with Protypo.Api.Engine_Values.Constant_Wrappers;
 
 generic
@@ -51,8 +50,7 @@ private
    package Record_Maps is
      new Ada.Containers.Indefinite_Ordered_Maps
        (Key_Type     => ID,
-        Element_Type => Engine_Value,
-        "<"          => Ada.Strings.Less_Case_Insensitive);
+        Element_Type => Engine_Value);
 
 
    type Enumerated_Record is

@@ -67,19 +67,19 @@ package body Protypo.Code_Trees.Interpreter.Names is
          when Selected    =>
             declare
                Head  : constant Name_Reference := Eval_Name (Status, Expr.Record_Var);
-               Field : constant ID := To_String (Expr.Field_Name);
+               Field : constant ID := ID (To_String (Expr.Field_Name));
             begin
                case Head.Class is
                   when Record_Reference =>
                      if not Head.Record_Handler.Is_Field (Field) then
-                        raise Bad_Field  with "Unknown field '" & Field & "'";
+                        raise Bad_Field  with "Unknown field '" & String (Field) & "'";
                      end if;
 
                      return + Head.Record_Handler.Get (Field);
 
                   when Ambivalent_Reference =>
                      if not Head.Ambivalent_Handler.Is_Field (Field) then
-                        raise Bad_Field  with "Unknown field '" & Field & "'";
+                        raise Bad_Field  with "Unknown field '" & String (Field) & "'";
                      end if;
 
                      return + Head.Ambivalent_Handler.Get (Field);
@@ -125,8 +125,8 @@ package body Protypo.Code_Trees.Interpreter.Names is
                use Api.Symbols.Protypo_Tables;
                use Protypo.Code_Trees.Interpreter.Symbol_Table_References;
 
-               ID       : constant String := To_String (Expr.ID_Value);
-               Position : Cursor := Status.Symbol_Table.Find (ID);
+               Ident    : constant ID := To_Id (Expr.ID_Value);
+               Position : Cursor := Status.Symbol_Table.Find (ident);
                Val      : Engine_Value := Void_Value;
             begin
 
@@ -139,7 +139,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
                   -- but leave it not initialized, it can be used only
                   -- as a LHS.
                   --
-                  Status.Symbol_Table.Create (Name          => ID,
+                  Status.Symbol_Table.Create (Name          => Ident,
                                               Position      => Position,
                                               Initial_Value => Void_Value);
 

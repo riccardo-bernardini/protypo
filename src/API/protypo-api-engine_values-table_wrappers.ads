@@ -1,6 +1,7 @@
 --  with Ada.Containers.Indefinite_Vectors;
 
 with Protypo.Api.Engine_Values.Value_Vectors;
+with Ada.Containers.Indefinite_Ordered_Maps;
 
 package Protypo.Api.Engine_Values.Table_Wrappers is
    type Table_Wrapper (<>) is new Ambivalent_Interface with private;
@@ -58,19 +59,35 @@ private
    package Engine_Value_Vectors is
      new Value_Vectors (Index_Type => Positive);
 
-   type Row_Wrapper (N_Columns : Positive) is
+   package Label_Maps is
+     new Ada.Containers.Indefinite_Ordered_Maps (Key_Type     => ID,
+                                                 Element_Type => Positive);
+
+   type Row_Wrapper is
      new Engine_Value_Vectors.Vector_Handler
    with
       record
-         Labels : Label_Array (1 .. N_Columns);
-
+         Label_To_Column : Label_Maps.Map;
       end record;
+
+   function Make_Map (Labels : Label_Array) return Label_Maps.Map
+     with
+       Pre => (for all I in Labels'Range =>
+                 (for all J in I + 1 .. Labels'Last =>
+                        Labels(I) /= Labels(J))),
+       Post => Integer (Make_Map'Result.Length) = Labels'Length;
+
+   overriding function Get (X     : Row_Wrapper;
+                            Field : ID)
+                            return Handler_Value;
+
+   overriding function Is_Field (X : Row_Wrapper; Field : Id) return Boolean;
 
 
    type Table_Wrapper (N_Columns : Positive)  is new Ambivalent_Interface with
       record
          Names  : Title_Array (1 .. N_Columns);
-         Rows   : Row_Wrapper (N_Columns);
+         Rows   : Row_Wrapper;
       end record;
 
    function Default_Titles (N_Columns : Positive) return Title_Array
@@ -84,10 +101,9 @@ private
                         Labels       : Label_Array) return Table_Wrapper_Access
    is (new Table_Wrapper'(N_Columns => Column_Names'Length,
                           Names     => Column_Names,
---                            Labels    => Labels,
+                          --                            Labels    => Labels,
                           Rows      => (Engine_Value_Vectors.Vector_Handler with
-                                          N_Columns => Column_Names'Length,
-                                        Labels    => Labels)));
+                                        Label_to_column    => Make_Map (Labels))));
 
    function Make_Table (N_Columns : Positive) return Table_Wrapper_Access
    is (Make_Table (Default_Titles (N_Columns), Default_Labels (N_Columns)));
@@ -103,6 +119,6 @@ private
    is (Item.N_Columns);
 
    function N_Rows (Item : Table_Wrapper) return Natural
-   is (Natural (Item.Rows.Vector.length));
+   is (Natural (Item.Rows.Vector.Length));
 
 end Protypo.Api.Engine_Values.Table_Wrappers;

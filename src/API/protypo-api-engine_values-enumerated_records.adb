@@ -65,7 +65,7 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
       Value : Engine_Value)
    is
    begin
-      Item.Map.Include (Key      => Field'Image,
+      Item.Map.Include (Key      => ID (Field'Image),
                         New_Item => Value);
    end Set;
 

@@ -10,7 +10,7 @@ package Protypo.Code_Trees is
    
    package ID_Lists is 
      new Ada.Containers.Indefinite_Vectors (Index_Type   => Positive,
-                                            Element_Type => String);
+                                            Element_Type => ID);
    
    subtype Id_List is ID_Lists.Vector;
    
@@ -319,14 +319,14 @@ private
             
             when Selected =>
                Record_Var      : Node_Access;
-               Field_Name      : Unbounded_String;
+               Field_Name      : Unbounded_ID;
                
             when Indexed =>
                Indexed_Var     : Node_Access;
                Indexes         : Node_Vectors.Vector;
                
             when Identifier => 
-               ID_Value        : Unbounded_String;
+               ID_Value        : Unbounded_ID;
             
             when Loop_Block | For_Block |  While_Block =>
                Loop_Body       : Node_Vectors.Vector;
