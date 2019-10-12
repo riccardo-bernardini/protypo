@@ -70,6 +70,8 @@ private
          Label_To_Column : Label_Maps.Map;
       end record;
 
+   type Row_Wrapper_Access is access Row_Wrapper;
+
    function Make_Map (Labels : Label_Array) return Label_Maps.Map
      with
        Pre => (for all I in Labels'Range =>
@@ -81,13 +83,17 @@ private
                             Field : ID)
                             return Handler_Value;
 
+   overriding function Get (X     : Row_Wrapper;
+                            index : Engine_Value_Array)
+                            return Handler_Value;
+
    overriding function Is_Field (X : Row_Wrapper; Field : Id) return Boolean;
 
 
    type Table_Wrapper (N_Columns : Positive)  is new Ambivalent_Interface with
       record
          Names  : Title_Array (1 .. N_Columns);
-         Rows   : Row_Wrapper;
+         Rows   : Row_Wrapper_Access;
       end record;
 
    function Default_Titles (N_Columns : Positive) return Title_Array
@@ -102,8 +108,8 @@ private
    is (new Table_Wrapper'(N_Columns => Column_Names'Length,
                           Names     => Column_Names,
                           --                            Labels    => Labels,
-                          Rows      => (Engine_Value_Vectors.Vector_Handler with
-                                        Label_to_column    => Make_Map (Labels))));
+                          Rows      => new Row_Wrapper'(Engine_Value_Vectors.Vector_Handler with
+                                                          Label_To_Column    => Make_Map (Labels))));
 
    function Make_Table (N_Columns : Positive) return Table_Wrapper_Access
    is (Make_Table (Default_Titles (N_Columns), Default_Labels (N_Columns)));

@@ -51,6 +51,27 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
       return Result;
    end Default_Labels;
 
+   --------------
+   -- Make_Map --
+   --------------
+
+   function Make_Map (Labels : Label_Array) return Label_Maps.Map
+   is
+      Result : Label_Maps.Map;
+   begin
+      for K in Labels'Range loop
+         if Result.Contains (To_Id (Labels (K))) then
+            raise Run_Time_Error
+              with "Duplicated column label '" & to_String (Labels (K)) & "'";
+         end if;
+
+         Result.Insert (Key      => To_Id(Labels(K)),
+                        New_Item => K - Labels'First + 1);
+      end loop;
+
+      return Result;
+   end Make_Map;
+
 
    ------------
    -- Append --
@@ -98,7 +119,7 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
    begin
       case My_Fields.To_Field (Field) is
          when All_Rows =>
-            return Void_Value;
+            return Create (Ambivalent_Interface_Access (X.Rows));
 
          when Title =>
             return Void_Value;
@@ -107,10 +128,10 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
             return Void_Value;
 
          when N_Rows =>
-            return Void_Value;
+            return Create (Integer (X.Rows.Vector.Length));
 
          when N_Columns =>
-            return Void_Value;
+            return Create (X.N_Columns);
 
       end case;
    end Get;
@@ -121,6 +142,10 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
 
    function Is_Field (X : Table_Wrapper; Field : Id) return Boolean
    is (My_Fields.Is_Field (Field));
+
+   ---------
+   -- Get --
+   ---------
 
    overriding function Get (X     : Row_Wrapper;
                             Field : ID)
@@ -134,13 +159,53 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
       end if;
    end Get;
 
+   ---------
+   -- Get --
+   ---------
+
+   overriding function Get (X     : Row_Wrapper;
+                            Index : Engine_Value_Array)
+                            return Handler_Value
+   is
+
+   begin
+      if Index'Length /= 1 then
+         raise Run_Time_Error with "too many indexes";
+      end if;
+
+      case Index (Index'First).Class is
+         when Int =>
+            return Engine_Value_Vectors.Vector_Handler (X).Get (Index);
+
+         when Text =>
+            declare
+               S : constant String := Get_String (Index (Index'First));
+            begin
+               if Is_Valid_Id (S) and then X.Label_To_Column.Contains (Id (S)) then
+                  return X.Vector.element (X.Label_To_Column (ID (S)));
+
+               else
+                  raise Run_Time_Error
+                    with "Row ID-indexing with bad/unknown column name"
+                    & "'" & S & "'";
+
+               end if;
+            end;
+
+         when others =>
+            raise Run_Time_Error
+              with "Bad index type: " & Index(Index'First).Class'Image;
+      end case;
+   end Get;
+
+
    --------------
    -- Is_Field --
    --------------
 
    overriding function Is_Field (X : Row_Wrapper; Field : Id) return Boolean
    is (X.Label_To_Column.Contains (Field) or else
-       Engine_Value_Vectors.Vector_Handler(X).Is_Field(Field));
+       Engine_Value_Vectors.Vector_Handler (X).Is_Field (Field));
 
 
 end Protypo.Api.Engine_Values.Table_Wrappers;
