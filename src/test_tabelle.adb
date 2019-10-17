@@ -72,7 +72,7 @@ procedure Test_Tabelle is
                                            Serial  => 54321,
                                            Address => 112));
 
-   Program  : constant Template_Type := Slurp (Source_File);
+--     Program  : constant Template_Type := Slurp (Source_File);
    Code     : Compiled_Code;
    Consumer : constant Consumer_Access :=
                 File_Writer.Open (File_Writer.Standard_Error);
@@ -104,7 +104,7 @@ begin
    --                                     Max_Parameters => 2));
 
    Compile (Target   => Code,
-            Program  => Program);
+            Program  => Slurp(Source_File));
 
    Engine.Run (Program      => Code,
                Consumer     => Consumer);
@@ -122,6 +122,6 @@ exception
       Set_Exit_Status (Failure);
 
    when E : others =>
-      Put_Line (Standard_Error, "other: " & Ada.Exceptions.Exception_Message (E)
-                & Ada.Exceptions.Exception_Information (E));
+      Put_Line (Standard_Error, "other: " & Ada.Exceptions.Exception_Message (E));
+      Put_Line (Ada.Exceptions.Exception_Information (E));
 end Test_Tabelle;
