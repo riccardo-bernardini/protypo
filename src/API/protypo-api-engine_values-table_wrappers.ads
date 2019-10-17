@@ -55,6 +55,44 @@ package Protypo.Api.Engine_Values.Table_Wrappers is
 
    function Is_Field (X : Table_Wrapper; Field : Id) return Boolean;
 
+   generic
+      type Field_Type is (<>);
+   package Enumerated_Rows is
+      type Aggregate_Type is array (Field_Type) of Engine_Value;
+
+      type Enumerated_Title_Array is array (Field_Type) of Unbounded_String;
+
+      N_Fields : constant Integer :=
+                   Field_Type'Pos (Field_Type'Last)-Field_Type'Pos (Field_Type'First)+1;
+
+      function Make_Table return Table_Wrapper_Access
+            with Post => Make_Table'Result.N_Columns = N_Fields;
+
+      function Make_Table (Titles : Enumerated_Title_Array) return Table_Wrapper_Access
+            with Post => Make_Table'Result.N_Columns = N_Fields;
+
+      procedure Append (Table : in out Table_Wrapper;
+                        Item  : Aggregate_Type);
+
+      generic
+         type Ada_Aggregate is limited private;
+         type Aggregate_Index is (<>);
+
+         type Generic_Aggregate_Array is
+               array (Aggregate_Index range <>) of Ada_Aggregate;
+
+         with function Convert (X : Ada_Aggregate) return Aggregate_Type;
+      procedure Append_Array (Table : in out Table_Wrapper;
+                              Item  : Generic_Aggregate_Array);
+
+   private
+      function Default_Titles return Enumerated_Title_Array
+      is ((others => Null_Unbounded_String));
+
+      function Make_Table return Table_Wrapper_Access
+      is (Make_Table (Default_Titles));
+
+   end Enumerated_Rows;
 private
    package Engine_Value_Vectors is
      new Value_Vectors (Index_Type => Positive);

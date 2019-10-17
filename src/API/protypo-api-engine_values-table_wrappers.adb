@@ -6,19 +6,19 @@ with Protypo.Api.Field_Names;
 
 package body Protypo.Api.Engine_Values.Table_Wrappers is
    type Field_Name is
-     (
-      Rows,
-      Titles,
-      N_Rows,
-      N_Columns
-     );
+         (
+          Rows,
+          Titles,
+          N_Rows,
+          N_Columns
+         );
    package My_Fields is
-     new Field_Names (Field_Enumerator => Field_Name,
-                      Prefix           => "");
+         new Field_Names (Field_Enumerator => Field_Name,
+                          Prefix           => "");
    package Row_Wrappers is
-     new Array_Wrappers (Element_Type => Engine_Value,
-                         Array_Type   => Engine_Value_Array,
-                         Create       => Identity);
+         new Array_Wrappers (Element_Type => Engine_Value,
+                             Array_Type   => Engine_Value_Array,
+                             Create       => Identity);
 
    --------------------
    -- Default_Titles --
@@ -79,10 +79,10 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
       for K in Labels'Range loop
          if Result.Contains (To_Id (Labels (K))) then
             raise Run_Time_Error
-              with "Duplicated column label '" & to_String (Labels (K)) & "'";
+                  with "Duplicated column label '" & To_String (Labels (K)) & "'";
          end if;
 
-         Result.Insert (Key      => To_Id(Labels(K)),
+         Result.Insert (Key      => To_Id (Labels (K)),
                         New_Item => K - Labels'First + 1);
       end loop;
 
@@ -98,10 +98,10 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
    begin
       if Row'Length /= Table.N_Columns then
          raise Constraint_Error
-           with
-             "Trying to append a row with " &
-             Row'Length'Image & " columns to a table with " &
-           Table.N_Rows'Image & " columns";
+               with
+                     "Trying to append a row with " &
+                     Row'Length'Image & " columns to a table with " &
+               Table.N_Rows'Image & " columns";
       end if;
 
       Table.Rows.Vector.Append (Row_Wrappers.Create (Row));
@@ -112,7 +112,7 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
    ---------
 
    function Get
-     (X : Table_Wrapper; Index : Engine_Value_Array) return Handler_Value
+         (X : Table_Wrapper; Index : Engine_Value_Array) return Handler_Value
    is
    begin
       if not (Index'Length = 1
@@ -196,19 +196,19 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
                S : constant String := Get_String (Index (Index'First));
             begin
                if Is_Valid_Id (S) and then X.Label_To_Column.Contains (Id (S)) then
-                  return X.Vector.element (X.Label_To_Column (ID (S)));
+                  return X.Vector.Element (X.Label_To_Column (ID (S)));
 
                else
                   raise Run_Time_Error
-                    with "Row ID-indexing with bad/unknown column name"
-                    & "'" & S & "'";
+                        with "Row ID-indexing with bad/unknown column name"
+                        & "'" & S & "'";
 
                end if;
             end;
 
          when others =>
             raise Run_Time_Error
-              with "Bad index type: " & Index(Index'First).Class'Image;
+                  with "Bad index type: " & Index (Index'First).Class'Image;
       end case;
    end Get;
 
@@ -220,6 +220,50 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
    overriding function Is_Field (X : Row_Wrapper; Field : Id) return Boolean
    is (X.Label_To_Column.Contains (Field) or else
        Engine_Value_Vectors.Vector_Handler (X).Is_Field (Field));
+
+   package body Enumerated_Rows is
+      First : constant Integer := Field_Type'Pos (Field_Type'First);
+
+      function Make_Table (Titles : Enumerated_Title_Array) return Table_Wrapper_Access
+      is
+         T : Title_Array (1 .. N_Fields);
+         L : Label_Array (1 .. N_Fields);
+      begin
+         for Field in Field_Type loop
+            T (Field_Type'Pos (Field)-First + T'First) := Titles (Field);
+            L (Field_Type'Pos (Field)-First + L'First) := To_Unbounded_String (Field'Image);
+         end loop;
+
+         return Make_Table (T, L);
+      end Make_Table;
+
+      procedure Append (Table : in out Table_Wrapper;
+                        Item  : Aggregate_Type)
+      is
+         Row : Engine_Value_Array (1 .. N_Fields);
+      begin
+
+         for Field in Field_Type loop
+            Row (Field_Type'Pos (Field)-First + Row'First) := Item (Field);
+         end loop;
+
+         Table.Append (Row);
+      end Append;
+
+      ------------------
+      -- Append_Array --
+      ------------------
+
+      procedure Append_Array (Table : in out Table_Wrapper;
+                              Item  : Generic_Aggregate_Array)
+      is
+      begin
+         for Element of Item loop
+            Append(Table, Convert(Element));
+         end loop;
+      end Append_Array;
+
+   end Enumerated_Rows;
 
 
 end Protypo.Api.Engine_Values.Table_Wrappers;
