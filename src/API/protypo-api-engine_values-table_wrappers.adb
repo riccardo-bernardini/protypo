@@ -3,6 +3,10 @@ with Ada.Strings.Fixed;
 
 with Protypo.Api.Engine_Values.Array_Wrappers;
 with Protypo.Api.Field_Names;
+with Protypo.Api.Engine_Values.Constant_Wrappers;
+
+pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
+with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Api.Engine_Values.Table_Wrappers is
    type Field_Name is
@@ -20,6 +24,23 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
                              Array_Type   => Engine_Value_Array,
                              Create       => Identity);
 
+ function Force_Handler (Item : Engine_Value) return Handler_Value
+   is (case Item.Class is
+          when Handler_Classes =>
+             Item,
+
+          when Int             =>
+             Constant_Wrappers.To_Handler_Value(Get_Integer(Item)),
+
+          when Real             =>
+             Constant_Wrappers.To_Handler_Value (Get_Float (Item)),
+
+          when Text             =>
+             Constant_Wrappers.To_Handler_Value (Get_String (Item)),
+
+          when Void | Iterator   =>
+             raise Constraint_Error);
+
    --------------------
    -- Default_Titles --
    --------------------
@@ -31,6 +52,24 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
    begin
       return Result;
    end Default_Titles;
+
+
+
+   --------------------
+   -- Default_Titles --
+   --------------------
+
+   function Default_Titles (Labels : Label_Array) return Title_Array
+   is
+      Result : Title_Array (Labels'Range);
+   begin
+      for k in Labels'Range loop
+         Result (K) := Unbounded_String (Labels (K));
+      end loop;
+
+      return Result;
+   end Default_Titles;
+
 
    --------------------
    -- Default_Labels --
@@ -82,6 +121,8 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
                   with "Duplicated column label '" & To_String (Labels (K)) & "'";
          end if;
 
+--           Put_Line ("@@@ inserting [" & To_String (Labels (K)) & "]");
+
          Result.Insert (Key      => To_Id (Labels (K)),
                         New_Item => K - Labels'First + 1);
       end loop;
@@ -89,12 +130,30 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
       return Result;
    end Make_Map;
 
+   --------------
+   -- Make_Row --
+   --------------
+
+   function Make_Row (Data   : Engine_Value_Array;
+                      Labels : Label_Maps.Map) return Row_Wrapper_Access
+   is
+      Result : constant Row_Wrapper_Access :=
+                 new Row_Wrapper'(Engine_Value_Vectors.Vector_Handler with
+                                  Label_To_Column => Labels);
+   begin
+      for Item of Data loop
+         Result.Vector.Append (item);
+      end loop;
+
+      return Result;
+   end Make_Row;
 
    ------------
    -- Append --
    ------------
 
    procedure Append (Table : in out Table_Wrapper; Row : Engine_Value_Array) is
+      X : Row_Wrapper_Access;
    begin
       if Row'Length /= Table.N_Columns then
          raise Constraint_Error
@@ -104,7 +163,8 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
                Table.N_Rows'Image & " columns";
       end if;
 
-      Table.Rows.Vector.Append (Row_Wrappers.Create (Row));
+      X := Make_Row (Row, Make_Map (Table.Labels));
+      Table.Rows.Vector.Append (Create (Ambivalent_Interface_Access (X)));
    end Append;
 
    ---------
@@ -166,10 +226,13 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
                             return Handler_Value
    is
    begin
+--        Put_Line ("@@@ proviamo [" & String (field) & "]");
       if not X.Label_To_Column.Contains (Field) then
+--           Put_Line ("@@@ manca");
          return Engine_Value_Vectors.Vector_Handler (X).Get (Field);
       else
-         return X.Vector.Element (X.Label_To_Column (Field));
+--           Put_Line ("@@@ trovato");
+         return Force_Handler (X.Vector.Element (X.Label_To_Column (Field)));
       end if;
    end Get;
 
@@ -262,6 +325,23 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
             Append(Table, Convert(Element));
          end loop;
       end Append_Array;
+
+
+   --------------------
+   -- Default_Titles --
+   --------------------
+
+   function Default_Titles return Enumerated_Title_Array
+   is
+      Result : Enumerated_Title_Array;
+   begin
+
+      for field in Field_Type loop
+            Result (Field) := To_Unbounded_String (Field'Image);
+      end loop;
+
+      return Result;
+   end Default_Titles;
 
    end Enumerated_Rows;
 

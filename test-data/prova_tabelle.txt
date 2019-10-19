@@ -1,0 +1,17 @@
+<table>
+#{
+[<tr>]
+   for title in users.titles.iterate loop
+     [<th> #title# </th> ]
+   end loop;
+[</tr>]
+
+   for row in users.rows.iterate loop
+[<tr>   
+  <td>#row.age#</td>
+  <td>#row.serial#</td>
+  <td>#row.address#</td>
+</tr>]
+   end loop;
+}#
+</table>
