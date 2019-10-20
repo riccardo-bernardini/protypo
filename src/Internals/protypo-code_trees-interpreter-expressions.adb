@@ -270,7 +270,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
                                Result     : in out Engine_Value_Array)
         with Pre =>
           Api.Engine_Values.Is_Valid_Parameter_Signature (Specs)
-        and Specs(Specs'Last).Class /= Varargin
+        and (Specs'Length = 0 or else Specs(Specs'Last).Class /= Varargin)
         and Specs'First = Result'First
         and Specs'Last = Result'Last;
 
@@ -317,7 +317,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
             raise Program_Error with "Bad parameter signature";
          end if;
 
-         if Specs (Specs'Last).Class /= Varargin then
+         if Specs'Length = 0 or else Specs (Specs'Last).Class /= Varargin then
             Apply_Default (Specs, Parameters, Result);
 
          else

@@ -20,6 +20,17 @@ package body Protypo.Code_Trees.Interpreter is
              when Text   => Get_String (X),
              when others => X.Class'Image);
 
+   function Stringify (Parameters : Engine_Value_Array)
+                            return Engine_Value_Array
+   is
+   begin
+      if Parameters'Length /= 1 then
+         raise Run_Time_Error with "image needs 1 parameter";
+      end if;
+
+      return (1 => Create (To_String (Parameters (Parameters'First))));
+   end Stringify;
+
    function Date_Callback  (Parameters : Engine_Value_Array)
                             return Engine_Value_Array
    is
@@ -84,6 +95,10 @@ package body Protypo.Code_Trees.Interpreter is
          Table.Create
            (Name          => "now",
             Initial_Value => Create (Date_Callback'Access, 0));
+
+         Table.Create
+           (Name          => "image",
+            Initial_Value => Create (Stringify'Access, 1));
       end Add_Builtin_Values;
 
       Interpreter : constant Interpreter_Access :=

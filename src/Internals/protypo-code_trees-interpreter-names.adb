@@ -130,7 +130,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
                Val      : Engine_Value := Void_Value;
             begin
 
---                 Put_Line ("@@@ searching '" & ID & "'");
+--                 Put_Line ("@@@ searching '" & String(IDent) & "'");
                if Position = No_Element then
 
 --                    Put_Line ("@@@ not found '" & ID & "'");

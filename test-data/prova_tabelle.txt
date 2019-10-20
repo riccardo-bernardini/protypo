@@ -1,5 +1,31 @@
 <table>
 #{
+procedure join2(x; s) is
+begin
+   for k in x.range loop
+     if k /= x.first then
+        [#s#]
+     end if;
+
+     [#x(k)#]
+   end loop;
+end join2;
+
+function join(x; s) is
+begin
+   result := "";
+   
+   for k in x.range loop
+     if k /= x.first then
+        result := result + s;
+     end if;
+
+     result := result + image(x(k));
+   end loop;
+
+   return result;
+end join;
+
 [<tr>]
    for title in users.titles.iterate loop
      [<th> #title# </th> ]
@@ -8,10 +34,25 @@
 
    for row in users.rows.iterate loop
 [<tr>   
-  <td>#row.age#</td>
+  <td>#row("age")#</td>
   <td>#row.serial#</td>
   <td>#row.address#</td>
 </tr>]
    end loop;
+
+
+   for row in users.rows.iterate loop
+[<tr>
+]
+     for item in row.iterate loop
+[   <td>#item#</td>
+]
+      end loop;
+[</tr>
+]
+   end loop;
+
+   g := join(users(2), "::");
+   [#g#]
 }#
 </table>

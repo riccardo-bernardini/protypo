@@ -91,7 +91,7 @@ package Protypo.Tokens is
                         Value   : String)
                         return Token
      with
-       Pre => Value /= "" and Builder.Is_Position_Set,
+       Pre => Builder.Is_Position_Set,
      Post => not Builder.Is_Position_Set;
 
    function Make_Token (Builder : in out Token_Builder;
@@ -134,7 +134,7 @@ private
          Value    : Unbounded_String;
          Position : Token_Position;
       end record
-     with Dynamic_Predicate => ((Class in Unvalued_Token) = (Value = Null_Unbounded_String));
+     with Dynamic_Predicate => (if Class in Unvalued_Token then Value = Null_Unbounded_String);
 
 
    function Make_Unanchored_Token (Class : Unvalued_Token)

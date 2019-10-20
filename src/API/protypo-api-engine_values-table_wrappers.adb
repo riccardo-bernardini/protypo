@@ -259,7 +259,7 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
                S : constant String := Get_String (Index (Index'First));
             begin
                if Is_Valid_Id (S) and then X.Label_To_Column.Contains (Id (S)) then
-                  return X.Vector.Element (X.Label_To_Column (ID (S)));
+                  return Force_Handler (X.Vector.Element (X.Label_To_Column (ID (S))));
 
                else
                   raise Run_Time_Error
