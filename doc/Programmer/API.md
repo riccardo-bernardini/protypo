@@ -764,3 +764,9 @@ Also for the array structure two wrappers are provided: _basic array wrapper_ an
 #### Basic array wrapper
 
 #### Generic array wrapper
+
+### Table wrapper
+
+This wrapper implements a two-dimensional table-like structure.  A table is a sequence of _rows_, every row has the same number of columns.  Every column can have a _label_ and a _title_.  The difference between a label and a title is that the label has the syntax of an identifier and it can be used to identify a column, a title is just a free-format string.
+
+
