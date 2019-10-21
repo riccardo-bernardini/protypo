@@ -5,16 +5,27 @@ with Ada.Characters.Latin_9;         use Ada.Characters.Latin_9;
 with Ada.Text_IO;                    use Ada.Text_IO;
 with Ada.Strings.Fixed;
 with Ada.Characters.Handling;
+with Ada.Containers.Indefinite_Ordered_Sets;
 
 
 with Readable_Sequences.String_Sequences;
 use Readable_Sequences;
 
 with String_Sets;                    use String_Sets;
+with GNAT.OS_Lib;
 
 package body Protypo.Scanning is
    use Ada.Strings.Unbounded;
    use Ada.Strings.Maps;
+
+   package String_Sets is
+     new Ada.Containers.Indefinite_Ordered_Sets (String);
+
+
+   function Internal_Tokenize (Template       : Protypo.Api.Interpreters.Template_Type;
+                               Base_Dir       : String;
+                               Required_Files : in out String_Sets.Set)
+                               return Token_List;
 
    ------------------------
    -- Parenthesis_String --
@@ -360,7 +371,7 @@ package body Protypo.Scanning is
          --              Buffer.Append (Input.Next);
          --           end loop;
 
-         Result.Append (Builder.Make_Token (Identifier, String(Consume_With_Escape_Procedure_Name)));
+         Result.Append (Builder.Make_Token (Identifier, String (Consume_With_Escape_Procedure_Name)));
          Result.Append (Make_Unanchored_Token (Open_Parenthesis));
          Result.Append (Make_Unanchored_Token (Text, Content));
          Result.Append (Make_Unanchored_Token (Close_Parenthesis));
@@ -416,10 +427,10 @@ package body Protypo.Scanning is
                   Result.Append (Builder.Make_Token (Best_Match));
                   Input.Next (Best_Match_Len);
                else
---                    Put_Line ("[" & Input.Read & "]"
---                              & String_Sequences.Line (Input.Position)'Image
---                              & String_Sequences.Char (Input.Position)'Image);
-                  Error (Unexpected_Token_In_Code, String_Sequences.Position(Input));
+                  --                    Put_Line ("[" & Input.Read & "]"
+                  --                              & String_Sequences.Line (Input.Position)'Image
+                  --                              & String_Sequences.Char (Input.Position)'Image);
+                  Error (Unexpected_Token_In_Code, String_Sequences.Position (Input));
                end if;
             end;
          end if;
@@ -429,7 +440,7 @@ package body Protypo.Scanning is
 
    exception
       when String_Sequences.Beyond_End =>
-         Error (Unexpected_Code_End, String_Sequences.Position(Input));
+         Error (Unexpected_Code_End, String_Sequences.Position (Input));
    end Code_Scanner;
 
 
@@ -452,7 +463,7 @@ package body Protypo.Scanning is
 
    begin
       if Buffer.Length > 0 then
-         Result.Append (Make_Unanchored_Token (Identifier, String(Consume_Procedure_Name)));
+         Result.Append (Make_Unanchored_Token (Identifier, String (Consume_Procedure_Name)));
          Result.Append (Make_Unanchored_Token (Open_Parenthesis));
          Result.Append (Make_Unanchored_Token (Text, Buffer.Dump));
          Result.Append (Make_Unanchored_Token (Close_Parenthesis));
@@ -462,61 +473,78 @@ package body Protypo.Scanning is
    end Dump_Buffer;
 
 
-   procedure Process_Directive (Input    : in out String_Sequences.Sequence;
-                                Result   : in out Token_List;
-                                Base_Dir : String)
+   procedure Process_Directive (Input          : in out String_Sequences.Sequence;
+                                Result         : in out Token_List;
+                                Base_Dir       : String;
+                                Required_Files : in out String_Sets.Set)
    is
+      use Ada.Strings.Fixed;
+      use Ada.Strings;
+      use Ada.Characters.Handling;
 
+      type Directive_Name is new String;
+
+      Include_Once : constant Directive_Name := "with";
+      Include_Always : constant Directive_Name := "include";
+
+      Raw : constant String := Parenthesis_String (Input  => Input,
+                                                   Open   => '(',
+                                                   Close  => ')',
+                                                   Escape => '\');
+
+      Trimmed : constant String := Trim (Raw, Left);
+
+      End_Directive_Pos : constant Natural := Index (Source  => Trimmed,
+                                                     Pattern => " ");
+
+      Directive : constant Directive_Name :=
+                    Directive_Name
+                      (To_Lower (if (End_Directive_Pos = 0) then
+                                 Trimmed
+                              else
+                                 Trimmed (Trimmed'First .. End_Directive_Pos - 1)));
+
+      Parameter : constant String :=
+                    Trim ((if End_Directive_Pos < Trimmed'Last then
+                             Trimmed (End_Directive_Pos + 1 .. Trimmed'Last)
+                          else
+                             ""), Left);
    begin
+      if Directive = Include_Always or Directive = Include_Once then
+         declare
+            use GNAT.OS_Lib;
+            use Api;
 
-      declare
-         use Ada.Strings.Fixed;
-         use Ada.Strings;
-         use Ada.Characters.Handling;
+            Filename : constant String :=
+                         Normalize_Pathname (Name      => Parameter,
+                                             Directory => Base_Dir);
+         begin
+            if Directive = Include_Always or not Required_Files.Contains (Filename) then
+               if Directive = Include_Once then
+                  Required_Files.Include (Filename);
+               end if;
 
-         Raw : constant String := Parenthesis_String (Input  => Input,
-                                                      Open   => '(',
-                                                      Close  => ')',
-                                                      Escape => '\');
+               Result.Append
+                 (Internal_Tokenize (Template       => Interpreters.Slurp (Filename),
+                                     Base_Dir       => Base_Dir,
+                                     Required_Files => Required_Files));
+            end if;
+         end;
 
-         Trimmed : constant String := Trim (Raw, Left);
-
-         End_Directive_Pos : constant Natural := Index (Source  => Trimmed,
-                                                        Pattern => " ");
-
-         Directive : constant String :=
-                       To_Lower (if (End_Directive_Pos = 0) then
-                                    Trimmed
-                                 else
-                                    Trimmed (Trimmed'First .. End_Directive_Pos - 1));
-
-         Parameter : constant String :=
-                       Trim ((if End_Directive_Pos < Trimmed'Last then
-                                Trimmed (End_Directive_Pos + 1 .. Trimmed'Last)
-                             else
-                                ""), Left);
-      begin
-         if Directive = "include" then
-            declare
-               Included : constant Token_List :=
-                            Tokenize (Api.Interpreters.Slurp (Parameter), Base_Dir);
-            begin
-               Result.Append (Included);
-            end;
-
-         else
-            Put_Line (Standard_Error, "Directive '" & Directive & "' unknown");
-         end if;
-      end;
+      else
+         Put_Line (Standard_Error, "Directive '" & String (Directive) & "' unknown");
+      end if;
    end Process_Directive;
 
 
-   --------------
-   -- Tokenize --
-   --------------
+   -----------------------
+   -- Internal_Tokenize --
+   -----------------------
 
-   function Tokenize (Template : Protypo.Api.Interpreters.Template_Type;
-                      Base_Dir : String) return Token_List is
+   function Internal_Tokenize (Template       : Protypo.Api.Interpreters.Template_Type;
+                               Base_Dir       : String;
+                               Required_Files : in out String_Sets.Set)
+                               return Token_List is
       use Tokens;
 
 
@@ -539,7 +567,7 @@ package body Protypo.Scanning is
             Dump_Buffer (Buffer, Result);
             Input.Next (Directive_Marker'Length);
 
-            Process_Directive (Input, Result, Base_Dir);
+            Process_Directive (Input, Result, Base_Dir, Required_Files);
 
 
          elsif Does_It_Follow (Input, Template_Comment) then
@@ -563,8 +591,20 @@ package body Protypo.Scanning is
       Dump_Buffer (Buffer, Result);
 
       return Result;
-   end Tokenize;
+   end Internal_Tokenize;
 
+   --------------
+   -- Tokenize --
+   --------------
+
+   function Tokenize (Template : Protypo.Api.Interpreters.Template_Type;
+                      Base_Dir : String) return Token_List
+   is
+      Required_Files : String_Sets.Set;
+   begin
+      Required_Files.Clear;
+      return Internal_Tokenize (Template, Base_Dir, Required_Files);
+   end Tokenize;
 
    ----------
    -- Dump --

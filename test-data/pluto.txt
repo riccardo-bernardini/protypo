@@ -1,0 +1,3 @@
+Pluto included
+#(with test-data/pippo.txt)
+dopo

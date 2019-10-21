@@ -1,3 +1,10 @@
+#-- (with test-data/pippo.txt)
+#-- (with test-data/pippo.txt)
+#(include test-data/pluto.txt)
+#(include test-data/pluto.txt)
+#(include test-data/pippo.txt)
+#(with test-data/pluto.txt)
+#(with test-data/pluto.txt)
 <table>
 #{
 procedure join2(x; s) is
