@@ -1,9 +1,31 @@
 pragma Ada_2012;
---------------------------------------------------
--- Protypo.Api.Engine_Values.Enumerated_Records --
---------------------------------------------------
+with Ada.Characters.Handling;
 
 package body Protypo.Api.Engine_Values.Enumerated_Records is
+   -----------
+   -- To_Id --
+   -----------
+
+   function To_Id (X : Field_Name) return ID
+   is
+      use Ada.Characters.Handling;
+
+      F : constant ID := Id(To_Lower (X'Image));
+      P : constant ID := Id(To_Lower (Prefix));
+   begin
+      if Prefix = "" then
+         return F;
+
+      elsif F'Length > P'Length and then F (F'First .. F'First + P'Length - 1) = P then
+         return F (F'First + P'Length .. F'Last);
+
+      else
+         raise Program_Error
+           with "Enumerative value '" & String (F) & "' "
+           & "has not prefix '" & String (P) & "'";
+      end if;
+   end To_Id;
+
    --------------
    -- To_Array --
    --------------
@@ -65,7 +87,7 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
       Value : Engine_Value)
    is
    begin
-      Item.Map.Include (Key      => ID (Field'Image),
+      Item.Map.Include (Key      => To_ID (Field),
                         New_Item => Value);
    end Set;
 

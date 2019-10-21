@@ -1,8 +1,25 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Protypo.Api.Engine_Values.Constant_Wrappers;
-
+--
+-- This package provides resources to define a record-like variable
+-- where the field names are specified as values of an enumerative
+-- type.  Since the enumerative type is not specified a priori, we
+-- need to make this package generic.
+--
+-- The record-like variable will appear to have fields whose name is
+-- obtained by removing the Prefix from the enumerative values.  This
+-- is done in order to turn around the fact that some words are reserved
+-- in Ada.
+--
+-- > For example, suppose one wants to export the field "range."
+-- Unfortunately, it is not possible to have "range" as an enumerative value.
+-- One can solve this problem by using --- for example --- `Prefix="Field_"`
+-- so that the enumerative value `Field_Range` can be used.
+--
 generic
    type Field_Name is (<>);
+
+   Prefix : String := "";
 package Protypo.Api.Engine_Values.Enumerated_Records is
    type Aggregate_Type is array (Field_Name) of Engine_Value;
    -- Type that allows to specify an enumerated record similarly
@@ -31,20 +48,31 @@ package Protypo.Api.Engine_Values.Enumerated_Records is
 
    function Make_Record (Init : Aggregate_Type := Void_Aggregate)
                          return Enumerated_Record_Access;
+   -- Create a new record-like handler initialized with the values
+   -- specified in the aggregate
 
    function Make_Value (Init : Aggregate_Type) return Engine_Value;
+   -- Syntactic sugar that creates the handler and embed it into
+   -- an Engine_Value. Equivalent to
+   --
+   --      Create (Record_Interface_Access (Make_Record (Init)))
+
 
    procedure Fill (Item   : in out Enumerated_Record;
                    Values : Aggregate_Type);
+   -- Write the values to the field of the Enumerated_Record
 
    procedure Set (Item  : in out Enumerated_Record;
                   Field : Field_Name;
                   Value : Engine_Value);
+   -- Write a field of the Enumerated_Record
 
+   overriding
    function Get (Item  : Enumerated_Record;
                  Field : ID)
                  return Handler_Value;
 
+   overriding
    function Is_Field (Item : Enumerated_Record; Field : ID) return Boolean;
 private
    package Record_Maps is
@@ -60,9 +88,12 @@ private
          Map : Record_Maps.Map;
       end record;
 
+   function Apply_Prefix (X : Id) return ID
+   is (ID (Prefix & String (X)));
+
    function Get (Item : Enumerated_Record; Field : Id) return Handler_Value
-   is (if Item.Map.Contains (Field) then
-          Constant_Wrappers.To_Handler_Value (Item.Map (Field))
+   is (if Item.Map.Contains (Apply_Prefix (Field)) then
+          Constant_Wrappers.To_Handler_Value (Item.Map (Apply_Prefix (Field)))
        else
           raise Unknown_Field);
 
