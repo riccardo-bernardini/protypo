@@ -207,7 +207,10 @@ and the first sub-expression is the `command`, the second sub-expression is the 
 
 ### Recognized directives
 
-Currently only `include` is recognized.  Its behaviour is similar to C `#include` and it does a "physical" inclusion of the target file.  This because I expect that in many cases `include` will be used to include common boilerplates and such.  `include` does not include the same file twice. Maybe later I'll add something line `always_include`. 
+Currently the following directives are recognized.  
+
+* _include_. Its behaviour is similar to C `#include` or Ruby `load` in the sense that it does a "physical" inclusion of the target file.  This because I expect that in many cases `include` will be used to include common boilerplates and such.  Like C `#include` or Ruby `load`, `include` does not check if a file was already included.
+* _with_. Its behaviour is similar to Ruby `require` or (more or less) Ada `with`.  It does a "physical" inclusion of the target file, but it will not include the same file twice. This can be useful to load function libraries.
 
 ## Comments 
 
