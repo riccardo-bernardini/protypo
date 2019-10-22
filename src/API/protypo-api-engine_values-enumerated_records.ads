@@ -67,13 +67,12 @@ package Protypo.Api.Engine_Values.Enumerated_Records is
                   Value : Engine_Value);
    -- Write a field of the Enumerated_Record
 
-   overriding
-   function Get (Item  : Enumerated_Record;
-                 Field : ID)
-                 return Handler_Value;
+   overriding function Get (Item  : Enumerated_Record;
+                            Field : ID)
+                            return Handler_Value;
 
-   overriding
-   function Is_Field (Item : Enumerated_Record; Field : ID) return Boolean;
+   overriding function Is_Field (Item : Enumerated_Record; Field : ID)
+                                 return Boolean;
 private
    package Record_Maps is
      new Ada.Containers.Indefinite_Ordered_Maps

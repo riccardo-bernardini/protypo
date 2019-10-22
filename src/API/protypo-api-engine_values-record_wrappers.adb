@@ -39,7 +39,7 @@ package body Protypo.Api.Engine_Values.Record_Wrappers is
       Result : Engine_Value;
    begin
       if not X.Map.Contains (Field) then
-         raise Unknown_Field with Field;
+         raise Unknown_Field with String (Field);
       end if;
 
       Result := X.Map (Field);

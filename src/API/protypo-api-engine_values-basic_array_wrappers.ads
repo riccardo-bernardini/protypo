@@ -1,4 +1,20 @@
 with Ada.Containers.Vectors;
+--
+-- ## What is this?
+--
+-- A _basic array wrapper_ is a wrapper for a `Engine_Value_Array`.
+-- The wrapper implements the `Ambivalent_Interface` that allows for both
+-- indexed and record-like access.  More precisely, it exports the following
+-- access methods
+--
+-- * _indexed_ access to access a specific element of the array
+-- * _first_, _last_ and _length_  analoguos to the corresponding Ada
+--   attributes for arrays.
+-- * _range_ and _iterate_ iterators to run over the array content.
+--   _range_ iterates over the set of indexes, _iterate_ over the array
+--   elements
+--
+--
 
 package Protypo.Api.Engine_Values.Basic_Array_Wrappers is
    subtype Array_Wrapper_Index is Positive;

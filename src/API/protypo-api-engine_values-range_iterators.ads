@@ -1,15 +1,21 @@
 with Protypo.Api.Engine_Values.Constant_Wrappers;
-
+--
+-- ## What is this?
+--
+-- A _range iterator_ implements the `Iterator_Interface` and it
+-- allows to iterate over an interval between two integers
+--
 package Protypo.Api.Engine_Values.Range_Iterators is
    type Range_Iterator is new Iterator_Interface with private;
 
    function Create (Start, Stop : Integer) return Iterator_Interface_Access;
-   procedure Reset (Iter : in out Range_Iterator);
-   procedure Next (Iter : in out Range_Iterator);
+   function Create (Start, Stop : Integer) return Handler_Value
+   is (Create (Create (Start, Stop)));
 
-   function End_Of_Iteration (Iter : Range_Iterator) return Boolean;
-
-   function Element (Iter : Range_Iterator) return Handler_Value;
+   overriding procedure Reset (Iter : in out Range_Iterator);
+   overriding procedure Next (Iter : in out Range_Iterator);
+   overriding function End_Of_Iteration (Iter : Range_Iterator) return Boolean;
+   overriding function Element (Iter : Range_Iterator) return Handler_Value;
 private
    use Protypo.Api.Engine_Values.Constant_Wrappers;
 

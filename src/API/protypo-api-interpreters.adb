@@ -64,7 +64,7 @@ package body Protypo.API.Interpreters is
                          then
                             Consumers.File_Writer.Standard_Output
                          else
-                            Consumers.File_Writer.To_Target(Target_Filenane));
+                            Target_Filenane);
 
       Template : constant Template_Type := Slurp (Input_Filename);
    begin

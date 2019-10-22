@@ -1,5 +1,8 @@
-
-
+--
+-- ## What is this?
+--
+-- A constant wrapper is just a wrapper around a constant value
+--
 package Protypo.Api.Engine_Values.Constant_Wrappers is
    type Constant_Wrapper is new Constant_Interface with private;
    type Constant_Wrapper_Access is access Constant_Wrapper;
