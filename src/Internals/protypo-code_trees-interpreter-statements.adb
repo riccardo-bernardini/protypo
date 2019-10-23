@@ -262,7 +262,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
             begin
                Iterator_Ref.Reset;
 
-               Status.Symbol_Table.Open_Internal_Block;
+               Status.Symbol_Table.Open_Internal_Namespace;
 
                Status.Symbol_Table.Create
                  (Name          => Variable,
@@ -280,7 +280,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                   Iterator_Ref.Next;
                end loop;
 
-               Status.Symbol_Table.Close_Block;
+               Status.Symbol_Table.Close_Namespace;
             end;
 
          when While_Block =>

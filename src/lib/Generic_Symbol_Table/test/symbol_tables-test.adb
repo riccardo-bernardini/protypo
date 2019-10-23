@@ -16,7 +16,7 @@ begin
    Put_Line (Boolean'Image (Table.Contains ("pippo")));
    Put_Line (St.Value (Table.Find ("pippo"))'Image);
 
-   Table.Open_Internal_Block;
+   Table.Open_Internal_Namespace;
 
    Put_Line (Boolean'Image (Table.Contains ("pippo")));
 
@@ -32,7 +32,7 @@ begin
    Put_Line (Boolean'Image (Table.Contains ("pluto")));
    Put_Line (St.Value (Table.Find ("pluto"))'Image);
 
-   Table.Open_External_Block;
+   Table.Open_External_Namespace;
 
    Put_Line (Boolean'Image (Table.Contains ("pippo")));
    Put_Line (Boolean'Image (Table.Contains ("pluto")));
@@ -43,11 +43,11 @@ begin
    Put_Line (Boolean'Image (Table.Contains ("pippo")));
    Put_Line (St.Value (Table.Find ("pippo"))'Image);
 
-   Table.Close_Block;
+   Table.Close_Namespace;
 
    Put_Line (St.Value (Table.Find ("pippo"))'Image);
 
-   Table.Close_Block;
+   Table.Close_Namespace;
 
    Put_Line (St.Value (Table.Find ("pippo"))'Image);
 

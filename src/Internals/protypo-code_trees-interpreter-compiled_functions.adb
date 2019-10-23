@@ -20,7 +20,7 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
          raise Program_Error;
       end if;
 
-      Fun.Status.Symbol_Table.Open_External_Block;
+      Fun.Status.Symbol_Table.Open_External_Namespace;
 
       declare
          Name_To_Param : constant Integer :=
@@ -36,7 +36,7 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
 
       Statements.Run (Fun.Status, Fun.Function_Body);
 
-      Fun.Status.Symbol_Table.Close_Block;
+      Fun.Status.Symbol_Table.Close_Namespace;
 
       case Fun.Status.Break.Breaking_Reason is
          when Exit_Statement =>

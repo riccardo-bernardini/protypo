@@ -1,6 +1,8 @@
-private
+--
+-- Utility package to convert IDs to enumarative values.
+--
 
-generic
+private generic
    type Field_Enumerator is (<>);
    Prefix : String := "";
 package Protypo.Api.Field_Names is

@@ -69,7 +69,7 @@ package body Symbol_Tables.Generic_Symbol_Table is
    -- Open_Block --
    ----------------
 
-   procedure Open_Block (Table : in out Symbol_Table; Parent : Table_Block) is
+   procedure Open_Namespace (Table : in out Symbol_Table; Parent : Table_Namespace) is
       New_Block : constant Namespace_Block :=
                     Namespace_Block'(Name_Map => Name_Maps.Empty_Map,
                                      Values   => Value_Vectors.Empty_Vector,
@@ -79,33 +79,33 @@ package body Symbol_Tables.Generic_Symbol_Table is
 
    begin
       Push (Table.T.Stack, New_Block);
-   end Open_Block;
+   end Open_Namespace;
 
 
    -------------------------
    -- Open_Internal_Block --
    -------------------------
 
-   procedure Open_Internal_Block (Table : in out Symbol_Table) is
+   procedure Open_Internal_Namespace (Table : in out Symbol_Table) is
    begin
-      Table.Open_Block (Table.Current_Block);
-   end Open_Internal_Block;
+      Table.Open_Namespace (Table.Current_Namespace);
+   end Open_Internal_Namespace;
 
    -------------------------
    -- Open_External_Block --
    -------------------------
 
-   procedure Open_External_Block (Table : in out Symbol_Table) is
+   procedure Open_External_Namespace (Table : in out Symbol_Table) is
    begin
-      Table.Open_Block (Table.Root);
-   end Open_External_Block;
+      Table.Open_Namespace (Table.Root);
+   end Open_External_Namespace;
 
 
    -----------------
    -- Close_Block --
    -----------------
 
-   procedure Close_Block (Table : in out Symbol_Table)
+   procedure Close_Namespace (Table : in out Symbol_Table)
    is
       use Ada.Containers;
    begin
@@ -116,7 +116,7 @@ package body Symbol_Tables.Generic_Symbol_Table is
       end if;
 
       Pop (Table.T.Stack);
-   end Close_Block;
+   end Close_Namespace;
 
    ----------
    -- Find --
@@ -136,7 +136,7 @@ package body Symbol_Tables.Generic_Symbol_Table is
          if Pos /= Name_Maps.No_Element then
             Debug ("found");
             return Cursor'(Namespace =>
-                             Table_Block'(Table => Table.t,
+                             Table_Namespace'(Table => Table.t,
                                           Index => Current_Trial,
                                           ID    => Table.T.Stack (Current_Trial).Id),
                            Idx       => Name_Maps.Element(Pos));
@@ -195,7 +195,7 @@ package body Symbol_Tables.Generic_Symbol_Table is
       Table.T.Stack (Pos).Name_Map.Insert (Key      => Name,
                                            New_Item => idx);
 
-      Position := Cursor'(Namespace => Table_Block'(Table => Table.T,
+      Position := Cursor'(Namespace => Table_Namespace'(Table => Table.T,
                                                     Index => Pos,
                                                     ID    => Table.T.Stack (Pos).Id),
                           Idx       => Idx);
@@ -236,7 +236,7 @@ package body Symbol_Tables.Generic_Symbol_Table is
                                       Values   => Value_Vectors.Empty_Vector,
                                       Names    => Name_Vectors.Empty_Vector,
                                       ID       => Root_ID,
-                                      Parent   => No_Block));
+                                      Parent   => No_Namespace));
    end Initialize;
 
 end Symbol_Tables.Generic_Symbol_Table;
