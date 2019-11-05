@@ -186,6 +186,7 @@ that associates the specified `Value` with `Name`. The type of `Name` (`ID`) is 
 > The association is done in a _global namespace_, so that they will be visible in every function/procedure defined in the template.
 
 >This association name-value is how we pass data to the template. For example, if we have a template letter that we want to personalize with the recipient name we could define variables `name` and `surname` and write in the template `Dear #name# #surname#,...`
+
 The template can be processed using procedure 
 ```Ada
    procedure Run (Interpreter  : in out Interpreter_Type;
