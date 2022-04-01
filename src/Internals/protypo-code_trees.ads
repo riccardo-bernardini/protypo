@@ -38,6 +38,13 @@ package Protypo.Code_Trees is
       List_Of_Expressions,
       Parameter_Signature
      );
+   
+   type Subprogram_Type is 
+     (
+      Function_Subprogram,
+      Procedure_Subprogram,
+      Builder_Subprogram
+     );
 
    subtype Expression        is Non_Terminal range Binary_Op .. Identifier;
    subtype Name              is Non_Terminal range Selected .. Identifier;
@@ -92,7 +99,7 @@ package Protypo.Code_Trees is
    function Definition (Name           : String;
                         Parameter_List : Parsed_Code;
                         Function_Body  : Parsed_Code;
-                        Is_Function    : Boolean;
+                        Def_Type       : Subprogram_Type;
                         Position       : Tokens.Token_Position := Tokens.No_Position)
                         return Parsed_Code
      with 
@@ -264,7 +271,7 @@ private
                Signature : Parameter_Specs;
                
             when Defun => 
-               Is_Function     : Boolean;
+               Defun_Type      : Subprogram_Type;
                Definition_Name : Unbounded_String;
                Function_Body   : Node_Vectors.Vector;
                Parameters      : Parameter_Specs;

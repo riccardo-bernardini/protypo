@@ -142,8 +142,10 @@ private
                   Ahead : Natural := 0) return Element_Type
    is (if Seq.Remaining > Ahead then
           Seq.Vector (Cursor (Integer (Seq.Position) + Ahead))
+
        elsif Seq.Has_End_Marker then
           Seq.End_Marker
+
        else
           raise Beyond_End);
 

@@ -40,6 +40,7 @@ package Protypo.Tokens is
       Kw_Exit,
       Kw_Function,
       Kw_Procedure,
+      Kw_Builder,
       Kw_Begin,
       Kw_Return,
       Kw_End,
@@ -60,6 +61,7 @@ package Protypo.Tokens is
    subtype Logical_Operator is Unvalued_Token  range Kw_And .. Kw_Xor;
    subtype Comp_Operator    is Unvalued_Token range Equal .. Greater_Or_Equal;
    subtype Numeric_Operator is Unvalued_Token  range Plus .. Div;
+   subtype Defun_Verb       is Unvalued_Token  range Kw_Function .. Kw_Builder;
 
    subtype Unary_Operator   is Unvalued_Token
      with Static_Predicate =>

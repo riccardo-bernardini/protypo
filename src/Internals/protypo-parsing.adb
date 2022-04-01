@@ -758,17 +758,21 @@ package body Protypo.Parsing is
       end Parse_ID_List;
 
       function Parse_Defun (Input : in out Scanning.Token_List)
-                            return Code_Trees.Parsed_Code;
-      --          with Post => Code_Trees.Class (Parse_Defun'Result) = Code_Trees.Defun;
+                            return Code_Trees.Parsed_Code
+        with
+          Pre => Class (Input.Read) in Defun_Verb;
+          --  Post => Code_Trees.Class (Parse_Defun'Result) = Code_Trees.Defun;
 
       function Parse_Defun (Input : in out Scanning.Token_List)
                             return Code_Trees.Parsed_Code
       is
-         Is_Function    : constant Boolean :=
-                            (case Class (Input.Read) is
-                                when Kw_Procedure => False,
-                                when Kw_Function  => True,
-                                when others       => raise Program_Error);
+         pragma Assert (Class (Input.Read) in Defun_Verb);
+
+         Defun_Type  : constant Code_Trees.Subprogram_Type :=
+                            (case Defun_Verb (Class (Input.Read)) is
+                                when Kw_Procedure => Code_Trees.Procedure_Subprogram,
+                                when Kw_Function  => Code_Trees.Function_Subprogram,
+                                when Kw_Builder   => Code_Trees.Builder_Subprogram);
 
          Name            : Unbounded_String;
          Parameter_Names : Code_Trees.Parsed_Code;
@@ -819,7 +823,7 @@ package body Protypo.Parsing is
          return Code_Trees.Definition (Name           => To_String (Name),
                                        Parameter_List => Parameter_Names,
                                        Function_Body  => Function_Body,
-                                       Is_Function    => Is_Function,
+                                       Def_Type       => Defun_Type,
                                        Position       => Here);
       end Parse_Defun;
 
@@ -851,7 +855,7 @@ package body Protypo.Parsing is
 
                --                 Result.Append (Parse_Case (Input));
 
-            when Kw_Procedure | Kw_Function =>
+            when Kw_Procedure | Kw_Function | Kw_Builder =>
                Result.Append (Parse_Defun (Input));
 
             when Kw_For =>

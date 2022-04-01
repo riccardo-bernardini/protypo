@@ -13,13 +13,13 @@ package body Protypo.Code_Trees is
    function Definition (Name           : String;
                         Parameter_List : Parsed_Code;
                         Function_Body  : Parsed_Code;
-                        Is_Function    : Boolean;
+                        Def_Type       : Subprogram_Type;
                         Position       : Tokens.Token_Position := Tokens.No_Position)
                         return Parsed_Code
    is
       Result : constant Node_Access :=
                  new Node'(Class           => Defun,
-                           Is_Function     => Is_Function,
+                           Defun_Type      => Def_Type,
                            Definition_Name => To_Unbounded_String (Name),
                            Function_Body   => <>,
                            Parameters      => <>,
@@ -671,6 +671,12 @@ package body Protypo.Code_Trees is
       function Full_Label return String
       is (Item.Class'Image
           & (if Label = "" then "" else " (" & Label & ")"));
+
+      function Image (Item : Subprogram_Type) return String
+      is (case Item is
+             when Function_Subprogram => "FUNCTION",
+             when Procedure_Subprogram => "PROCEDURE",
+             when Builder_Subprogram   => "BUILDER");
    begin
 
 
@@ -687,7 +693,7 @@ package body Protypo.Code_Trees is
             Dump (Item.Signature, Level);
 
          when Defun =>
-            Put_Line (Tabbing (Level) & (if Item.Is_Function then "FUNCTION" else "PROCEDURE"));
+            Put_Line (Tabbing (Level) & (Image (Item.Defun_Type)));
             Put_Line (Tabbing (Level) & "Name = '" & To_String (Item.Definition_Name) & "'");
             Dump (Item.Parameters, Level);
             Dump (Item.Function_Body, Level + 1);
