@@ -291,7 +291,7 @@ private
             when Return_Statement =>
                Return_Values   : Node_Vectors.Vector;
             
-            when Procedure_Call =>
+            when Procedure_Call | Capture_Call =>
                Name            : Unbounded_String;
                Params          : Node_Vectors.Vector;
             
@@ -330,7 +330,7 @@ private
                Record_Var      : Node_Access;
                Field_Name      : Unbounded_ID;
                
-            when Indexed | Capture_Call  =>
+            when Indexed =>
                Indexed_Var     : Node_Access;
                Indexes         : Node_Vectors.Vector;
                

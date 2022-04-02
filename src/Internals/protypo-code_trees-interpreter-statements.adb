@@ -7,7 +7,7 @@ with Protypo.Code_Trees.Interpreter.Expressions;
 with Ada.Exceptions;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_Io; use Ada.Text_Io;
 
 package body Protypo.Code_Trees.Interpreter.Statements is
    use type Names.Name_Reference;
@@ -40,9 +40,53 @@ package body Protypo.Code_Trees.Interpreter.Statements is
             with "Trying to convert non-numeric value ("
        & X.Class'Image & ") to Boolean");
 
-   package LHS_Vectors is
-        new Ada.Containers.Vectors (Index_Type   => Positive,
-                                    Element_Type => Names.Name_Reference);
+   package Lhs_Vectors is
+     new Ada.Containers.Vectors (Index_Type   => Positive,
+                                 Element_Type => Names.Name_Reference);
+
+   procedure Do_Procedure_Call (Status : Interpreter_Access;
+                                Name   : Unbounded_String;
+                                Params : Node_Vectors.Vector)
+   is
+      use Api.Symbols.Protypo_Tables;
+
+      Position : constant Cursor :=
+                   Status.Symbol_Table.Find (Id (To_String (Name)));
+
+      Proc_Handler : Engine_Value;
+
+   begin
+      if Position = No_Element then
+         raise Constraint_Error with
+           "Unknown function '" & To_String (Name) & "'";
+      end if;
+
+      Proc_Handler :=  Value (Position);
+
+      if Proc_Handler.Class /= Function_Handler then
+         raise Constraint_Error;
+      end if;
+
+      declare
+         Funct : constant Function_Interface_Access :=
+                   Get_Function (Proc_Handler);
+
+         Parameters : constant Engine_Value_Vectors.Vector :=
+                         Expressions.Eval_Vector (Status, Params);
+
+         Call_Ref : constant Names.Name_Reference :=
+                      (Class            => Names.Function_Call,
+                       Function_Handler => Funct,
+                       Parameters       => Parameters);
+
+         Result   : constant Engine_Value_Array :=
+                      Expressions.Call_Function (Call_Ref);
+      begin
+         if Result'Length /= 0 then
+            raise Run_Time_Error with "Procedure call returns a value";
+         end if;
+      end;
+   end Do_Procedure_Call;
 
    ---------
    -- Run --
@@ -54,7 +98,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
       use Compiled_Functions;
 
 
-      subtype Lhs_Array is LHS_Vectors.Vector;
+      subtype Lhs_Array is Lhs_Vectors.Vector;
 
       type Continue_Or_Stop is (Continue, Stop);
 
@@ -91,7 +135,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
       if Program.Class not in Statement_Classes then
          raise Program_Error
            with "Trying to execute a non-statment node ("
-             & Program.Class'Image & ")";
+           & Program.Class'Image & ")";
       end if;
 
 
@@ -102,7 +146,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
          when Defun       =>
             Status.Symbol_Table.Create
               (Name          =>
-                  ID(To_String (Program.Definition_Name)),
+                  Id (To_String (Program.Definition_Name)),
                Initial_Value =>
                   Create (new Compiled_Function'(Function_Body => Program.Function_Body,
                                                  Parameters    => Program.Parameters,
@@ -116,7 +160,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                --                 LHS : array (Program.Lhs.First_Index .. Program.Lhs.Last_Index) of Names.Name_Reference;
 
                Values : Engine_Value_Vectors.Vector;
-               LHS : Lhs_Array;
+               Lhs : Lhs_Array;
             begin
                Values  := Expressions.Eval_Vector (Status, Program.Rvalues);
 
@@ -150,11 +194,11 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                   -- (with the variable values still unchanged) and finally
                   -- the assigment is done-
                   --
---                    Put_Line ("@@@");
-                  LHS.Append (Names.Eval_Name (Status, Name));
---                    Put_Line ("@@@ 1");
+                  --                    Put_Line ("@@@");
+                  Lhs.Append (Names.Eval_Name (Status, Name));
+                  --                    Put_Line ("@@@ 1");
 
-                  if LHS.Last_Element.Class /= Names.Variable_Reference then
+                  if Lhs.Last_Element.Class /= Names.Variable_Reference then
                      --
                      -- Only reference handlers (that allow for both reading
                      -- and writing) can be on the LHS
@@ -162,17 +206,17 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                      raise Constraint_Error;
                   end if;
                end loop;
---                 Put_Line ("@@@ xx");
+               --                 Put_Line ("@@@ xx");
 
                declare
-                  Shift : constant Integer := Values.First_Index - LHS.First_Index;
+                  Shift : constant Integer := Values.First_Index - Lhs.First_Index;
                begin
 
-                  for K in LHS.First_Index .. Lhs.Last_Index loop
-                     LHS (K).Variable_Handler.Write (Values (K + Shift));
+                  for K in Lhs.First_Index .. Lhs.Last_Index loop
+                     Lhs (K).Variable_Handler.Write (Values (K + Shift));
                   end loop;
 
---                    Put_Line ("@@@ uu");
+                  --                    Put_Line ("@@@ uu");
 
                end;
             end;
@@ -183,48 +227,8 @@ package body Protypo.Code_Trees.Interpreter.Statements is
             return;
 
          when Procedure_Call =>
-            declare
-               use Api.Symbols.Protypo_Tables;
+            Do_Procedure_Call (Status, Program.Name, Program.Params);
 
-               Position : constant Cursor :=
-                            Status.Symbol_Table.Find (ID (To_String (Program.Name)));
-
-               Proc_Handler : Engine_Value;
-
-            begin
-               --                 Put_Line ("@pc " & To_String (Program.Name));
-               if Position = No_Element then
-                  --                    Put_Line ("@pc 1");
-                  raise Constraint_Error with
-                    "Unknown function '" & To_String (Program.Name) & "'";
-               end if;
-
-               Proc_Handler :=  Value (Position);
-               if Proc_Handler.Class /= Function_Handler then
-                  raise Constraint_Error;
-               end if;
-
-               declare
-                  Funct : constant Function_Interface_Access :=
-                            Get_Function (Proc_Handler);
-
-                  Params : constant Engine_Value_Vectors.Vector :=
-                             Expressions.Eval_Vector (Status, Program.Params);
-
-                  Call_Ref : constant Names.Name_Reference :=
-                               (Class            => Names.Function_Call,
-                                Function_Handler => Funct,
-                                Parameters       => Params);
-
-                  Result   : constant Engine_Value_Array :=
-                               Expressions.Call_Function (Call_Ref);
-               begin
-                  if Result'Length /= 0 then
-                     raise Run_Time_Error with "Procedure call returns a value";
-                  end if;
-               end;
-
-            end;
 
          when Exit_Statement =>
             Status.Break :=
@@ -256,7 +260,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                Iterator_Ref : constant Iterator_Interface_Access :=
                                 Expressions.Eval_Iterator (Status, Program.Iterator);
 
-               Variable : constant ID := ID (To_String (Program.Variable));
+               Variable : constant Id := Id (To_String (Program.Variable));
 
                Position : Protypo_Tables.Cursor;
             begin

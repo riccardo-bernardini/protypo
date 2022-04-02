@@ -27,7 +27,7 @@ use Ada;
 --   Two common choices for the parent namespace are
 --   * The current namespace (like using a `declare .. begin .. end` in Ada)
 --   * The root namespace (like when a new procedure is defined)
--- * When a symbol is searched  fore, first it is searched the current
+-- * When a symbol is searched  for, first it is searched the current
 ---  namespace.  If the symbol is not found, it is searched in the parent,
 --   grand-parent and so on... until the root namespace is reached.
 -- * When a new namespace is created it becomes the current one;
@@ -35,7 +35,7 @@ use Ada;
 --
 -- It turns out that namespaces are organized in two structures
 --
--- * They are organized as a tree (having the blobal namspace as root)
+-- * They are organized as a tree (having the global namspace as root)
 --   according to the child-parent relationship
 -- * They are organized as a stack whose top is the current namespace.
 --   New namespaces are pushed to the top and they are popped when

@@ -3,7 +3,10 @@ pragma Ada_2012;
 with Ada.Exceptions;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_Io; use Ada.Text_Io;
+
+with Protypo.Code_Trees.Interpreter.Statements;
+with protypo.Api.consumers.Buffers;
 
 package body Protypo.Code_Trees.Interpreter.Expressions is
    Unvaluable_Expression : exception;
@@ -162,6 +165,24 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
          end case;
       end Apply;
 
+      function Do_Capture (Status : Interpreter_Access;
+                           Name   : Unbounded_String;
+                           Params : Node_Vectors.Vector)
+                           return Engine_Value_Vectors.Vector
+      is
+         Buffer : Api.Consumers.Buffers.Buffer_Access := Api.Consumers.Buffers.New_Buffer;
+      begin
+         Status.Push_Consumer (Api.Consumers.Consumer_Access (Buffer));
+
+         Statements.Do_Procedure_Call (Status => Status,
+                                       Name   => Name,
+                                       Params => Params);
+
+         Status.Pop_Consumer;
+
+         return Embed (Api.Engine_Values.Create (Buffer.Get_Data));
+      end Do_Capture;
+
       Left, Right : Engine_Value;
    begin
 
@@ -191,15 +212,18 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
             return Embed (Create (To_String (Expr.S)));
 
 
-         when Selected | Indexed | Identifier | Capture_Call  =>
+         when Capture_Call =>
+            return Do_Capture (Status, Expr.Name, Expr.Params);
+
+         when Selected | Indexed | Identifier  =>
             --              Code_Trees.Dump (Expr, 0);
             declare
                Ref : constant Names.Name_Reference := Names.Eval_Name (Status, Expr);
             begin
---  --                 Put_Line ("@@@" & Ref.Class'Image);
---                 if not (Ref.Class in Evaluable_Classes) then
---                    raise Unvaluable_Expression with Ref.Class'image;
---                 end if;
+               --  --                 Put_Line ("@@@" & Ref.Class'Image);
+               --                 if not (Ref.Class in Evaluable_Classes) then
+               --                    raise Unvaluable_Expression with Ref.Class'image;
+               --                 end if;
 
                return To_Vector (To_Value (Ref));
             end;
@@ -263,17 +287,17 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
          Result     : in out Engine_Value_Array)
         with Pre =>
           Api.Engine_Values.Is_Valid_Parameter_Signature (Specs)
-        and Specs'First = Result'First
-        and Specs'Last = Result'Last;
+          and Specs'First = Result'First
+          and Specs'Last = Result'Last;
 
       procedure Apply_Default (Specs      : Api.Engine_Values.Parameter_Signature;
                                Parameters : Engine_Value_Vectors.Vector;
                                Result     : in out Engine_Value_Array)
         with Pre =>
           Api.Engine_Values.Is_Valid_Parameter_Signature (Specs)
-        and (Specs'Length = 0 or else Specs(Specs'Last).Class /= Varargin)
-        and Specs'First = Result'First
-        and Specs'Last = Result'Last;
+          and (Specs'Length = 0 or else Specs (Specs'Last).Class /= Varargin)
+          and Specs'First = Result'First
+          and Specs'Last = Result'Last;
 
       procedure Apply_Default (Specs      : Api.Engine_Values.Parameter_Signature;
                                Parameters : Engine_Value_Vectors.Vector;
@@ -347,9 +371,9 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
    function To_Value (Ref : Names.Name_Reference) return Engine_Value_Array
    is
    begin
---        if not (Ref.Class in Evaluable_Classes) then
---           raise Program_Error;
---        end if;
+      --        if not (Ref.Class in Evaluable_Classes) then
+      --           raise Program_Error;
+      --        end if;
 
       case Ref.Class is
          when Names.Constant_Reference =>
