@@ -1,10 +1,30 @@
 pragma Ada_2012;
 with Ada.Strings.Fixed;
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_Io; use Ada.Text_Io;
 
 package body Protypo.Code_Trees is
+   function To_Expression_Vector (X              : Tree_Array;
+                                  Void_Accepted  : Boolean := False)
+                                  return Node_Vectors.Vector;
 
 
+   function Capture (Function_Ref   : Parsed_Code;
+                     Parameters     : Tree_Array;
+                     Position       : Tokens.Token_Position := Tokens.No_Position)
+                     return Parsed_Code
+   is
+      Result : constant Node_Access :=
+                 new Node'(Class           => Capture_Call,
+                           Indexed_Var     => Function_Ref.Pt,
+                           Indexes         => To_Expression_Vector (Parameters),
+                           Source_Position => Position);
+   begin
+      if not (Result.Indexed_Var.Class in Name) then
+         raise Program_Error;
+      end if;
+
+      return (Pt => Result);
+   end Capture;
 
    ----------------
    -- Definition --
@@ -126,7 +146,7 @@ package body Protypo.Code_Trees is
    ----------------
 
    function Assignment
-     (LHS   : Tree_Array;
+     (Lhs   : Tree_Array;
       Value : Tree_Array)
       return Parsed_Code
    is
@@ -282,7 +302,7 @@ package body Protypo.Code_Trees is
       return Parsed_Code
    is
       Result : constant Node_Access := new Node'(Class           => Identifier,
-                                                 ID_Value        => To_Unbounded_String (Id),
+                                                 Id_Value        => To_Unbounded_String (Id),
                                                  Source_Position => Position);
    begin
       return (Pt => Result);
@@ -557,7 +577,7 @@ package body Protypo.Code_Trees is
          when Return_Statement =>
             Delete (Item.Return_Values);
 
-         when Procedure_Call =>
+         when Procedure_Call | Capture_Call =>
             Delete (Item.Params);
 
          when Exit_Statement =>
@@ -705,9 +725,14 @@ package body Protypo.Code_Trees is
          when Return_Statement =>
             Dump (Item.Return_Values, Level + 1);
 
-         when Procedure_Call =>
+         when Procedure_Call | Capture_Call =>
             Dump (Item.Name, Level + 1);
-            Dump (Item.Params, Level + 1, "procedure");
+            Dump (Item.Params, Level + 1,
+                  (if Item.Class = Procedure_Call
+                   then
+                      "procedure"
+                   else
+                      "capture"));
 
          when Exit_Statement =>
             null;
@@ -744,7 +769,7 @@ package body Protypo.Code_Trees is
             Put_Line (Tabbing (Level) & """" & To_String (Item.S) & """");
 
          when Identifier =>
-            Put_Line (Tabbing (Level) &  "<" & To_String (Item.ID_Value) & ">");
+            Put_Line (Tabbing (Level) &  "<" & To_String (Item.Id_Value) & ">");
 
          when Selected =>
             Dump (Item.Record_Var, Level + 1);

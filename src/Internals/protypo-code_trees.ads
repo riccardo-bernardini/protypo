@@ -33,7 +33,8 @@ package Protypo.Code_Trees is
       Text_Constant,
       Selected,
       Indexed,
-      Identifier,
+      Capture_Call, 
+      Identifier, 
       List_Of_Names,
       List_Of_Expressions,
       Parameter_Signature
@@ -174,6 +175,14 @@ package Protypo.Code_Trees is
                             return Parsed_Code
      with
        Post => Class (Procedure_Call'Result) = Procedure_Call;
+   
+   function Capture (Function_Ref   : Parsed_Code;
+                     Parameters     : Tree_Array;
+                     Position       : Tokens.Token_Position := Tokens.No_Position)
+                     return Parsed_Code
+     with
+       Post => Class (Capture'Result) = Capture_Call;
+   
 
 
    function Selector (Ref            : Parsed_Code;
@@ -321,13 +330,13 @@ private
                Record_Var      : Node_Access;
                Field_Name      : Unbounded_ID;
                
-            when Indexed =>
+            when Indexed | Capture_Call  =>
                Indexed_Var     : Node_Access;
                Indexes         : Node_Vectors.Vector;
                
             when Identifier => 
-               ID_Value        : Unbounded_ID;
-            
+               Id_Value        : Unbounded_Id;
+               
             when Loop_Block | For_Block |  While_Block =>
                Loop_Body       : Node_Vectors.Vector;
                Labl            : Label_Type;

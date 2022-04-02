@@ -27,11 +27,12 @@ private package Protypo.Code_Trees.Interpreter.Names is
       Variable_Reference,
       Constant_Reference,
       Function_Reference,
-      Function_Call
+      Function_Call,
+      Capture_Call
      );
 
    subtype Function_Classes is
-     Value_Name_Class range Function_Reference .. Function_Call;
+     Value_Name_Class range Function_Reference .. Capture_Call;
 
    type Name_Reference (Class : Value_Name_Class := Constant_Reference) is
       record
@@ -51,7 +52,7 @@ private package Protypo.Code_Trees.Interpreter.Names is
          when Constant_Reference =>
             Costant_Handler : Constant_Interface_Access;
 
-         when Function_Reference | Function_Call =>
+            when Function_Reference | Function_Call | Capture_Call =>
             Function_Handler : Function_Interface_Access;
             Parameters       : Engine_Value_Vectors.Vector;
 

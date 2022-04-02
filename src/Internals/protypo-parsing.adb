@@ -68,7 +68,7 @@ package body Protypo.Parsing is
    -- Expect --
    ------------
 
-   procedure Expect (Input    : in out Scanning.Token_List;
+   procedure Expect (Input    : in Scanning.Token_List;
                      Expected : Token_Mask)
    is
    begin
@@ -81,7 +81,7 @@ package body Protypo.Parsing is
    -- Expect --
    ------------
 
-   procedure Expect (Input    : in out Scanning.Token_List;
+   procedure Expect (Input    : in Scanning.Token_List;
                      Expected : Token_Class)
    is
       Mask : Token_Mask := (others => False);
@@ -182,7 +182,7 @@ package body Protypo.Parsing is
    is
       subtype Primary_Head is Token_Class
         with Static_Predicate =>
-          Primary_Head in Open_Parenthesis | Identifier | Text | Int | Real;
+          Primary_Head in Open_Parenthesis | Identifier | Text | Int | Real | Kw_Capture;
 
       Result : Code_Trees.Parsed_Code;
    begin
@@ -213,6 +213,30 @@ package body Protypo.Parsing is
 
          when Real =>
             Result := Code_Trees.Float_Constant (Value (Input.Next));
+
+         when Kw_capture =>
+            Expect_And_Eat (Input, Open_Parenthesis);
+
+            if Class (Input.Read) /= Identifier then
+               raise Parsing_Error with "Expected identifier inside CAPTURE call at " & Image (Position (Input.Read));
+            end if;
+
+            declare
+               Parameters : Statement_Sequences.Sequence;
+               Here       : constant Tokens.Token_Position := Tokens.Position (Input.Read);
+
+            begin
+               Result := Code_Trees.Identifier (Value (Input.Next));
+
+               Expect_And_Eat (Input, Open_Parenthesis);
+
+               Parameters := Parse_Expression_List (Input);
+
+               Result := Code_Trees.Capture (Result, Parameters.Dump, Here);
+
+               Expect_And_Eat (Input, Close_Parenthesis);
+            end;
+
 
       end case;
 
@@ -881,7 +905,7 @@ package body Protypo.Parsing is
                Open_Parenthesis | Label_Separator  |
                Kw_When          | Kw_In            | Kw_Of               |
                Real             | Kw_Xor           | Kw_Not              |
-               Kw_Begin         | Kw_Is       =>
+               Kw_Begin         | Kw_Is            | Kw_Capture   =>
 
                Unexpected_Token (Class (Input.Read), End_Of_Text, Position (Input.Read));
                exit;

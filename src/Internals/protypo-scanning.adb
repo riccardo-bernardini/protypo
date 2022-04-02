@@ -234,6 +234,7 @@ package body Protypo.Scanning is
                     Kw_Return    => +"return",
                     Kw_Function  => +"function",
                     Kw_Procedure => +"procedure",
+                    Kw_Capture   => +"capture",
                     Kw_Begin     => +"begin",
                     Kw_Exit      => +"exit",
                     Kw_End       => +"end",

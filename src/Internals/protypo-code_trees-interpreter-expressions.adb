@@ -190,7 +190,8 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
          when Text_Constant =>
             return Embed (Create (To_String (Expr.S)));
 
-         when Selected | Indexed | Identifier  =>
+
+         when Selected | Indexed | Identifier | Capture_Call  =>
             --              Code_Trees.Dump (Expr, 0);
             declare
                Ref : constant Names.Name_Reference := Names.Eval_Name (Status, Expr);
