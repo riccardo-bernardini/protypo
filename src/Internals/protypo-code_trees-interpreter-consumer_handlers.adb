@@ -89,8 +89,8 @@ package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is
    end Do_Escape;
 
    overriding function Process (Fun       : Consumer_Callback;
-                                Parameter : Engine_Value_Array)
-                                return Engine_Value_Array
+                                Parameter : Engine_Value_vectors.Vector)
+                                return Engine_Value_vectors.Vector
    is
 
    begin
@@ -105,12 +105,12 @@ package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is
          end;
       end loop;
 
-      return No_Value;
+      return Engine_Value_Vectors.Empty_Vector;
    end Process;
 
    function Signature (Fun : Consumer_Callback)
-                                return Api.Engine_Values.Parameter_Signature
-   is (1 => Parameter_Spec'(Class   => Mandatory));
+                                return Api.Engine_Values.Parameter_Lists.Parameter_Signature
+   is (1 => Parameter_Lists.Mandatory);
 
 
 end Protypo.Code_Trees.Interpreter.Consumer_Handlers;

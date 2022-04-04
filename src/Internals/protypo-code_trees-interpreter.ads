@@ -1,6 +1,6 @@
 with Protypo.Api.Symbols;
 with Protypo.Api.Consumers;
-with Protypo.Api.Engine_Values;
+with Protypo.Api.Engine_Values.Engine_Value_Vectors;
 
 with Ada.Containers.Doubly_Linked_Lists;
 
@@ -14,10 +14,6 @@ package Protypo.Code_Trees.Interpreter is
    Bad_Iterator : exception;
    Bad_Field    : exception;
 private
-   package Engine_Value_Vectors is
-     new Ada.Containers.Vectors (Index_Type   => Positive,
-                                 Element_Type => Engine_Value);
-
    type Symbol_Table_Access is not null access Api.Symbols.Table;
 
 
@@ -33,7 +29,7 @@ private
                Loop_Label : Label_Type;
 
             when Return_Statement =>
-               Result : Engine_Value_Vectors.Vector;
+               Result : Api.Engine_Values.Engine_Value_Vectors.Vector;
          end case;
       end record;
 

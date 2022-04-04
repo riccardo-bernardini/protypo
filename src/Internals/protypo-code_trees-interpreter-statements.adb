@@ -4,6 +4,8 @@ with Protypo.Code_Trees.Interpreter.Compiled_Functions;
 with Protypo.Code_Trees.Interpreter.Names;
 with Protypo.Code_Trees.Interpreter.Expressions;
 
+with Protypo.Api.Engine_Values.Handlers;
+
 with Ada.Exceptions;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
@@ -45,15 +47,15 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                                  Element_Type => Names.Name_Reference);
 
    procedure Do_Procedure_Call (Status : Interpreter_Access;
-                                Name   : Unbounded_id;
+                                Name   : Unbounded_Id;
                                 Params : Node_Vectors.Vector)
    is
       use Api.Symbols.Protypo_Tables;
+      use type Ada.Containers.Count_Type;
 
       Position : constant Cursor :=
                    Status.Symbol_Table.Find (Id (To_String (Name)));
 
-      Proc_Handler : Engine_Value;
 
    begin
       if Position = No_Element then
@@ -61,30 +63,32 @@ package body Protypo.Code_Trees.Interpreter.Statements is
            "Unknown function '" & To_String (Name) & "'";
       end if;
 
-      Proc_Handler :=  Value (Position);
-
-      if Proc_Handler.Class /= Function_Handler then
-         raise Constraint_Error;
-      end if;
-
       declare
-         Funct : constant Function_Interface_Access :=
-                   Get_Function (Proc_Handler);
-
-         Parameters : constant Engine_Value_Vectors.Vector :=
-                         Expressions.Eval_Vector (Status, Params);
-
-         Call_Ref : constant Names.Name_Reference :=
-                      (Class            => Names.Function_Call,
-                       Function_Handler => Funct,
-                       Parameters       => Parameters);
-
-         Result   : constant Engine_Value_Array :=
-                      Expressions.Call_Function (Call_Ref);
+         Proc_Handler : constant Engine_Value :=  Value (Position);
       begin
-         if Result'Length /= 0 then
-            raise Run_Time_Error with "Procedure call returns a value";
+         if Proc_Handler.Class /= Function_Handler then
+            raise Constraint_Error;
          end if;
+
+         declare
+            Funct : constant Protypo.Api.Engine_Values.Handlers.Function_Interface_Access :=
+                      Handlers.Get_Function (Proc_Handler);
+
+            Parameters : constant Engine_Value_Vectors.Vector :=
+                           Expressions.Eval_Vector (Status, Params);
+
+            Call_Ref : constant Names.Name_Reference :=
+                         (Class            => Names.Function_Call,
+                          Function_Handler => Funct,
+                          Parameters       => Parameters);
+
+            Result   : constant Engine_Value_Vectors.Vector :=
+                         Expressions.Call_Function (Call_Ref);
+         begin
+            if Result.Length /= 0 then
+               raise Run_Time_Error with "Procedure call returns a value";
+            end if;
+         end;
       end;
    end Do_Procedure_Call;
 
@@ -148,9 +152,9 @@ package body Protypo.Code_Trees.Interpreter.Statements is
               (Name          =>
                   Id (To_String (Program.Definition_Name)),
                Initial_Value =>
-                  Create (new Compiled_Function'(Function_Body => Program.Function_Body,
-                                                 Parameters    => Program.Parameters,
-                                                 Status        => Status)));
+                  Handlers.Create (new Compiled_Function'(Function_Body => Program.Function_Body,
+                                                          Parameters    => Program.Parameters,
+                                                          Status        => Status)));
 
          when Assignment  =>
             declare
@@ -257,7 +261,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
             declare
                use Api.Symbols;
 
-               Iterator_Ref : constant Iterator_Interface_Access :=
+               Iterator_Ref : constant handlers.Iterator_Interface_Access :=
                                 Expressions.Eval_Iterator (Status, Program.Iterator);
 
                Variable : constant Id := Id (To_String (Program.Variable));

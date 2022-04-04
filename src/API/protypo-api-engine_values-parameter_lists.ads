@@ -1,4 +1,4 @@
-with Protypo.Api.Engine_Values.Value_Arrays;
+with Protypo.Api.Engine_Values.Engine_Value_Vectors;
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 
 with Ada.Containers.Indefinite_Holders;
@@ -13,9 +13,11 @@ package Protypo.Api.Engine_Values.Parameter_Lists is
 
    Mandatory : constant Parameter_Spec;
 
+   Varargin : constant Parameter_Spec;
+
    function Optional (Default : Engine_Value) return Parameter_Spec;
 
-   Varargin : constant Parameter_Spec;
+
 
    type Parameter_Signature is array (Positive range <>) of Parameter_Spec;
 
@@ -45,7 +47,7 @@ package Protypo.Api.Engine_Values.Parameter_Lists is
    -- (that removes the first element too, kind of shift in Ruby, bash, ...)
    -- or Peek (that does not change the list)
 
-   function Create (Params : Value_Arrays.Engine_Value_Array) return Parameter_List
+   function Create (Params : Engine_Value_vectors.Vector) return Parameter_List
      with Post => Length (Create'Result) = Params.Length;
 
    function Length (List : Parameter_List) return Ada.Containers.Count_Type;
@@ -97,8 +99,8 @@ private
          L : Parameter_Linked_Lists.List;
       end record;
 
-   function Length (List : Parameter_List) return Natural
-   is (Natural (List.L.Length));
+   function Length (List : Parameter_List) return Ada.Containers.Count_Type
+   is (List.L.Length);
 
    ----------
    -- Peek --

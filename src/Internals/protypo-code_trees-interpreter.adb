@@ -3,6 +3,7 @@ with Ada.Calendar.Formatting;
 with Ada.Strings.Fixed;
 
 with Protypo.Api.Engine_Values.Range_Iterators;
+with Protypo.Api.Engine_Values.Handlers;
 with Protypo.Code_Trees.Interpreter.Statements;
 with Protypo.Code_Trees.Interpreter.Consumer_Handlers;
 with Protypo.Scanning;
@@ -20,28 +21,32 @@ package body Protypo.Code_Trees.Interpreter is
           when Text   => Get_String (X),
           when others => X.Class'Image);
 
-   function Stringify (Parameters : Engine_Value_Array)
-                       return Engine_Value_Array
+   function Stringify (Parameters : Engine_Value_Vectors.Vector)
+                       return Engine_Value_Vectors.Vector
    is
+      use type Ada.Containers.Count_Type;
    begin
-      if Parameters'Length /= 1 then
+      if Parameters.Length /= 1 then
          raise Run_Time_Error with "image needs 1 parameter";
       end if;
 
-      return (1 => Create (To_String (Parameters (Parameters'First))));
+      return Engine_Value_Vectors.To_Vector
+        (Create (To_String (Parameters (Parameters.First))), 1);
    end Stringify;
 
-   function Date_Callback  (Parameters : Engine_Value_Array)
-                            return Engine_Value_Array
+   function Date_Callback  (Parameters : Engine_Value_Vectors.Vector)
+                            return Engine_Value_Vectors.Vector
    is
+
+      use type Ada.Containers.Count_Type;
       use Ada.Calendar.Formatting;
       use Ada.Calendar;
    begin
-      if Parameters'Length /= 0 then
+      if Parameters.Length /= 0 then
          raise Run_Time_Error with "date wants no parameter";
       end if;
 
-      return (1 => Create (Image (Clock)));
+      return Engine_Value_Vectors.To_Vector (Create (Image (Clock)), 1);
 
    end Date_Callback;
 
@@ -49,17 +54,23 @@ package body Protypo.Code_Trees.Interpreter is
    -- Range_Callback --
    --------------------
 
-   function Range_Callback (Parameters : Engine_Value_Array)
-                            return Engine_Value_Array
+   function Range_Callback (Parameters : Engine_Value_Vectors.Vector)
+                            return Engine_Value_Vectors.Vector
    is
+      use type Ada.Containers.Count_Type;
+
    begin
-      if Parameters'Length /= 2 then
+      if Parameters.Length /= 2 then
          raise Run_Time_Error with "range needs 2 parameters";
       end if;
 
-      return (1 => Create (Range_Iterators.Create
-              (Start => Get_Integer (Parameters (Parameters'First)),
-               Stop  => Get_Integer (Parameters (Parameters'First + 1)))));
+      declare
+         First : constant Integer := Get_Integer (Parameters (Parameters.First_Index));
+         Last  : constant Integer := Get_Integer (Parameters (Parameters.First_Index + 1));
+         Val   : constant Engine_Value := Handlers.Create (Range_Iterators.Create (First, Last));
+      begin
+         return Engine_Value_Vectors.To_Vector (Val, 1);
+      end;
    end Range_Callback;
 
    procedure Update_Consumer (Inter    : Interpreter_Access;
@@ -69,14 +80,14 @@ package body Protypo.Code_Trees.Interpreter is
    begin
       Update
         (Pos          => Inter.Consumer_Without_Escape_Cursor,
-         New_Value    => Create (Consumer_Handlers.Create (Consumer    => Consumer,
-                                                           With_Escape => False,
-                                                           Status      => Inter)));
+         New_Value    => Handlers.Create (Consumer_Handlers.Create (Consumer    => Consumer,
+                                                                    With_Escape => False,
+                                                                    Status      => Inter)));
       Update
         (Pos          => Inter.Consumer_With_Escape_Cursor,
-         New_Value    => Create (Consumer_Handlers.Create (Consumer    => Consumer,
-                                                           With_Escape => True,
-                                                           Status      => Inter)));
+         New_Value    => Handlers.Create (Consumer_Handlers.Create (Consumer    => Consumer,
+                                                                    With_Escape => True,
+                                                                    Status      => Inter)));
 
    end Update_Consumer;
 
@@ -97,7 +108,7 @@ package body Protypo.Code_Trees.Interpreter is
       begin
          Table.Create
            (Name            => Scanning.Consume_Procedure_Name,
-            Initial_Value   => Create (Consumer_Handlers.Create (Consumer    => Consumer,
+            Initial_Value   => handlers.Create (Consumer_Handlers.Create (Consumer    => Consumer,
                                                                  With_Escape => False,
                                                                  Status      => Inter)),
             Position        => Inter.Consumer_Without_Escape_Cursor);
@@ -105,22 +116,22 @@ package body Protypo.Code_Trees.Interpreter is
 
          Table.Create
            (Name            => Scanning.Consume_With_Escape_Procedure_Name,
-            Initial_Value   => Create (Consumer_Handlers.Create (Consumer    => Consumer,
+            Initial_Value   => handlers.Create (Consumer_Handlers.Create (Consumer    => Consumer,
                                                                  With_Escape => True,
                                                                  Status      => Inter)),
             Position        => Inter.Consumer_With_Escape_Cursor);
 
          Table.Create
            (Name          => "range",
-            Initial_Value => Create (Range_Callback'Access, 2));
+            Initial_Value => Handlers.Create (Range_Callback'Access, 2));
 
          Table.Create
            (Name          => "now",
-            Initial_Value => Create (Date_Callback'Access, 0));
+            Initial_Value => Handlers.Create (Date_Callback'Access, 0));
 
          Table.Create
            (Name          => "image",
-            Initial_Value => Create (Stringify'Access, 1));
+            Initial_Value => Handlers.Create (Stringify'Access, 1));
       end Add_Builtin_Values;
 
       Interpreter : constant Interpreter_Access :=
@@ -157,7 +168,9 @@ package body Protypo.Code_Trees.Interpreter is
       end if;
 
       declare
-         Fun      : constant Function_Interface_Access := Get_Function (Value (Pos));
+         Fun      : constant Handlers.Function_Interface_Access :=
+                      Handlers.Get_Function (Value (Pos));
+
          Callback : constant Consumer_Callback := Consumer_Callback (Fun.all);
       begin
          Interpreter.Saved_Consumers.Prepend (User_Consumer (Callback));
@@ -196,10 +209,10 @@ end Protypo.Code_Trees.Interpreter;
 --        return Result;
 --     end "+";
 
---     function "+" (X : Engine_Value)  return Engine_Value_Array
+--     function "+" (X : Engine_Value)  return Engine_Value_Vectors.Vector
 --     is (To_Array (+X));
 --
---     function "+" (X : Engine_Value_Array)  return Engine_Value
+--     function "+" (X : Engine_Value_Vectors.Vector)  return Engine_Value
 --     is (if X'Length = 1 then
 --            X (X'First)
 --         else
