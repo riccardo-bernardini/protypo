@@ -225,14 +225,14 @@ package body Protypo.Parsing is
                Parameters : Statement_Sequences.Sequence;
                Here       : constant Tokens.Token_Position := Tokens.Position (Input.Read);
 
+               Name : constant Unbounded_Id  :=
+                        Unbounded_Id'(To_Unbounded_String (Value (Input.Next)));
             begin
-               Result := Code_Trees.Identifier (Value (Input.Next));
-
                Expect_And_Eat (Input, Open_Parenthesis);
 
                Parameters := Parse_Expression_List (Input);
 
-               Result := Code_Trees.Capture (Result, Parameters.Dump, Here);
+               Result := Code_Trees.Capture (Name, Parameters.Dump, Here);
 
                Expect_And_Eat (Input, Close_Parenthesis);
             end;

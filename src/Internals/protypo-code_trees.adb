@@ -8,21 +8,17 @@ package body Protypo.Code_Trees is
                                   return Node_Vectors.Vector;
 
 
-   function Capture (Function_Ref   : Parsed_Code;
+   function Capture (Name           : Unbounded_Id;
                      Parameters     : Tree_Array;
                      Position       : Tokens.Token_Position := Tokens.No_Position)
                      return Parsed_Code
    is
       Result : constant Node_Access :=
                  new Node'(Class           => Capture_Call,
-                           Indexed_Var     => Function_Ref.Pt,
-                           Indexes         => To_Expression_Vector (Parameters),
+                           Name            => Name,
+                           Params          => To_Expression_Vector (Parameters),
                            Source_Position => Position);
    begin
-      if not (Result.Indexed_Var.Class in Name) then
-         raise Program_Error;
-      end if;
-
       return (Pt => Result);
    end Capture;
 
@@ -726,7 +722,7 @@ package body Protypo.Code_Trees is
             Dump (Item.Return_Values, Level + 1);
 
          when Procedure_Call | Capture_Call =>
-            Dump (Item.Name, Level + 1);
+            Dump (Unbounded_String (Item.Name), Level + 1);
             Dump (Item.Params, Level + 1,
                   (if Item.Class = Procedure_Call
                    then

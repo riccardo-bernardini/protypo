@@ -55,11 +55,12 @@ private
          Consumer_With_Escape_Cursor    : Api.Symbols.Protypo_Tables.Cursor;
       end record;
 
+
    type Interpreter_Access is not null access Interpreter_Type;
+
 
    procedure Push_Consumer (Interpreter : Interpreter_Access;
                             Consumer    : Api.Consumers.Consumer_Access);
 
-   procedure Pop_Consumer (Interpreter : Interpreter_access);
-
+   procedure Pop_Consumer (Interpreter :  Interpreter_Access);
 end Protypo.Code_Trees.Interpreter;

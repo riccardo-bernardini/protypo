@@ -1,4 +1,6 @@
 pragma Ada_2012;
+with Ada.Unchecked_Deallocation;
+
 package body Protypo.Api.Consumers.Buffers is
 
    -------------
@@ -30,5 +32,15 @@ package body Protypo.Api.Consumers.Buffers is
    begin
       return To_String (Consumer.Data);
    end Get_Data;
+
+   procedure Destroy (Item : in out Buffer_Access)
+   is
+      procedure Free is
+        new Ada.Unchecked_Deallocation (Object => Buffer,
+                                        Name   => Buffer_Access);
+   begin
+      Free (Item);
+   end Destroy;
+
 
 end Protypo.Api.Consumers.Buffers;

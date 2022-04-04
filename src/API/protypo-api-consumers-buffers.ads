@@ -9,6 +9,8 @@ package Protypo.Api.Consumers.Buffers is
 
    function New_Buffer return Buffer_Access;
 
+   procedure Destroy (Item  : in out Buffer_Access);
+
    overriding procedure Process (Consumer  : in out Buffer;
                                  Parameter : String);
 

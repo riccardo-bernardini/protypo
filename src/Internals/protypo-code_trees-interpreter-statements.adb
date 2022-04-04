@@ -45,7 +45,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                                  Element_Type => Names.Name_Reference);
 
    procedure Do_Procedure_Call (Status : Interpreter_Access;
-                                Name   : Unbounded_String;
+                                Name   : Unbounded_id;
                                 Params : Node_Vectors.Vector)
    is
       use Api.Symbols.Protypo_Tables;

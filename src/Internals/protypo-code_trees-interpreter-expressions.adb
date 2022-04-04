@@ -166,21 +166,26 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
       end Apply;
 
       function Do_Capture (Status : Interpreter_Access;
-                           Name   : Unbounded_String;
+                           Name   : Unbounded_id;
                            Params : Node_Vectors.Vector)
                            return Engine_Value_Vectors.Vector
       is
          Buffer : Api.Consumers.Buffers.Buffer_Access := Api.Consumers.Buffers.New_Buffer;
       begin
-         Status.Push_Consumer (Api.Consumers.Consumer_Access (Buffer));
+         Push_Consumer (Status, Api.Consumers.Consumer_Access (Buffer));
 
          Statements.Do_Procedure_Call (Status => Status,
                                        Name   => Name,
                                        Params => Params);
 
-         Status.Pop_Consumer;
+         Pop_Consumer (Status);
 
-         return Embed (Api.Engine_Values.Create (Buffer.Get_Data));
+         return Result : constant Engine_Value_Vectors.Vector :=
+           Embed (Api.Engine_Values.Create (Buffer.Get_Data))
+         do
+            Api.Consumers.Buffers.Destroy (Buffer);
+         end return;
+
       end Do_Capture;
 
       Left, Right : Engine_Value;
