@@ -82,40 +82,6 @@ package body Protypo.API.Engine_Values is
    -- Default_Parameters --
    ------------------------
 
-   function Signature (Fun : Callback_Based_Handler)
-                       return Parameter_Signature
-   is
-      Tot_Parameters : constant Natural :=
-                         Fun.Max_Parameters
-                           + (if Fun.With_Varargin then 1 else 0);
-
-      Result         : Parameter_Signature (2 .. Tot_Parameters + 1) :=
-                         (others => (Class => Varargin));
-      -- Result is initialized to an invalid Parameter_Signature, so that
-      -- if there is some bug, it will be (with large probability)
-      -- caught by the contract of Signature
-
-      Last_Mandatory : constant Natural := Result'First + Fun.Min_Parameters - 1;
-      Last_Optional  : constant Natural := Result'First + Fun.Max_Parameters - 1;
-   begin
-      if Fun.Min_Parameters > 0 then
-         Result (Result'First .. Last_Mandatory) :=
-           (others => Parameter_Spec'(Class => Mandatory));
-      end if;
-
-      if Fun.Max_Parameters > Fun.Min_Parameters then
-         Result (Last_Mandatory + 1 .. Last_Optional) :=
-           (others => Parameter_Spec'(Class   => Optional,
-                                      Default => Void_Value));
-      end if;
-
-      if Fun.With_Varargin then
-         Result (Result'Last) := Parameter_Spec'(Class => Varargin);
-      end if;
-
-      return Result;
-   end Signature;
-
    function Bool (X : Integer) return Integer
    is (if X /= 0 then 1 else 0);
 
