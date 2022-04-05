@@ -2,7 +2,7 @@ pragma Ada_2012;
 package body Protypo.Api.Engine_Values.Record_Wrappers is
 
    type Record_Access_Handler is
-     new Constant_Interface
+     new Handlers.Constant_Interface
    with
       record
          Pos : Record_Maps.Cursor;
@@ -23,6 +23,7 @@ package body Protypo.Api.Engine_Values.Record_Wrappers is
 
    function To_Handler (Pos : Record_Maps.Cursor) return Engine_Value
    is
+      use Handlers;
    begin
       return Create (Constant_Interface_Access'(new Record_Access_Handler'(Pos => Pos)));
    end To_Handler;
@@ -36,19 +37,20 @@ package body Protypo.Api.Engine_Values.Record_Wrappers is
       Field : ID)
       return Handler_Value
    is
-      Result : Engine_Value;
    begin
       if not X.Map.Contains (Field) then
-         raise Unknown_Field with String (Field);
+         raise Handlers.Unknown_Field with String (Field);
       end if;
 
-      Result := X.Map (Field);
-
-      if Result.Class in Handler_Classes then
-         return Result;
-      else
-         return To_Handler (X.Map.Find (Field));
-      end if;
+      declare
+         Result : constant Engine_Value := X.Map (Field);
+      begin
+         if Result.Class in Handler_Classes then
+            return Result;
+         else
+            return To_Handler (X.Map.Find (Field));
+         end if;
+      end;
    end Get;
 
 end Protypo.Api.Engine_Values.Record_Wrappers;
