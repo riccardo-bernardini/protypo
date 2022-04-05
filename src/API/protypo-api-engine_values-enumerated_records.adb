@@ -1,5 +1,6 @@
 pragma Ada_2012;
 with Ada.Characters.Handling;
+with Ada.Strings.Fixed;
 
 package body Protypo.Api.Engine_Values.Enumerated_Records is
    -----------
@@ -9,21 +10,26 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
    function To_Id (X : Field_Name) return ID
    is
       use Ada.Characters.Handling;
+      use Ada.Strings.Fixed;
 
       F : constant ID := Id(To_Lower (X'Image));
-      P : constant ID := Id(To_Lower (Prefix));
    begin
       if Prefix = "" then
          return F;
-
-      elsif F'Length > P'Length and then F (F'First .. F'First + P'Length - 1) = P then
-         return F (F'First + P'Length .. F'Last);
-
-      else
-         raise Program_Error
-           with "Enumerative value '" & String (F) & "' "
-           & "has not prefix '" & String (P) & "'";
       end if;
+
+      declare
+         P : constant String := To_Lower (Prefix);
+      begin
+         if F'Length > P'Length and then Head (String(F), P'Length) = P then
+            return ID (Tail (String (F), F'First - P'Length));
+
+         else
+            raise Program_Error
+              with "Enumerative value '" & String (F) & "' "
+              & "has not prefix '" & String (P) & "'";
+         end if;
+      end;
    end To_Id;
 
    --------------

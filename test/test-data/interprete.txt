@@ -2,6 +2,7 @@ Una riga
 #{
 
 function zorro(x; y:=2)
+is
 begin
   [ #x+y# ]
 end zorro;
