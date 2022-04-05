@@ -1,6 +1,6 @@
 with Protypo.Api.Interpreters;
 with Protypo.Api.Consumers.File_Writer;
-with Protypo.Api.Engine_Values;
+with Protypo.Api.Engine_Values.Handlers;
 
 with Callbacks;
 
@@ -21,7 +21,7 @@ begin
                   Value => Engine_Values.Create (42));
 
    Engine.Define (Name  => "sin",
-                  Value => Engine_Values.Create (Callbacks.Sin'Access));
+                  Value => Engine_Values.Handlers.Create (Callbacks.Sin'Access));
 
    Engine.Run (Program, Consumer);
 end Simple_Example;
