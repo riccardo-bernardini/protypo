@@ -30,12 +30,14 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
    -- To_Array --
    --------------
 
-   function To_Array (Db : Multi_Aggregate) return Engine_Value_Array
+   function To_Array (Db : Multi_Aggregate) return Engine_Value_Vectors.Vector
    is
-      Result : Engine_Value_Array (Db'Range);
+      use Handlers;
+
+      Result : Engine_Value_Vectors.Vector;
    begin
-      for K in Db'Range loop
-         Result (K) := Create (Record_Interface_Access (Make_Record (Db (K))));
+      for Element of Db loop
+         Result.Append (Create (Record_Interface_Access (Make_Record (Element))));
       end loop;
 
       return Result;
@@ -61,7 +63,7 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
    ----------------
 
    function Make_Value (Init : Aggregate_Type) return Engine_Value
-   is (Create (Record_Interface_Access (Make_Record (Init))));
+   is (Handlers.Create (Handlers.Record_Interface_Access (Make_Record (Init))));
 
    ----------
    -- Fill --
@@ -71,9 +73,10 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
      (Item   : in out Enumerated_Record;
       Values : Aggregate_Type)
    is
+      use Engine_Value_Holders;
    begin
       for Field in Values'Range loop
-         Item.Set (Field, Values (Field));
+         Item.Set (Field, Element (Values (Field)));
       end loop;
    end Fill;
 
