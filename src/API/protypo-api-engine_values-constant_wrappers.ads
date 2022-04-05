@@ -28,6 +28,9 @@ package Protypo.Api.Engine_Values.Constant_Wrappers is
    function To_Handler_Value (Value : String) return Handler_Value;
    -- Equivalent to Create(Make_Wrapper(Value))
 
+   function To_Handler_Value (Value : Boolean) return Handler_Value;
+   -- Equivalent to Create(Make_Wrapper(Value))
+
 private
    type Constant_Wrapper is new handlers.Constant_Interface
    with
@@ -59,5 +62,9 @@ private
 
    function To_Handler_Value (Value : String) return Handler_Value
    is (To_Handler_Value (Create (Value)));
+
+   function To_Handler_Value (Value : Boolean) return Handler_Value
+   is (To_Handler_Value (Create (Value)));
+
 
 end Protypo.Api.Engine_Values.Constant_Wrappers;

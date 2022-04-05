@@ -9,6 +9,7 @@ package Protypo.Api.Engine_Values is
       Void,
       Int,
       Real,
+      Logical,
       Text,
       Array_Handler,
       Record_Handler,
@@ -19,7 +20,7 @@ package Protypo.Api.Engine_Values is
       Iterator
      );
 
-   subtype Scalar_Classes  is Engine_Value_Class  range Int .. Text;
+   subtype Scalar_Classes  is Engine_Value_Class range Int .. Text;
    subtype Numeric_Classes is Scalar_Classes     range Int .. Real;
    subtype Handler_Classes is Engine_Value_Class range Array_Handler .. Constant_Handler;
 
@@ -29,6 +30,7 @@ package Protypo.Api.Engine_Values is
 
    subtype Integer_Value    is Engine_Value (Int);
    subtype Real_Value       is Engine_Value (Real);
+   subtype logical_Value    is Engine_Value (logical);
    subtype String_Value     is Engine_Value (Text);
    subtype Array_Value      is Engine_Value (Array_Handler);
    subtype Record_Value     is Engine_Value (Record_Handler);
@@ -141,6 +143,8 @@ package Protypo.Api.Engine_Values is
    function Create (Val : String) return Engine_Value
      with Post => Create'Result.Class = Text;
 
+   function Create (Val : Boolean) return Logical_Value;
+
    function Get_Integer (Val : Integer_Value) return Integer;
    function Get_Integer (Val : Engine_Value; Default : Integer) return Integer;
 
@@ -149,6 +153,8 @@ package Protypo.Api.Engine_Values is
 
    function Get_String (Val : String_Value) return String;
    function Get_String (Val : Engine_Value; Default : String) return String;
+
+   function Get_Logical (Val : Logical_Value) return Boolean;
 
 private
    --     type Engine_Value_Vector is range 1 .. 2;
@@ -164,6 +170,9 @@ private
 
             when Real =>
                Real_Val : Float;
+
+            when Logical =>
+               Bool_Val : Boolean;
 
             when Text =>
                Text_Val : Unbounded_String;
@@ -207,6 +216,11 @@ private
    function Create (Val : String) return Engine_Value
    is (Engine_Value'(Class            => Text,
                      Text_Val         => To_Unbounded_String (Val)));
+
+
+   function Create (Val : Boolean) return Logical_Value
+   is (Engine_Value'(Class            => Logical,
+                     Bool_Val         => Val));
 
 
    function Get_Integer (Val : Integer_Value) return Integer
@@ -255,6 +269,8 @@ private
              raise Constraint_Error);
 
 
+   function Get_Logical (Val : Logical_Value) return Boolean
+   is (Val.Bool_Val);
 
 
    function "-" (Left, Right : Engine_Value) return Engine_Value

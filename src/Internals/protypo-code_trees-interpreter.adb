@@ -108,17 +108,17 @@ package body Protypo.Code_Trees.Interpreter is
       begin
          Table.Create
            (Name            => Scanning.Consume_Procedure_Name,
-            Initial_Value   => handlers.Create (Consumer_Handlers.Create (Consumer    => Consumer,
-                                                                 With_Escape => False,
-                                                                 Status      => Inter)),
+            Initial_Value   => Handlers.Create (Consumer_Handlers.Create (Consumer    => Consumer,
+                                                                          With_Escape => False,
+                                                                          Status      => Inter)),
             Position        => Inter.Consumer_Without_Escape_Cursor);
 
 
          Table.Create
            (Name            => Scanning.Consume_With_Escape_Procedure_Name,
-            Initial_Value   => handlers.Create (Consumer_Handlers.Create (Consumer    => Consumer,
-                                                                 With_Escape => True,
-                                                                 Status      => Inter)),
+            Initial_Value   => Handlers.Create (Consumer_Handlers.Create (Consumer    => Consumer,
+                                                                          With_Escape => True,
+                                                                          Status      => Inter)),
             Position        => Inter.Consumer_With_Escape_Cursor);
 
          Table.Create

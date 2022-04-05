@@ -16,8 +16,6 @@ package body Protypo.API.Engine_Values is
    function Bool (X : Float) return Integer
    is (if X /= 0.0 then 1 else 0);
 
-   function Create (X : Boolean) return Engine_Value
-   is (Create (Integer'(if X then 1 else 0)));
 
    function Bool (X : Engine_Value) return Integer
    is (case X.Class is
