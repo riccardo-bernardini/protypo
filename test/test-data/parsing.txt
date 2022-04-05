@@ -1,8 +1,10 @@
 Proviamo con un documento
 #{
 function pippo(x; y; a:=x*3)
+is
 begin
   function zorro (g)
+  is 
   begin
     consume("Hello world!");
   end zorro;
