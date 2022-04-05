@@ -299,17 +299,13 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
          Parameters : Engine_Value_Vectors.Vector;
          Result     : in out Engine_Value_Vectors.Vector)
         with Pre =>
-          Parameter_Lists.Is_Valid_Parameter_Signature (Specs)
-          and Specs'First = Result.First_Index
-          and Specs'Last = Result.Last_Index;
+          Parameter_Lists.Is_Valid_Parameter_Signature (Specs);
 
       procedure Apply_Default (Specs      : Parameter_Lists.Parameter_Signature;
                                Parameters : Engine_Value_Vectors.Vector;
                                Result     : in out Engine_Value_Vectors.Vector)
         with Pre =>
           Parameter_Lists.Is_Valid_Parameter_Signature (Specs)
-          and Specs'First = Result.First_Index
-          and Specs'Last = Result.Last_Index
           and (Specs'Length = 0 or else Specs (Specs'Last) /= Parameter_Lists.Varargin);
 
       procedure Apply_Default (Specs      : Parameter_Lists.Parameter_Signature;

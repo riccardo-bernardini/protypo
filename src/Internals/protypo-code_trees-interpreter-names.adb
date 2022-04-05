@@ -126,14 +126,13 @@ package body Protypo.Code_Trees.Interpreter.Names is
                use Protypo.Code_Trees.Interpreter.Symbol_Table_References;
 
                Ident    : constant ID := To_Id (Expr.ID_Value);
-               Position : Cursor := Status.Symbol_Table.Find (ident);
-               Val      : Engine_Value := Void_Value;
+               Position : Cursor := Status.Symbol_Table.Find (Ident);
             begin
 
---                 Put_Line ("@@@ searching '" & String(IDent) & "'");
+               --                 Put_Line ("@@@ searching '" & String(IDent) & "'");
                if Position = No_Element then
 
---                    Put_Line ("@@@ not found '" & ID & "'");
+                  --                    Put_Line ("@@@ not found '" & ID & "'");
                   --
                   -- The name is not in the symbol table: create it
                   -- but leave it not initialized, it can be used only
@@ -143,7 +142,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
                                               Position      => Position,
                                               Initial_Value => Void_Value);
 
---                    Put_Line ("@@@ inserted '" & ID & "' @" & Image (Position));
+                  --                    Put_Line ("@@@ inserted '" & ID & "' @" & Image (Position));
                   if Position = No_Element then
                      raise Program_Error with "something bad";
                   end if;
@@ -156,9 +155,9 @@ package body Protypo.Code_Trees.Interpreter.Names is
                                 (Class            => Variable_Reference,
                                  Variable_Handler => X);
                   begin
---                       Put_Line ("@@@ hh");
+                     --                       Put_Line ("@@@ hh");
                      Result.Variable_Handler := X;
---                       Put_Line ("@@@ hhh");
+                     --                       Put_Line ("@@@ hhh");
                      return Result;
                   end;
                else
@@ -168,18 +167,19 @@ package body Protypo.Code_Trees.Interpreter.Names is
                   -- reference to the symbol table.  Remember that the
                   -- result of the evaluation of a name is always a reference.
                   --
-                  Val := Value (Position);
+                  declare
+                     Val : constant Engine_Value := Value (Position);
+                  begin
+                     if Val.Class in Handler_Classes then
+                        return + Val;
 
+                     else
+                        return Name_Reference'
+                          (Class            => Variable_Reference,
+                           Variable_Handler => Symbol_Table_Reference (Position));
 
-                  if Val.Class in Handler_Classes then
-                     return + Val;
-
-                  else
-                     return Name_Reference'
-                       (Class            => Variable_Reference,
-                        Variable_Handler => Symbol_Table_Reference (Position));
-
-                  end if;
+                     end if;
+                  end;
                end if;
             end;
       end case;

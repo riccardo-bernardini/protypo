@@ -25,6 +25,10 @@ package Protypo.Api.Engine_Values.Parameter_Lists is
 
    type Parameter_Signature is array (Positive range <>) of Parameter_Spec;
 
+   function Image (Spec : Parameter_Spec) return String;
+
+   function Image (Signature : Parameter_Signature) return String;
+
    function Is_Valid_Parameter_Signature (Signature : Parameter_Signature) return Boolean;
    --
    -- Return True if Signature is a valid parameter signature that can be returned

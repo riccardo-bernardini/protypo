@@ -38,6 +38,36 @@ package body Protypo.Api.Engine_Values.Parameter_Lists is
       return Result;
    end Shift;
 
+   function Image (Spec : Parameter_Spec) return String
+   is (case Spec.Class is
+          when Mandatory_Class =>
+             "Mandatory",
+
+          when Optional_Class  =>
+             "Optional",
+
+          when Varargin_Class  =>
+             "Varargin",
+
+          when Void            =>
+             "Void");
+
+   function Image (Signature : Parameter_Signature) return String
+   is
+      Result : Unbounded_String;
+   begin
+      Result := To_Unbounded_String ("(");
+
+      for Idx in Signature'Range loop
+         Result := Result & Image (Signature (Idx));
+
+         if Idx < Signature'Last then
+            Result := Result & ", ";
+         end if;
+      end loop;
+
+      return To_String (Result & ")");
+   end Image;
 
 
    ----------------------------------
