@@ -49,7 +49,7 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
          when Return_Statement =>
 
             declare
-               Result : constant Engine_Value_Vectors.Vector := Expressions.To_Array (Fun.Status.Break.Result);
+               Result : constant Engine_Value_Vectors.Vector := Fun.Status.Break.Result;
             begin
                Fun.Status.Break := No_Break;
                return Result;

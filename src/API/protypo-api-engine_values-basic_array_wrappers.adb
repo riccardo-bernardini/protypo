@@ -1,10 +1,11 @@
 pragma Ada_2012;
+with Ada.Containers;
 with Protypo.Api.Engine_Values.Constant_Wrappers;
 
 with Protypo.Api.Engine_Values.Range_Iterators;
 with Protypo.Api.Field_Names;
 
-pragma Warnings(Off, "no entities of ""Ada.Text_IO"" are referenced");
+pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_IO; use Ada.Text_IO;
 
 package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
@@ -27,18 +28,36 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
    function To_Field (X : ID) return Field_Name
    is (Field_Names_Package.To_Field (X));
 
---     function To_Field (X : String) return Field_Name
---     is (Field_Name'Value ("Field_" & X));
+   --     function To_Field (X : String) return Field_Name
+   --     is (Field_Name'Value ("Field_" & X));
 
 
    type Array_Iterator is
-     new Iterator_Interface
+     new Handlers.Iterator_Interface
    with
       record
-         Cursor    : Array_Wrapper_Index;
-         Container : Vector_Access;
+         Cursor : Engine_Value_Vectors.Cursor;
+         First  : Engine_Value_Vectors.Cursor;
+         --  Container : Vector_Access;
       end record;
 
+
+   function Force_Handler (Item : Engine_Value) return Handler_Value
+   is (case Item.Class is
+          when Handler_Classes   =>
+             Item,
+
+          when Int               =>
+             Constant_Wrappers.To_Handler_Value (Get_Integer (Item)),
+
+          when Real              =>
+             Constant_Wrappers.To_Handler_Value (Get_Float (Item)),
+
+          when Text              =>
+             Constant_Wrappers.To_Handler_Value (Get_String (Item)),
+
+          when Void | Iterator   =>
+             raise Constraint_Error);
 
    overriding procedure Reset (Iter : in out Array_Iterator);
    overriding procedure Next (Iter : in out Array_Iterator);
@@ -48,47 +67,29 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
    overriding procedure Reset (Iter : in out Array_Iterator)
    is
    begin
-      Iter.Cursor := Iter.Container.First_Index;
+      Iter.Cursor := Iter.First;
    end Reset;
 
    overriding procedure Next (Iter : in out Array_Iterator)
    is
    begin
-      if not Iter.End_Of_Iteration then
-         Iter.Cursor := Iter.Cursor + 1;
-      end if;
+      Engine_Value_Vectors.Next (Iter.Cursor);
    end Next;
-
-   function Force_Handler (Item : Engine_Value) return Handler_Value
-   is (case Item.Class is
-          when Handler_Classes =>
-             Item,
-
-          when Int             =>
-             Constant_Wrappers.To_Handler_Value(Get_Integer(Item)),
-
-          when Real             =>
-             Constant_Wrappers.To_Handler_Value (Get_Float (Item)),
-
-          when Text             =>
-             Constant_Wrappers.To_Handler_Value (Get_String (Item)),
-
-          when Void | Iterator   =>
-             raise Constraint_Error);
 
 
    overriding function End_Of_Iteration (Iter : Array_Iterator) return Boolean
-   is (Iter.Cursor > Iter.Container.Last_Index);
+   is (not Engine_Value_Vectors.Has_Element (Iter.Cursor));
 
    overriding function Element (Iter : Array_Iterator) return Handler_Value
-   is (Force_Handler (Iter.Container.all (Iter.Cursor)));
+   is (Force_Handler (Engine_Value_Vectors.Element (Iter.Cursor)));
 
    ------------------
    -- Make_Wrapper --
    ------------------
 
    function Make_Wrapper
-     (Init : Engine_Value_Array := No_Value) return Array_Wrapper_Access
+     (Init : Engine_Value_Vectors.Vector := Engine_Value_Vectors.Empty_Vector)
+      return Array_Wrapper_Access
    is
       V : constant Vector_Access :=
             new Engine_Value_Vectors.Vector'(Engine_Value_Vectors.Empty_Vector);
@@ -132,22 +133,23 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
    ---------
 
    function Get
-     (X : Array_Wrapper; Index : Engine_Value_Array) return Handler_Value
+     (X : Array_Wrapper; Index : Engine_Value_Vectors.Vector) return Handler_Value
    is
+      use type Ada.Containers.Count_Type;
    begin
-      if Index'Length /= 1 then
-         raise Out_Of_Range with "Array access with /= 1 index";
+      if Index.Length /= 1 then
+         raise Handlers.Out_Of_Range with "Array access with /= 1 index";
       end if;
 
-      if Index (Index'First).Class /= Int then
-         raise Out_Of_Range with "Array access with non-integer index";
+      if Index.First_Element.Class /= Int then
+         raise Handlers.Out_Of_Range with "Array access with non-integer index";
       end if;
 
       declare
-         Idx : constant Integer := Get_Integer (Index (Index'First));
+         Idx : constant Integer := Get_Integer (Index.First_Element);
       begin
          if Idx < X.Vector.First_Index or Idx > X.Vector.Last_Index then
-            raise Out_Of_Range with "Out of bounds index";
+            raise Handlers.Out_Of_Range with "Out of bounds index";
          end if;
 
          return Constant_Wrappers.To_Handler_Value (X.Vector.all (Idx));
@@ -173,14 +175,14 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
 
          when Field_Iterate =>
             return To_Handler_Value
-              (Create
-                 (Iterator_Interface_Access'
-                      (new Array_Iterator'(Cursor    => X.Vector.First_Index,
-                                           Container => X.Vector))));
+              (Handlers.Create
+                 (Handlers.Iterator_Interface_Access'
+                      (new Array_Iterator'(Cursor    => X.Vector.First,
+                                           First     => X.Vector.First))));
 
          when Field_Range =>
             return To_Handler_Value
-              (Create
+              (Handlers.Create
                  (Range_Iterators.Create (Start     => X.Vector.First_Index,
                                           Stop      => X.Vector.Last_Index)));
       end case;
@@ -190,28 +192,28 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
    is (Field_Names_Package.Is_Field (Field));
 
 
---     --------------
---     -- Is_Field --
---     --------------
---
---     function Is_Field (X : Array_Wrapper; Field : Id) return Boolean
---     is
---        pragma Unreferenced (X);
---        Ignored : Field_Name;
---     begin
---        Ignored := To_Field (Field);
---        return True;
---        -- Yes, I know, it is not the best practice to use exceptions
---        -- to do flow control, but this is the easiest way
---     exception
---        when Constraint_Error =>
---           return False;
---     end Is_Field;
---  --        return Equal_Case_Insensitive (Field, "first")
---          or Equal_Case_Insensitive (Field, "last")
---          or Equal_Case_Insensitive (Field, "length")
---          or Equal_Case_Insensitive (Field, "iterate")
---          or Equal_Case_Insensitive (Field, "range");
+   --     --------------
+   --     -- Is_Field --
+   --     --------------
+   --
+   --     function Is_Field (X : Array_Wrapper; Field : Id) return Boolean
+   --     is
+   --        pragma Unreferenced (X);
+   --        Ignored : Field_Name;
+   --     begin
+   --        Ignored := To_Field (Field);
+   --        return True;
+   --        -- Yes, I know, it is not the best practice to use exceptions
+   --        -- to do flow control, but this is the easiest way
+   --     exception
+   --        when Constraint_Error =>
+   --           return False;
+   --     end Is_Field;
+   --  --        return Equal_Case_Insensitive (Field, "first")
+   --          or Equal_Case_Insensitive (Field, "last")
+   --          or Equal_Case_Insensitive (Field, "length")
+   --          or Equal_Case_Insensitive (Field, "iterate")
+   --          or Equal_Case_Insensitive (Field, "range");
 
 
 end Protypo.Api.Engine_Values.Basic_Array_Wrappers;
