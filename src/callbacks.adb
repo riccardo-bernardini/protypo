@@ -2,17 +2,19 @@ pragma Ada_2012;
 with Ada.Numerics.Elementary_Functions;
 
 package body Callbacks is
-   use Ada.Numerics;
+   use Ada.Numerics.Elementary_Functions;
+   use Engine_Values;
+   use Engine_Values.Engine_Value_Vectors;
+
    ---------
    -- Sin --
    ---------
 
-   function Sin (X : Engine_Values.Engine_Value_Array)
-                 return Engine_Values.Engine_Value_Array
+   function Sin (X : Engine_Value_Vectors.Vector)
+                 return Engine_Value_Vectors.Vector
    is
    begin
-      return (1 => Engine_Values.Create
-              (Elementary_Functions.Sin (Engine_Values.Get_Float (X (X'First)))));
+      return To_Vector (Create (Sin (Get_Float (X.First_Element))), 1);
    end Sin;
 
 end Callbacks;

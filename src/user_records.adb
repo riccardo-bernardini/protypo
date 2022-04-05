@@ -1,4 +1,5 @@
 pragma Ada_2012;
+with Protypo.Api.Engine_Values.Parameter_Lists; use Protypo.Api.Engine_Values.Parameter_Lists;
 package body User_Records is
 
    ---------------
@@ -6,8 +7,8 @@ package body User_Records is
    ---------------
 
    function Split_Bit
-     (Params : Protypo.Api.Engine_Values.Engine_Value_Array)
-      return Protypo.Api.Engine_Values.Engine_Value_Array
+     (Params : Protypo.Api.Engine_Values.Engine_Value_Vectors.Vector)
+      return Protypo.Api.Engine_Values.Engine_Value_Vectors.Vector
    is
       use Protypo.Api.Engine_Values;
 
@@ -16,7 +17,7 @@ package body User_Records is
       X : constant Integer := Get_Integer (Shift (Parameters));
       Y : constant Integer := Get_Integer (Shift (Parameters), 2);
 
-      Result : Engine_Value_Array(1..2);
+      Result : Engine_Value_Vectors.Vector;
 
    begin
       Result (1) := Create (X / Y);

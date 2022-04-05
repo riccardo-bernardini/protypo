@@ -16,12 +16,13 @@ package body Protypo.Api.Engine_Values.Table_Wrappers is
           N_Rows,
           N_Columns
          );
+
    package My_Fields is
          new Field_Names (Field_Enumerator => Field_Name,
                           Prefix           => "");
    package Row_Wrappers is
          new Array_Wrappers (Element_Type => Engine_Value,
-                             Array_Type   => Engine_Value_Array,
+                             Array_Type   => Engine_Value_Vectors.Vector,
                              Create       => Identity);
 
  function Force_Handler (Item : Engine_Value) return Handler_Value

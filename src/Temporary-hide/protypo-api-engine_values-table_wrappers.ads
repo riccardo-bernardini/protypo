@@ -1,9 +1,8 @@
---  with Ada.Containers.Indefinite_Vectors;
-
 with Protypo.Api.Engine_Values.Handlers;
 with Protypo.Api.Engine_Values.Engine_Value_Holders;
 with Protypo.Api.Engine_Values.Engine_Value_Vectors;
-with Protypo.Api.Engine_Values;
+with Protypo.Api.Engine_Values.Array_Wrappers;
+
 with Ada.Containers.Indefinite_Ordered_Maps;
 
 package Protypo.Api.Engine_Values.Table_Wrappers is
@@ -103,7 +102,7 @@ private
                                                  Element_Type => Positive);
 
    type Row_Wrapper is
-     new Value_Vectors.Vector_Handler
+     new Array_Wrappers.Array_Wrapper
    with
       record
          Label_To_Column : Label_Maps.Map;
