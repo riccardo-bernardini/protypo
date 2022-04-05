@@ -6,11 +6,11 @@ package Protypo.Code_Trees.Interpreter.Expressions is
 
 
 
-   function To_Vector (X : Engine_Value_Vectors.Vector)
-                       return Engine_Value_Vectors.Vector;
-
-   function To_Array (X : Engine_Value_Vectors.Vector)
-                      return Engine_Value_Vectors.Vector;
+   --  function To_Vector (X : Engine_Value_Vectors.Vector)
+   --                      return Engine_Value_Vectors.Vector;
+   --
+   --  function To_Array (X : Engine_Value_Vectors.Vector)
+   --                     return Engine_Value_Vectors.Vector;
 
 
    function Eval_Expression (Status : Interpreter_Access;

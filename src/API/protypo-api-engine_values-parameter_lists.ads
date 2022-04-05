@@ -17,7 +17,11 @@ package Protypo.Api.Engine_Values.Parameter_Lists is
 
    function Optional (Default : Engine_Value) return Parameter_Spec;
 
+   function Is_Optional (Item : Parameter_Spec) return Boolean;
 
+   function Default_Value (Item : Parameter_Spec) return Engine_Value
+     with
+       Pre => Is_Optional (Item);
 
    type Parameter_Signature is array (Positive range <>) of Parameter_Spec;
 

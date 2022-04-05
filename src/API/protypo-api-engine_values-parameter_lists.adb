@@ -1,6 +1,15 @@
 pragma Ada_2012;
 package body Protypo.Api.Engine_Values.Parameter_Lists is
 
+   function Is_Optional (Item : Parameter_Spec) return Boolean
+   is (Item.Class = Optional_Class);
+
+   function Default_Value (Item : Parameter_Spec) return Engine_Value
+   is (if Is_Optional (Item) then
+          Item.Default.Element
+       else
+          raise Constraint_Error);
+
    ------------
    -- Create --
    ------------
