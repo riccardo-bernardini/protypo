@@ -6,29 +6,6 @@ pragma Ada_2012;
 package body Protypo.API.Engine_Values is
 
 
-   ------------------------
-   -- Default_Parameters --
-   ------------------------
-
-   function Bool (X : Integer) return Integer
-   is (if X /= 0 then 1 else 0);
-
-   function Bool (X : Float) return Integer
-   is (if X /= 0.0 then 1 else 0);
-
-
-   function Bool (X : Engine_Value) return Integer
-   is (case X.Class is
-          when Int    => Bool (Get_Integer (X)),
-          when Real   => Bool (Get_Float (X)),
-          when others => raise Constraint_Error);
-
-   function Real (X : Engine_Value) return Float
-   is (case X.Class is
-          when Int    => Float (Get_Integer (X)),
-          when Real   => Get_Float (X),
-          when others => raise Constraint_Error);
-
 
    ---------
    -- "-" --
@@ -52,7 +29,7 @@ package body Protypo.API.Engine_Values is
    -- "not" --
    -----------
 
-   function "not" (X : Engine_Value) return Engine_Value is
+   function "not" (X : Engine_Value) return Integer_Value is
    begin
       if not Is_Numeric (X) then
          raise Constraint_Error with "Non-numeric value";
@@ -127,7 +104,7 @@ package body Protypo.API.Engine_Values is
    -- "=" --
    ---------
 
-   function "=" (Left, Right : Engine_Value) return Engine_Value is
+   function "=" (Left, Right : Engine_Value) return Integer_Value is
    begin
       if not (Is_Scalar (Left) and Is_Scalar (Right)) then
          raise Constraint_Error;
@@ -153,7 +130,7 @@ package body Protypo.API.Engine_Values is
    -- "<" --
    ---------
 
-   function "<" (Left, Right : Engine_Value) return Engine_Value is
+   function "<" (Left, Right : Engine_Value) return Integer_Value is
    begin
       if not (Is_Scalar (Left) and Is_Scalar (Right)) then
          raise Constraint_Error;
@@ -179,7 +156,7 @@ package body Protypo.API.Engine_Values is
    -- "and" --
    -----------
 
-   function "and" (Left, Right : Engine_Value) return Engine_Value is
+   function "and" (Left, Right : Integer_Value) return Integer_Value is
    begin
       return Create (Bool (Left) * Bool (Right));
    end "and";
@@ -188,7 +165,7 @@ package body Protypo.API.Engine_Values is
    -- "or" --
    ----------
 
-   function "or" (Left, Right : Engine_Value) return Engine_Value is
+   function "or" (Left, Right : Integer_Value) return Integer_Value is
    begin
       return Create (Bool (Left) + Bool (Right));
    end "or";
@@ -197,7 +174,7 @@ package body Protypo.API.Engine_Values is
    -- "xor" --
    -----------
 
-   function "xor" (Left, Right : Engine_Value) return Engine_Value is
+   function "xor" (Left, Right : Integer_Value) return Integer_Value is
    begin
       return Create ((Bool (Left) + Bool (Right)) mod 2);
    end "xor";
