@@ -126,6 +126,13 @@ package Protypo.Api.Engine_Values.Handlers is
    function Get_Function (Val : Function_Value) return Function_Interface_Access;
    function Get_Reference (Val : Reference_Value) return Reference_Interface_Access;
    function Get_Constant (Val : Constant_Value) return Constant_Interface_Access;
+
+   function Force_Handler (Item : Engine_Value) return Handler_Value
+     with Pre => Item.Class /= Void and Item.Class /= Iterator;
+   --  Take any Engine_Value (but Void and Iterator) and embed it
+   --  (if necessary) into a Constant handler value.  If Item is
+   --  already a handler, just return Item.
+
 private
    type Callback_Based_Handler is
      new Function_Interface

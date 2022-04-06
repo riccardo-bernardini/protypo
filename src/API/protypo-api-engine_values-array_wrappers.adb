@@ -10,7 +10,7 @@ package body Protypo.Api.Engine_Values.Array_Wrappers is
                           return Handlers.Ambivalent_Interface_Access
    is
       Result : constant Wrapper_Access :=
-                 new Array_Wrapper'(A => Basic_Array_Wrappers.Make_Wrapper);
+                 new Array_Wrapper'(A => Engine_Value_Array_Wrappers.Make_Wrapper);
    begin
       for Idx in Init'Range loop
          Result.Set (Index => Idx,

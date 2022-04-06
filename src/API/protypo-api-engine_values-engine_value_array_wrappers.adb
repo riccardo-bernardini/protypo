@@ -6,9 +6,9 @@ with Protypo.Api.Engine_Values.Range_Iterators;
 with Protypo.Api.Field_Names;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_Io; use Ada.Text_Io;
 
-package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
+package body Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
    -- Type that represents the name of the fields that we export
    -- every name is preceded by "Field_" in order to avoid clashes
    -- with keywords (e.g., 'range')
@@ -25,7 +25,7 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
      new Field_Names (Field_Enumerator => Field_Name,
                       Prefix           => "Field_");
 
-   function To_Field (X : ID) return Field_Name
+   function To_Field (X : Id) return Field_Name
    is (Field_Names_Package.To_Field (X));
 
    --     function To_Field (X : String) return Field_Name
@@ -41,26 +41,26 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
          --  Container : Vector_Access;
       end record;
 
-
-   function Force_Handler (Item : Engine_Value) return Handler_Value
-   is (case Item.Class is
-          when Handler_Classes   =>
-             Item,
-
-          when Int               =>
-             Constant_Wrappers.To_Handler_Value (Get_Integer (Item)),
-
-          when Real              =>
-             Constant_Wrappers.To_Handler_Value (Get_Float (Item)),
-
-          when Text              =>
-             Constant_Wrappers.To_Handler_Value (Get_String (Item)),
-
-          when logical              =>
-             Constant_Wrappers.To_Handler_Value (Get_Logical (Item)),
-
-          when Void | Iterator   =>
-             raise Constraint_Error);
+   --
+   --  function Force_Handler (Item : Engine_Value) return Handler_Value
+   --  is (case Item.Class is
+   --         when Handler_Classes   =>
+   --            Item,
+   --
+   --         when Int               =>
+   --            Constant_Wrappers.To_Handler_Value (Get_Integer (Item)),
+   --
+   --         when Real              =>
+   --            Constant_Wrappers.To_Handler_Value (Get_Float (Item)),
+   --
+   --         when Text              =>
+   --            Constant_Wrappers.To_Handler_Value (Get_String (Item)),
+   --
+   --         when logical              =>
+   --            Constant_Wrappers.To_Handler_Value (Get_Logical (Item)),
+   --
+   --         when Void | Iterator   =>
+   --            raise Constraint_Error);
 
    overriding procedure Reset (Iter : in out Array_Iterator);
    overriding procedure Next (Iter : in out Array_Iterator);
@@ -84,7 +84,7 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
    is (not Engine_Value_Vectors.Has_Element (Iter.Cursor));
 
    overriding function Element (Iter : Array_Iterator) return Handler_Value
-   is (Force_Handler (Engine_Value_Vectors.Element (Iter.Cursor)));
+   is (Handlers.Force_Handler (Engine_Value_Vectors.Element (Iter.Cursor)));
 
    ------------------
    -- Make_Wrapper --
@@ -94,11 +94,11 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
      (Init : Engine_Value_Vectors.Vector := Engine_Value_Vectors.Empty_Vector)
       return Array_Wrapper_Access
    is
-      V : constant Vector_Access :=
-            new Engine_Value_Vectors.Vector'(Engine_Value_Vectors.Empty_Vector);
+      --  V : constant Vector_Access :=
+      --        new Engine_Value_Vectors.Vector'(Engine_Value_Vectors.Empty_Vector);
 
       Result : constant Array_Wrapper_Access :=
-                 new Array_Wrapper'(Vector => V);
+                 new Array_Wrapper'(Vector => Engine_Value_Vectors.Empty_Vector);
    begin
       for El of Init loop
          Result.Vector.Append (El);
@@ -117,7 +117,7 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
       Value     :        Engine_Value)
    is
    begin
-      Container.Vector.Insert (Index, Force_Handler (Value));
+      Container.Vector.Insert (Index, Value);
    end Set;
 
    ------------
@@ -155,7 +155,7 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
             raise Handlers.Out_Of_Range with "Out of bounds index";
          end if;
 
-         return Constant_Wrappers.To_Handler_Value (X.Vector.all (Idx));
+         return Constant_Wrappers.To_Handler_Value (X.Vector (Idx));
       end;
    end Get;
 
@@ -163,7 +163,7 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
    -- Get --
    ---------
 
-   function Get (X : Array_Wrapper; Field : ID) return Handler_Value is
+   function Get (X : Array_Wrapper; Field : Id) return Handler_Value is
       use Constant_Wrappers;
    begin
       case To_Field (Field) is
@@ -219,4 +219,4 @@ package body Protypo.Api.Engine_Values.Basic_Array_Wrappers is
    --          or Equal_Case_Insensitive (Field, "range");
 
 
-end Protypo.Api.Engine_Values.Basic_Array_Wrappers;
+end Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;

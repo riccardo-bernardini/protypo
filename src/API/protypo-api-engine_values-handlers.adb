@@ -1,4 +1,6 @@
 pragma Ada_2012;
+with Protypo.Api.Engine_Values.Constant_Wrappers;
+
 package body Protypo.Api.Engine_Values.Handlers is
 
    function Create (Val : Array_Interface_Access) return Engine_Value
@@ -68,6 +70,25 @@ package body Protypo.Api.Engine_Values.Handlers is
    function Get_Constant (Val : Constant_Value) return Constant_Interface_Access
    is (Val.Constant_Object);
 
+   function Force_Handler (Item : Engine_Value) return Handler_Value
+   is (case Item.Class is
+          when Handler_Classes      =>
+             Item,
+
+          when Int                  =>
+             Constant_Wrappers.To_Handler_Value (Get_Integer (Item)),
+
+          when Real                 =>
+             Constant_Wrappers.To_Handler_Value (Get_Float (Item)),
+
+          when Text                 =>
+             Constant_Wrappers.To_Handler_Value (Get_String (Item)),
+
+          when Logical              =>
+             Constant_Wrappers.To_Handler_Value (Get_Logical (Item)),
+
+          when Void | Iterator      =>
+             raise Constraint_Error);
 
    ---------------
    function Signature (Fun : Callback_Based_Handler)

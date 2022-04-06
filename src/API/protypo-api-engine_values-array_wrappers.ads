@@ -1,4 +1,4 @@
-with Protypo.Api.Engine_Values.Basic_Array_Wrappers;
+with Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;
 with Protypo.Api.Engine_Values.Engine_Value_Vectors;
 with Protypo.Api.Engine_Values.Handlers;
 
@@ -28,11 +28,11 @@ generic
    type Element_Type is private;
 
    type Array_Type is
-     array (Basic_Array_Wrappers.Array_Wrapper_Index range <>) of Element_Type;
+     array (Engine_Value_Array_Wrappers.Array_Wrapper_Index range <>) of Element_Type;
 
    with function Create (X : Element_Type) return Engine_Value is <>;
 package Protypo.Api.Engine_Values.Array_Wrappers is
-   subtype Index_Type is Basic_Array_Wrappers.Array_Wrapper_Index;
+   subtype Index_Type is Engine_Value_Array_Wrappers.Array_Wrapper_Index;
 
    type Array_Wrapper is new Handlers.Ambivalent_Interface with private;
    type Array_Wrapper_Access is access Array_Wrapper;
@@ -65,7 +65,7 @@ private
      new Handlers.Ambivalent_Interface
    with
       record
-         A : Basic_Array_Wrappers.Array_Wrapper_Access;
+         A : Engine_Value_Array_Wrappers.Array_Wrapper_Access;
       end record;
 
    function Get (X     : Array_Wrapper;
