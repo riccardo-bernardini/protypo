@@ -6,7 +6,7 @@ with Protypo.Api.Engine_Values.Range_Iterators;
 with Protypo.Api.Field_Names;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_Io; use Ada.Text_Io;
 
 
 package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
@@ -23,7 +23,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
      new Field_Names (Field_Enumerator => Field_Name,
                       Prefix           => "Field_");
 
-   function To_Field (X : ID) return Field_Name
+   function To_Field (X : Id) return Field_Name
    is (Field_Names_Package.To_Field (X));
 
 
@@ -42,25 +42,25 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    overriding function Element (Iter : Array_Iterator) return Handler_Value;
 
 
-   function Force_Handler (Item : Engine_Value) return Handler_Value
-   is (case Item.Class is
-          when Handler_Classes   =>
-             Item,
-
-          when Int               =>
-             Constant_Wrappers.To_Handler_Value (Get_Integer (Item)),
-
-          when Real              =>
-             Constant_Wrappers.To_Handler_Value (Get_Float (Item)),
-
-          when Text              =>
-             Constant_Wrappers.To_Handler_Value (Get_String (Item)),
-
-          when logical              =>
-             Constant_Wrappers.To_Handler_Value (Get_Logical (Item)),
-
-          when Void | Iterator   =>
-             raise Constraint_Error);
+   --  function Force_Handler (Item : Engine_Value) return Handler_Value
+   --  is (case Item.Class is
+   --         when Handler_Classes   =>
+   --            Item,
+   --
+   --         when Int               =>
+   --            Constant_Wrappers.To_Handler_Value (Get_Integer (Item)),
+   --
+   --         when Real              =>
+   --            Constant_Wrappers.To_Handler_Value (Get_Float (Item)),
+   --
+   --         when Text              =>
+   --            Constant_Wrappers.To_Handler_Value (Get_String (Item)),
+   --
+   --         when logical              =>
+   --            Constant_Wrappers.To_Handler_Value (Get_Logical (Item)),
+   --
+   --         when Void | Iterator   =>
+   --            raise Constraint_Error);
 
    overriding procedure Reset (Iter : in out Array_Iterator)
    is
@@ -79,7 +79,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    is (not Engine_Value_Vectors.Has_Element (Iter.Cursor));
 
    overriding function Element (Iter : Array_Iterator) return Handler_Value
-   is (Force_Handler (Engine_Value_Vectors.Element (Iter.Cursor)));
+   is (Handlers.Force_Handler (Engine_Value_Vectors.Element (Iter.Cursor)));
 
    ---------
    -- Get --
@@ -113,15 +113,15 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    -- Get --
    ---------
 
-   function Get (X : Vector_Handler; Field : ID) return Handler_Value is
+   function Get (X : Vector_Handler; Field : Id) return Handler_Value is
       use Constant_Wrappers;
    begin
       case To_Field (Field) is
          when Field_First =>
-            return To_Handler_Value (Integer(X.Vect.First_Index));
+            return To_Handler_Value (Integer (X.Vect.First_Index));
 
          when Field_Last =>
-            return To_Handler_Value (Integer(X.Vect.Last_Index));
+            return To_Handler_Value (Integer (X.Vect.Last_Index));
 
          when Field_Length =>
             return To_Handler_Value (Integer (X.Vect.Length));
@@ -136,8 +136,8 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
          when Field_Range =>
             return To_Handler_Value
               (Handlers.Create
-                 (Range_Iterators.Create (Start     => Integer(X.Vect.First_Index),
-                                          Stop      => Integer(X.Vect.Last_Index))));
+                 (Range_Iterators.Create (Start     => Integer (X.Vect.First_Index),
+                                          Stop      => Integer (X.Vect.Last_Index))));
       end case;
    end Get;
 

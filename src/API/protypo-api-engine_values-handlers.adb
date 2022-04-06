@@ -84,9 +84,6 @@ package body Protypo.Api.Engine_Values.Handlers is
           when Text                 =>
              Constant_Wrappers.To_Handler_Value (Get_String (Item)),
 
-          when Logical              =>
-             Constant_Wrappers.To_Handler_Value (Get_Logical (Item)),
-
           when Void | Iterator      =>
              raise Constraint_Error);
 
