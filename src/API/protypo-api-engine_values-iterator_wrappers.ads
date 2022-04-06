@@ -1,5 +1,7 @@
 with Ada.Iterator_Interfaces;
 
+with Protypo.Api.Engine_Values.Handlers;
+
 generic
    type Cursor is private;
 
@@ -7,17 +9,19 @@ generic
 
    with function Element (Position : Cursor) return Engine_Value;
 
-   with package Iterators is
+   with package Basic_Iterators is
      new Ada.Iterator_Interfaces (Cursor       => Cursor,
                                   Has_Element  => Has_Element);
 
 package Protypo.Api.Engine_Values.Iterator_Wrappers is
    type Iterator_Wrapper is
-     new Iterator_Interface with private;
+     new Handlers.Iterator_Interface
+   with
+     private;
 
    type Iterator_Wrapper_Access is access Iterator_Wrapper;
 
-   type Basic_Iterator_Access is access all Iterators.Reversible_Iterator'Class;
+   type Basic_Iterator_Access is access all Basic_Iterators.Reversible_Iterator'Class;
 
    function Make_Wrapper (Iter : Basic_Iterator_Access)
                           return Iterator_Wrapper_Access;
@@ -32,7 +36,7 @@ package Protypo.Api.Engine_Values.Iterator_Wrappers is
 
 private
    type Iterator_Wrapper is
-     new Iterator_Interface with
+     new Handlers.Iterator_Interface with
       record
          Iterator : Basic_Iterator_Access;
          Position : Cursor;

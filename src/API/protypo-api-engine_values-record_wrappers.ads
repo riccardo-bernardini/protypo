@@ -1,5 +1,7 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 
+with Protypo.Api.Engine_Values.Handlers;
+
 --
 -- This package provides a wrapper around a map structure. The field names
 -- are the keys of the map.
@@ -17,7 +19,7 @@ package Protypo.Api.Engine_Values.Record_Wrappers is
 
 
 
-   type Record_Wrapper is new Record_Interface with private;
+   type Record_Wrapper is new Handlers.Record_Interface with private;
    type Record_Wrapper_Access is access Record_Wrapper;
 
    overriding function Get (X : Record_Wrapper; Field : ID) return Handler_Value;
@@ -30,7 +32,7 @@ private
 
    type Record_Map_Reference (Ref : access Record_Map) is limited null record;
 
-   type Record_Wrapper is new Record_Interface
+   type Record_Wrapper is new Handlers.Record_Interface
    with
       record
          Map : aliased Record_Map;

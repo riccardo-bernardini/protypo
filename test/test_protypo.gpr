@@ -1,0 +1,31 @@
+with "../protypo.gpr";
+
+project Test_Protypo is
+   for Source_Dirs use ("examples",
+       "interpreter-test",
+       "scanning-test",
+       "simple-example",
+       "parsing-test" --, "table-test"
+       );
+
+   for Object_Dir use "obj";
+   for Main use ("protypo-parsing-test.adb", "protypo-scanning-test.adb", "prova_interpreter.adb", "simple_example.adb");
+
+   package Builder is
+      for Switches ("ada") use ("-s");
+   end Builder;
+
+   package Compiler is
+      for Switches ("ada") use ("-gnatwa", "-gnat12", "-g", "-gnatE", "-fstack-check", "-gnata");
+   end Compiler;
+
+   package Binder is
+      for Switches ("ada") use ("-E");
+   end Binder;
+
+   package Linker is
+      for Switches ("ada") use ("-g");
+   end Linker;
+
+end Test_Protypo;
+

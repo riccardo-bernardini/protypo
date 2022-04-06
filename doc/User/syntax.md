@@ -28,7 +28,7 @@ simple_exp = term [(+|-) simple_exp]
 term       = factor [('*|/) term]
 factor     = [ unary_op ] primary
 unary_op   = +|-|NOT
-primary    = '( expression ') | name | NUMBER | TEXT
+primary    = '( expression ') | name | NUMBER | TEXT | CAPTURE '( proc_call ')
 expr_list  = expression [, expr_list]
 
 if         = IF expression THEN sequence_of_statement 

@@ -1,0 +1,59 @@
+Una riga
+#{
+
+function zorro(x; y:=2)
+is
+begin
+  [ #x+y# ]
+end zorro;
+
+old := 1;
+x := 1;
+loop
+
+zino := capture(zorro(x));
+
+[ #42*x# gigi (#x#, #zino#, #zino#) ]
+
+zorro(x);
+zorro(x,0);
+
+--[ #y# ma anche #v#]
+
+  tmp := x;
+  x := x + old;
+  old := tmp;
+
+  if x > 10 then
+    exit;
+  end if;
+end loop;
+
+procedure within(tag; body) is
+begin
+  [
+  <#tag#>
+  #body#
+  </#tag#>
+  ]
+end within;
+
+procedure t(a; b) is
+begin
+[<td>#a# </td><td> #b#</td>]
+end t;
+
+procedure minnie(number)
+is
+begin
+  for i in range(1, number) loop
+    within("tr", capture(t("minnie", i)));
+  end loop;
+end minnie;
+
+within("table", capture(minnie(4)));
+
+
+}#
+
+un'altra riga #x

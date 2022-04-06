@@ -31,28 +31,28 @@ package body Protypo.Code_Trees.Interpreter.Names is
          case Handler_Classes (X.Class) is
             when Array_Handler =>
                return Name_Reference'(Class            => Array_Reference,
-                                      Array_Handler    => Get_Array (X));
+                                      Array_Handler    => Handlers.Get_Array (X));
 
             when Record_Handler =>
                return Name_Reference'(Class             => Record_Reference,
-                                      Record_Handler    => Get_Record (X));
+                                      Record_Handler    => Handlers.Get_Record (X));
 
             when Ambivalent_Handler =>
                return Name_Reference'(Class              => Ambivalent_Reference,
-                                      Ambivalent_Handler => Get_Ambivalent (X));
+                                      Ambivalent_Handler => Handlers.Get_Ambivalent (X));
 
             when Function_Handler =>
                return Name_Reference'(Class            => Function_Reference,
-                                      Function_Handler => Get_Function (X),
+                                      Function_Handler => Handlers.Get_Function (X),
                                       Parameters       => <>);
 
             when Reference_Handler =>
                return Name_Reference'(Class            => Variable_Reference,
-                                      Variable_Handler => Get_Reference (X));
+                                      Variable_Handler => Handlers.Get_Reference (X));
 
             when Constant_Handler =>
                return Name_Reference'(Class             => Constant_Reference,
-                                      Costant_Handler   => Get_Constant (X));
+                                      Costant_Handler   => Handlers.Get_Constant (X));
          end case;
       end "+";
 
@@ -104,7 +104,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
                case Indexed_References (Head.Class) is
                   when Array_Reference =>
 
-                     return + Head.Array_Handler.Get (Expressions.To_Array (Indexes));
+                     return + Head.Array_Handler.Get (Indexes);
 
                   when Function_Reference =>
 
@@ -114,7 +114,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
 
                   when Ambivalent_Reference =>
                      --                       Put_Line ("@@@ index");
-                     return + Head.Ambivalent_Handler.Get (Expressions.To_Array (Indexes));
+                     return + Head.Ambivalent_Handler.Get (Indexes);
 
                end case;
             end;
@@ -126,14 +126,13 @@ package body Protypo.Code_Trees.Interpreter.Names is
                use Protypo.Code_Trees.Interpreter.Symbol_Table_References;
 
                Ident    : constant ID := To_Id (Expr.ID_Value);
-               Position : Cursor := Status.Symbol_Table.Find (ident);
-               Val      : Engine_Value := Void_Value;
+               Position : Cursor := Status.Symbol_Table.Find (Ident);
             begin
 
---                 Put_Line ("@@@ searching '" & String(IDent) & "'");
+               --                 Put_Line ("@@@ searching '" & String(IDent) & "'");
                if Position = No_Element then
 
---                    Put_Line ("@@@ not found '" & ID & "'");
+                  --                    Put_Line ("@@@ not found '" & ID & "'");
                   --
                   -- The name is not in the symbol table: create it
                   -- but leave it not initialized, it can be used only
@@ -143,22 +142,22 @@ package body Protypo.Code_Trees.Interpreter.Names is
                                               Position      => Position,
                                               Initial_Value => Void_Value);
 
---                    Put_Line ("@@@ inserted '" & ID & "' @" & Image (Position));
+                  --                    Put_Line ("@@@ inserted '" & ID & "' @" & Image (Position));
                   if Position = No_Element then
                      raise Program_Error with "something bad";
                   end if;
 
                   declare
-                     X : constant Reference_Interface_Access :=
+                     X : constant Api.Engine_Values.Handlers.Reference_Interface_Access :=
                            Symbol_Table_Reference (Position);
 
                      Result : Name_Reference :=
                                 (Class            => Variable_Reference,
                                  Variable_Handler => X);
                   begin
---                       Put_Line ("@@@ hh");
+                     --                       Put_Line ("@@@ hh");
                      Result.Variable_Handler := X;
---                       Put_Line ("@@@ hhh");
+                     --                       Put_Line ("@@@ hhh");
                      return Result;
                   end;
                else
@@ -168,23 +167,24 @@ package body Protypo.Code_Trees.Interpreter.Names is
                   -- reference to the symbol table.  Remember that the
                   -- result of the evaluation of a name is always a reference.
                   --
-                  Val := Value (Position);
+                  declare
+                     Val : constant Engine_Value := Value (Position);
+                  begin
+                     if Val.Class in Handler_Classes then
+                        return + Val;
 
+                     else
+                        return Name_Reference'
+                          (Class            => Variable_Reference,
+                           Variable_Handler => Symbol_Table_Reference (Position));
 
-                  if Val.Class in Handler_Classes then
-                     return + Val;
-
-                  else
-                     return Name_Reference'
-                       (Class            => Variable_Reference,
-                        Variable_Handler => Symbol_Table_Reference (Position));
-
-                  end if;
+                     end if;
+                  end;
                end if;
             end;
       end case;
    exception
-      when Unknown_Field =>
+      when Handlers.Unknown_Field =>
          raise Run_Time_Error with "Unknown field at " & Tokens.Image (Expr.Source_Position);
    end Eval_Name;
 

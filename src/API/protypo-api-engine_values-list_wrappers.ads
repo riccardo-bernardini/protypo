@@ -1,4 +1,4 @@
-with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 with Ada.Finalization;
 
 package Protypo.Api.Engine_Values.List_Wrappers is
@@ -7,10 +7,10 @@ package Protypo.Api.Engine_Values.List_Wrappers is
    procedure Append (Item  : in out List;
                      Value : Engine_Value);
 
-   function Iterator (Item : List) return Iterator_Interface_Access;
+   function Iterator (Item : List) return Handlers.Iterator_Interface_Access;
 private
    package Engine_Value_Lists is
-     new Ada.Containers.Doubly_Linked_Lists (Engine_Value);
+     new Ada.Containers.Indefinite_Doubly_Linked_Lists (Engine_Value);
 
    type Value_List_Access is access Engine_Value_Lists.List;
    type List is new Ada.Finalization.Controlled with

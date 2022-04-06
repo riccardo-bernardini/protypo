@@ -31,9 +31,10 @@ package Protypo.Code_Trees is
       Int_Constant,
       Real_Constant,
       Text_Constant,
+      Capture_Call, 
       Selected,
       Indexed,
-      Identifier,
+      Identifier, 
       List_Of_Names,
       List_Of_Expressions,
       Parameter_Signature
@@ -174,6 +175,14 @@ package Protypo.Code_Trees is
                             return Parsed_Code
      with
        Post => Class (Procedure_Call'Result) = Procedure_Call;
+   
+   function Capture (Name           : Unbounded_Id;
+                     Parameters     : Tree_Array;
+                     Position       : Tokens.Token_Position := Tokens.No_Position)
+                     return Parsed_Code
+     with
+       Post => Class (Capture'Result) = Capture_Call;
+   
 
 
    function Selector (Ref            : Parsed_Code;
@@ -282,8 +291,8 @@ private
             when Return_Statement =>
                Return_Values   : Node_Vectors.Vector;
             
-            when Procedure_Call =>
-               Name            : Unbounded_String;
+            when Procedure_Call | Capture_Call =>
+               Name            : Unbounded_Id;
                Params          : Node_Vectors.Vector;
             
             when Exit_Statement =>
@@ -326,8 +335,8 @@ private
                Indexes         : Node_Vectors.Vector;
                
             when Identifier => 
-               ID_Value        : Unbounded_ID;
-            
+               Id_Value        : Unbounded_Id;
+               
             when Loop_Block | For_Block |  While_Block =>
                Loop_Body       : Node_Vectors.Vector;
                Labl            : Label_Type;
@@ -348,6 +357,10 @@ private
                end case;
          end case;
       end record;
+   
+   
+   subtype Indexed_Name_Node is Node (Indexed);
+   
 
    procedure Free  is 
      new Ada.Unchecked_Deallocation (Object => Node,

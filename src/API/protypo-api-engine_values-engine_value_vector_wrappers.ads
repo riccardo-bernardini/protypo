@@ -1,5 +1,6 @@
-with Ada.Containers.Vectors;
 with Ada.Finalization;
+with Protypo.Api.Engine_Values.Handlers;
+with Protypo.Api.Engine_Values.Engine_Value_Vectors;
 --
 -- ## What is this?
 --
@@ -17,26 +18,21 @@ with Ada.Finalization;
 --   _range_ iterates over the set of indexes, _iterate_ over the array
 --   elements
 --
-Generic
-   type Index_Type is range <>;
 
-package Protypo.Api.Engine_Values.Value_Vectors is
-   package Vectors is
-     new Ada.Containers.Vectors (Index_Type   => Index_Type,
-                                 Element_Type => Engine_Value);
-
-   type Vector_Reference (Ref : access Vectors.Vector) is limited private
+package Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
+   type Vector_Reference (Ref : access Engine_Value_Vectors.Vector) is limited private
      with Implicit_Dereference => Ref;
 
    type Vector_Handler is
      new Ada.Finalization.Controlled
-     and Ambivalent_Interface
+     and Handlers.Ambivalent_Interface
    with
      private;
+
    type Vector_Handler_Access is access Vector_Handler;
 
    overriding function Get (X     : Vector_Handler;
-                            Index : Engine_Value_Array)
+                            Index : Engine_Value_Vectors.Vector)
                                return Handler_Value;
 
    overriding function Get (X     : Vector_Handler;
@@ -50,12 +46,12 @@ package Protypo.Api.Engine_Values.Value_Vectors is
 
 
 private
-   type Vector_Reference (Ref : access Vectors.Vector) is limited null record;
-   type Vector_Access is access Vectors.Vector;
+   type Vector_Reference (Ref : access Engine_Value_Vectors.Vector) is limited null record;
+   type Vector_Access is access Engine_Value_Vectors.Vector;
 
    type Vector_Handler is
      new Ada.Finalization.Controlled
-     and Ambivalent_Interface
+     and Handlers.Ambivalent_Interface
    with
       record
          Vect : Vector_Access;
@@ -69,4 +65,4 @@ private
    function Vector (Item : Vector_Handler) return Vector_Reference
    is (Vector_Reference'(Ref => Item.Vect));
 
-end Protypo.Api.Engine_Values.Value_Vectors;
+end Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers;

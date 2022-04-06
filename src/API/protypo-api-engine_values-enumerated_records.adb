@@ -1,5 +1,6 @@
 pragma Ada_2012;
 with Ada.Characters.Handling;
+with Ada.Strings.Fixed;
 
 package body Protypo.Api.Engine_Values.Enumerated_Records is
    -----------
@@ -9,33 +10,40 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
    function To_Id (X : Field_Name) return ID
    is
       use Ada.Characters.Handling;
+      use Ada.Strings.Fixed;
 
       F : constant ID := Id(To_Lower (X'Image));
-      P : constant ID := Id(To_Lower (Prefix));
    begin
       if Prefix = "" then
          return F;
-
-      elsif F'Length > P'Length and then F (F'First .. F'First + P'Length - 1) = P then
-         return F (F'First + P'Length .. F'Last);
-
-      else
-         raise Program_Error
-           with "Enumerative value '" & String (F) & "' "
-           & "has not prefix '" & String (P) & "'";
       end if;
+
+      declare
+         P : constant String := To_Lower (Prefix);
+      begin
+         if F'Length > P'Length and then Head (String(F), P'Length) = P then
+            return ID (Tail (String (F), F'First - P'Length));
+
+         else
+            raise Program_Error
+              with "Enumerative value '" & String (F) & "' "
+              & "has not prefix '" & String (P) & "'";
+         end if;
+      end;
    end To_Id;
 
    --------------
    -- To_Array --
    --------------
 
-   function To_Array (Db : Multi_Aggregate) return Engine_Value_Array
+   function To_Array (Db : Multi_Aggregate) return Engine_Value_Vectors.Vector
    is
-      Result : Engine_Value_Array (Db'Range);
+      use Handlers;
+
+      Result : Engine_Value_Vectors.Vector;
    begin
-      for K in Db'Range loop
-         Result (K) := Create (Record_Interface_Access (Make_Record (Db (K))));
+      for Element of Db loop
+         Result.Append (Create (Record_Interface_Access (Make_Record (Element))));
       end loop;
 
       return Result;
@@ -61,7 +69,7 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
    ----------------
 
    function Make_Value (Init : Aggregate_Type) return Engine_Value
-   is (Create (Record_Interface_Access (Make_Record (Init))));
+   is (Handlers.Create (Handlers.Record_Interface_Access (Make_Record (Init))));
 
    ----------
    -- Fill --
@@ -71,9 +79,10 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
      (Item   : in out Enumerated_Record;
       Values : Aggregate_Type)
    is
+      use Engine_Value_Holders;
    begin
       for Field in Values'Range loop
-         Item.Set (Field, Values (Field));
+         Item.Set (Field, Element (Values (Field)));
       end loop;
    end Fill;
 

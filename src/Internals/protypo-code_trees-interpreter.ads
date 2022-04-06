@@ -1,6 +1,8 @@
 with Protypo.Api.Symbols;
 with Protypo.Api.Consumers;
-with Protypo.Api.Engine_Values;
+with Protypo.Api.Engine_Values.Engine_Value_Vectors;
+
+with Ada.Containers.Doubly_Linked_Lists;
 
 package Protypo.Code_Trees.Interpreter is
    use Protypo.Api.Engine_Values;
@@ -12,10 +14,6 @@ package Protypo.Code_Trees.Interpreter is
    Bad_Iterator : exception;
    Bad_Field    : exception;
 private
-  package Engine_Value_Vectors is
-     new Ada.Containers.Vectors (Index_Type   => Positive,
-                                 Element_Type => Engine_Value);
-
    type Symbol_Table_Access is not null access Api.Symbols.Table;
 
 
@@ -31,22 +29,34 @@ private
                Loop_Label : Label_Type;
 
             when Return_Statement =>
-               Result : Engine_Value_Vectors.Vector;
+               Result : Api.Engine_Values.Engine_Value_Vectors.Vector;
          end case;
       end record;
 
    No_Break : constant Break_Status := (Breaking_Reason => None);
 
+   use type Api.Consumers.Consumer_Access;
+
+   package Consumer_Stacks is
+     new Ada.Containers.Doubly_Linked_Lists (Api.Consumers.Consumer_Access);
+
+   subtype Consumer_Stack is Consumer_Stacks.List;
+
    type Interpreter_Type is tagged limited
       record
-         Break        : Break_Status;
-         Symbol_Table : Api.Symbols.Table;
+         Break                          : Break_Status;
+         Symbol_Table                   : Api.Symbols.Table;
+         Saved_Consumers                : Consumer_Stack;
+         Consumer_Without_Escape_Cursor : Api.Symbols.Protypo_Tables.Cursor;
+         Consumer_With_Escape_Cursor    : Api.Symbols.Protypo_Tables.Cursor;
       end record;
+
 
    type Interpreter_Access is not null access Interpreter_Type;
 
 
+   procedure Push_Consumer (Interpreter : Interpreter_Access;
+                            Consumer    : Api.Consumers.Consumer_Access);
 
-
-
+   procedure Pop_Consumer (Interpreter :  Interpreter_Access);
 end Protypo.Code_Trees.Interpreter;

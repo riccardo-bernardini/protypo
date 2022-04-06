@@ -1,4 +1,6 @@
 with Protypo.Api.Engine_Values.Constant_Wrappers;
+with Protypo.Api.Engine_Values.Handlers;
+
 --
 -- ## What is this?
 --
@@ -6,11 +8,11 @@ with Protypo.Api.Engine_Values.Constant_Wrappers;
 -- allows to iterate over an interval between two integers
 --
 package Protypo.Api.Engine_Values.Range_Iterators is
-   type Range_Iterator is new Iterator_Interface with private;
+   type Range_Iterator is new Handlers.Iterator_Interface with private;
 
-   function Create (Start, Stop : Integer) return Iterator_Interface_Access;
+   function Create (Start, Stop : Integer) return handlers.Iterator_Interface_Access;
    function Create (Start, Stop : Integer) return Handler_Value
-   is (Create (Create (Start, Stop)));
+   is (handlers.Create (Create (Start, Stop)));
 
    overriding procedure Reset (Iter : in out Range_Iterator);
    overriding procedure Next (Iter : in out Range_Iterator);
@@ -19,7 +21,7 @@ package Protypo.Api.Engine_Values.Range_Iterators is
 private
    use Protypo.Api.Engine_Values.Constant_Wrappers;
 
-   type Range_Iterator is new Iterator_Interface with
+   type Range_Iterator is new handlers.Iterator_Interface with
       record
          Start   : Integer;
          Stop    : Integer;
@@ -27,7 +29,7 @@ private
       end record;
 
 
-   function Create (Start, Stop : Integer) return Iterator_Interface_Access
+   function Create (Start, Stop : Integer) return handlers.Iterator_Interface_Access
    is (new Range_Iterator'(Start   => Start,
                            Stop    => Stop,
                            Current => Start));
@@ -36,5 +38,5 @@ private
    is (Iter.Current > Iter.Stop);
 
    function Element (Iter : Range_Iterator) return Handler_Value
-   is (Create (Constant_Interface_Access (Make_Wrapper (Iter.Current))));
+   is (handlers.Create (handlers.Constant_Interface_Access (Make_Wrapper (Iter.Current))));
 end Protypo.Api.Engine_Values.Range_Iterators;

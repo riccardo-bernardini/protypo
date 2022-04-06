@@ -1,10 +1,12 @@
+with Protypo.Api.Engine_Values.Handlers;
+with protypo.Api.Engine_Values.engine_value_holders;
 --
 -- ## What is this?
 --
 -- A constant wrapper is just a wrapper around a constant value
 --
 package Protypo.Api.Engine_Values.Constant_Wrappers is
-   type Constant_Wrapper is new Constant_Interface with private;
+   type Constant_Wrapper is new handlers.Constant_Interface with private;
    type Constant_Wrapper_Access is access Constant_Wrapper;
 
    function Read (X : Constant_Wrapper) return Engine_Value;
@@ -26,19 +28,22 @@ package Protypo.Api.Engine_Values.Constant_Wrappers is
    function To_Handler_Value (Value : String) return Handler_Value;
    -- Equivalent to Create(Make_Wrapper(Value))
 
+   function To_Handler_Value (Value : Boolean) return Handler_Value;
+   -- Equivalent to Create(Make_Wrapper(Value))
+
 private
-   type Constant_Wrapper is new Constant_Interface
+   type Constant_Wrapper is new handlers.Constant_Interface
    with
       record
-         Value : Engine_Value;
+         Value : engine_value_holders.Holder;
       end record;
 
 
    function Read (X : Constant_Wrapper) return Engine_Value
-   is (X.Value);
+   is (X.Value.Element);
 
    function Make_Wrapper (Value : Engine_Value) return Constant_Wrapper_Access
-   is (new Constant_Wrapper'(Value => Value));
+   is (new Constant_Wrapper'(Value => Engine_Value_Holders.To_Holder (Value)));
 
    function Make_Wrapper (Value : Integer) return Constant_Wrapper_Access
    is (Make_Wrapper (Create (Value)));
@@ -57,5 +62,9 @@ private
 
    function To_Handler_Value (Value : String) return Handler_Value
    is (To_Handler_Value (Create (Value)));
+
+   function To_Handler_Value (Value : Boolean) return Handler_Value
+   is (To_Handler_Value (Create (Value)));
+
 
 end Protypo.Api.Engine_Values.Constant_Wrappers;

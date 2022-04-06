@@ -1,4 +1,5 @@
 pragma Ada_2012;
+pragma Warnings (Off, "no entities");
 with Ada.Text_IO;                           use Ada.Text_IO;
 with Ada.Exceptions;
 
@@ -68,7 +69,7 @@ package body Protypo.Parsing is
    -- Expect --
    ------------
 
-   procedure Expect (Input    : in out Scanning.Token_List;
+   procedure Expect (Input    : in Scanning.Token_List;
                      Expected : Token_Mask)
    is
    begin
@@ -81,7 +82,7 @@ package body Protypo.Parsing is
    -- Expect --
    ------------
 
-   procedure Expect (Input    : in out Scanning.Token_List;
+   procedure Expect (Input    : in Scanning.Token_List;
                      Expected : Token_Class)
    is
       Mask : Token_Mask := (others => False);
@@ -96,7 +97,8 @@ package body Protypo.Parsing is
    ------------
 
    procedure Expect_And_Eat (Input    : in out Scanning.Token_List;
-                             Expected : Token_Class)
+                             Expected : Token_Class;
+                             Context  : String := "")
    is
    begin
       if Class (Input.Read) /= Expected then
@@ -105,7 +107,8 @@ package body Protypo.Parsing is
            & Expected'Image
            & " found "
            &  Class (Input.Read)'Image
-           & " at " & Image (Position (Input.Read));
+           & " at " & Image (Position (Input.Read))
+           & (if Context /= "" then " (" & Context & ")" else "");
       end if;
 
       Input.Next;
@@ -182,10 +185,11 @@ package body Protypo.Parsing is
    is
       subtype Primary_Head is Token_Class
         with Static_Predicate =>
-          Primary_Head in Open_Parenthesis | Identifier | Text | Int | Real;
+          Primary_Head in Open_Parenthesis | Identifier | Text | Int | Real | Kw_Capture;
 
       Result : Code_Trees.Parsed_Code;
    begin
+      --  Put_Line (">> parse primary");
 
       if not (Class (Input.Read) in Primary_Head) then
          raise Parsing_Error
@@ -195,12 +199,14 @@ package body Protypo.Parsing is
            & " at " & Image (Position(Input.Read));
       end if;
 
+      --  Put_Line (Image (Input.Read));
+
       case Primary_Head (Class (Input.Read)) is
          when Open_Parenthesis =>
             Input.Next;
             Result := Parse_Expression (Input);
 
-            Expect_And_Eat (Input, Close_Parenthesis);
+            Expect_And_Eat (Input, Close_Parenthesis, "PRIMARY");
 
          when Identifier =>
             Result := Parse_Name (Input);
@@ -213,6 +219,36 @@ package body Protypo.Parsing is
 
          when Real =>
             Result := Code_Trees.Float_Constant (Value (Input.Next));
+
+         when Kw_Capture =>
+            Input.Next;
+            Expect_And_Eat (Input, Open_Parenthesis, "PRIMARY 2");
+
+            if Class (Input.Read) /= Identifier then
+               raise Parsing_Error with "Expected identifier inside CAPTURE call at " & Image (Position (Input.Read));
+            end if;
+
+            declare
+               Parameters : Statement_Sequences.Sequence;
+               Here       : constant Tokens.Token_Position := Tokens.Position (Input.Read);
+
+               Name : constant Unbounded_Id  :=
+                        Unbounded_Id'(To_Unbounded_String (Value (Input.Next)));
+            begin
+               Expect_And_Eat (Input, Open_Parenthesis, "PRIMARY 3");
+
+               Parameters := Parse_Expression_List (Input);
+
+               Result := Code_Trees.Capture (Name, Parameters.Dump, Here);
+
+               -- The close parenthesis of the called function
+               Expect_And_Eat (Input, Close_Parenthesis, "PRIMARY 4");
+
+               -- Close of CAPTURE
+               Expect_And_Eat (Input, Close_Parenthesis, "PRIMARY 5");
+               --  Put_Line (">> done capture");
+            end;
+
 
       end case;
 
@@ -333,6 +369,8 @@ package body Protypo.Parsing is
       Op     : Logical_Operator;
       Here   : constant Tokens.Token_Position := Tokens.Position (Input.Read);
    begin
+      --  Put_Line (">> Parse expression");
+
       Result := Parse_Relation (Input);
 
       if Class (Input.Read) in Logical_Operator then
@@ -402,11 +440,11 @@ package body Protypo.Parsing is
       Values : Statement_Sequences.Sequence;
       Names  : constant Statement_Sequences.Sequence := Parse_Name_List (Input);
    begin
-      Expect_And_Eat (Input, Assign);
+      Expect_And_Eat (Input, Assign, "ASSIGN 1");
 
       Values := Parse_Expression_List (Input);
 
-      Expect_And_Eat (Input, End_Of_Statement);
+      Expect_And_Eat (Input, End_Of_Statement, "ASSIGN 2");
 
 
       return Code_Trees.Assignment (LHS    => Names.Dump,
@@ -490,6 +528,8 @@ package body Protypo.Parsing is
       Loop_Body : Code_Trees.Parsed_Code;
    begin
       Expect_And_Eat (Input, Kw_Loop);
+
+      --  Put_Line ("In parse loop" & Image (Input.Read));
 
       Loop_Body := Parse_Statement_Sequence (Input);
 
@@ -650,6 +690,7 @@ package body Protypo.Parsing is
          -- In the last case we need to look after the closed parenthesis
          -- in order to decied
          --
+         --  Put_Line ("Assign or call " & Follower'Image & ", " & Image (Input.Read));
 
          if not (Follower in ID_Follower) then
             raise Parsing_Error
@@ -666,7 +707,7 @@ package body Protypo.Parsing is
                   Result : constant Code_Trees.Parsed_Code :=
                              Code_Trees.Procedure_Call (Value (Input.Next));
                begin
-                  Expect_And_Eat (Input, End_Of_Statement);
+                  Expect_And_Eat (Input, End_Of_Statement, "END OF STATEMENT");
                   return Result;
                end;
 
@@ -686,17 +727,17 @@ package body Protypo.Parsing is
                   Parameters : Statement_Sequences.Sequence;
                begin
                   Input.Next;
-                  Expect_And_Eat (Input, Open_Parenthesis);
+                  Expect_And_Eat (Input, Open_Parenthesis, "OPEN 1");
 
                   Parameters := Parse_Expression_List (Input);
 
-                  Expect_And_Eat (Input, Close_Parenthesis);
+                  Expect_And_Eat (Input, Close_Parenthesis, "OPEN 2");
 
                   case Class (Input.Read) is
                      when End_Of_Statement | End_Of_Text =>
                         Input.Clear_Position;
 
-                        Expect_And_Eat (Input, Class (Input.Read));
+                        Expect_And_Eat (Input, Class (Input.Read), "OPEN 3");
 
                         return Code_Trees.Procedure_Call (ID, Parameters.Dump, Here);
 
@@ -726,7 +767,7 @@ package body Protypo.Parsing is
       begin
          loop
             if Class (Input.Read) /= Identifier then
-               Put_Line (">>>" & Class (Input.Read)'Image);
+               --  Put_Line (">>>" & Class (Input.Read)'Image);
                raise Parsing_Error
                  with "Expected IDENTIFIER in ID list"
                  & " found " & Class (Input.Read)'Image
@@ -829,10 +870,13 @@ package body Protypo.Parsing is
       Here   : constant Token_Position := Position (Input.Read);
    begin
       --        Scanning.Dump (Input);
-
+      --  Put_Line ("We are back!");
       loop
+          --  Put_Line (Image (Input.read));
          case Class (Input.Read) is
+
             when Identifier =>
+               --  Put_Line ("Below identifier");
                if Class (Input.Read (1)) = Label_Separator then
                   if not (Class (Input.Read (2)) in Labeled_Construct) then
                      raise Constraint_Error;
@@ -881,7 +925,7 @@ package body Protypo.Parsing is
                Open_Parenthesis | Label_Separator  |
                Kw_When          | Kw_In            | Kw_Of               |
                Real             | Kw_Xor           | Kw_Not              |
-               Kw_Begin         | Kw_Is       =>
+               Kw_Begin         | Kw_Is            | Kw_Capture   =>
 
                Unexpected_Token (Class (Input.Read), End_Of_Text, Position (Input.Read));
                exit;

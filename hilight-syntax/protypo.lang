@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- See https://gnome.pages.gitlab.gnome.org/gtksourceview/gtksourceview5/lang-tutorial.html -->
+<language id="protypo" name="Protypo" version="2.0" _section="Markup">
+
+  <metadata>
+    <property name="globs">*.prot;*.prohtml;*.phtml</property>
+  </metadata>
+
+  <styles>
+    <style id="string" name="String" map-to="def:string"/>
+    <style id="escaped-character" name="Escaped Character" map-to="def:special-char"/>
+    <style id="expression-inline" name="Expression in #" map-to="def:preprocessor"/>
+    <style id="inline" name="Text in [...]" map-to="def:string"/>
+    <style id="comment" name="Character" map-to="def:comment"/>
+    <style id="keyword" name="Keyword" map-to="def:keyword"/>
+    <style id="code" name="Code" map-to="def:type"/>
+  </styles>
+
+  <definitions>
+    <context id="protypo-block">
+      <start>#{</start>
+      <end>}#</end>
+      <include>
+	<context id="comment" style-ref="comment">
+	  <start>--</start>
+	  <end>$</end>
+	</context>
+
+	<context id="string" style-ref="string">
+	  <start>"</start>
+	  <end>"</end>
+	</context>
+
+	<context id="inline" style-ref="inline">
+	  <start>\[</start>
+	  <end>\]</end>
+	  <include>
+	    <context id="expression-inline" style-ref="expression-inline">
+	      <start>#[^#]</start>
+	      <end>#</end>
+	    </context>
+	  </include>
+	</context>
+
+	<context id="keywords" style-ref="keyword">
+	  <keyword>if</keyword>
+	  <keyword>else</keyword>
+	  <keyword>for</keyword>
+	  <keyword>while</keyword>
+	  <keyword>loop</keyword>
+	  <keyword>return</keyword>
+	  <keyword>break</keyword>
+	  <keyword>case</keyword>
+	  <keyword>default</keyword>
+	  <keyword>do</keyword>
+	  <keyword>continue</keyword>
+	  <keyword>function</keyword>
+	  <keyword>procedure</keyword>
+	  <keyword>capture</keyword>
+	  <keyword>is</keyword>
+	  <keyword>begin</keyword>
+	  <keyword>end</keyword>
+	  <keyword>in</keyword>
+	  <keyword>of</keyword>
+	  <keyword>range</keyword>
+	</context>
+      </include>
+    </context>
+
+    <replace id="html:embedded-lang-hook" ref="protypo-block"/>
+
+    <context id="protypo" class="no-spell-check">
+      <include>
+        <context ref="protypo-block"/>
+        <context ref="html:html"/>
+      </include>
+    </context>
+
+  </definitions>
+</language>

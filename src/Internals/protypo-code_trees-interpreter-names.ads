@@ -16,6 +16,7 @@
 --
 -- We have several types of references, see Value_Name_Class.
 --
+with Protypo.Api.Engine_Values.Handlers;
 
 private package Protypo.Code_Trees.Interpreter.Names is
 
@@ -36,32 +37,32 @@ private package Protypo.Code_Trees.Interpreter.Names is
    type Name_Reference (Class : Value_Name_Class := Constant_Reference) is
       record
          case Class is
-         when Array_Reference =>
-            Array_Handler : Array_Interface_Access;
+            when Array_Reference =>
+               Array_Handler : Api.Engine_Values.Handlers.Array_Interface_Access;
 
-         when Record_Reference =>
-            Record_Handler : Record_Interface_Access;
+            when Record_Reference =>
+               Record_Handler : Api.Engine_Values.Handlers.Record_Interface_Access;
 
-         when Ambivalent_Reference =>
-            Ambivalent_Handler : Ambivalent_Interface_Access;
+            when Ambivalent_Reference =>
+               Ambivalent_Handler : Api.Engine_Values.Handlers.Ambivalent_Interface_Access;
 
-         when Variable_Reference =>
-            Variable_Handler : Reference_Interface_Access;
+            when Variable_Reference =>
+               Variable_Handler : Api.Engine_Values.Handlers.Reference_Interface_Access;
 
-         when Constant_Reference =>
-            Costant_Handler : Constant_Interface_Access;
+            when Constant_Reference =>
+               Costant_Handler : Api.Engine_Values.Handlers.Constant_Interface_Access;
 
-         when Function_Reference | Function_Call =>
-            Function_Handler : Function_Interface_Access;
-            Parameters       : Engine_Value_Vectors.Vector;
+            when Function_Reference | Function_Call =>
+               Function_Handler : Api.Engine_Values.Handlers.Function_Interface_Access;
+               Parameters       : Engine_Value_Vectors.Vector;
 
          end case;
       end record;
---       with
---         Dynamic_Predicate =>
---           (if Name_Reference.Class = Function_Reference
---              then
---                Name_Reference.Parameters.Is_Empty);
+   --       with
+   --         Dynamic_Predicate =>
+   --           (if Name_Reference.Class = Function_Reference
+   --              then
+   --                Name_Reference.Parameters.Is_Empty);
 
    function Eval_Name (Status : Interpreter_Access;
                        Expr   : not null Node_Access)

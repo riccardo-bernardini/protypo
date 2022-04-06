@@ -5,137 +5,6 @@ pragma Ada_2012;
 
 package body Protypo.API.Engine_Values is
 
-   ------------
-   -- Create --
-   ------------
-
-   function Create (Params : Engine_Value_Array) return Parameter_List
-   is
-      Result : Parameter_List;
-   begin
-      for Element of Params loop
-         Result.L.Append (Element);
-      end loop;
-
-      return Result;
-   end Create;
-
-
-   -----------
-   -- Shift --
-   -----------
-
-   function Shift (List : in out Parameter_List) return Engine_Value
-   is
-      Result : constant Engine_Value := Peek (List);
-   begin
-      List.L.Delete_First;
-      return Result;
-   end Shift;
-
-
-
-   ----------------------------------
-   -- Is_Valid_Parameter_Signature --
-   ----------------------------------
-
-   function Is_Valid_Parameter_Signature (Signature : Parameter_Signature)
-                                          return Boolean
-   is
-      --
-      -- We check this with the following finite automata
-      --                non-void
-      --   Mandatory -------------->  Optional
-      --    ||  ^                       ||  ^
-      --    |+--| Void                  |+--| Non-void
-      --    |                           |
-      --    |  Varargin                 | Varargin
-      --    +-----------> Varargin <----+
-      --
-      -- Note that the next status is determined by the current
-      -- value class and that Varargin cannot go anywhere
-      --
-      Old : Parameter_Class := Mandatory;
-   begin
-      --
-      -- A signature is valid if and only if
-      --
-      -- * Any Mandatory is preceded by another Mandatory
-      -- * Nothing follows Varargin
-      --
-      for Param  of Signature loop
-         if Old = Varargin then
-            return False;
-         end if;
-
-         if Param.Class = Mandatory and Old /= Mandatory then
-            return False;
-         end if;
-
-         Old := Param.Class;
-      end loop;
-
-      return True;
-   end Is_Valid_Parameter_Signature;
-
-   ------------------------
-   -- Default_Parameters --
-   ------------------------
-
-   function Signature (Fun : Callback_Based_Handler)
-                       return Parameter_Signature
-   is
-      Tot_Parameters : constant Natural :=
-                         Fun.Max_Parameters
-                           + (if Fun.With_Varargin then 1 else 0);
-
-      Result         : Parameter_Signature (2 .. Tot_Parameters + 1) :=
-                         (others => (Class => Varargin));
-      -- Result is initialized to an invalid Parameter_Signature, so that
-      -- if there is some bug, it will be (with large probability)
-      -- caught by the contract of Signature
-
-      Last_Mandatory : constant Natural := Result'First + Fun.Min_Parameters - 1;
-      Last_Optional  : constant Natural := Result'First + Fun.Max_Parameters - 1;
-   begin
-      if Fun.Min_Parameters > 0 then
-         Result (Result'First .. Last_Mandatory) :=
-           (others => Parameter_Spec'(Class => Mandatory));
-      end if;
-
-      if Fun.Max_Parameters > Fun.Min_Parameters then
-         Result (Last_Mandatory + 1 .. Last_Optional) :=
-           (others => Parameter_Spec'(Class   => Optional,
-                                      Default => Void_Value));
-      end if;
-
-      if Fun.With_Varargin then
-         Result (Result'Last) := Parameter_Spec'(Class => Varargin);
-      end if;
-
-      return Result;
-   end Signature;
-
-   function Bool (X : Integer) return Integer
-   is (if X /= 0 then 1 else 0);
-
-   function Bool (X : Float) return Integer
-   is (if X /= 0.0 then 1 else 0);
-
-   function Create (X : Boolean) return Engine_Value
-   is (Create (Integer'(if X then 1 else 0)));
-
-   function Bool (X : Engine_Value) return Integer
-   is (case X.Class is
-          when Int    => Bool (Get_Integer (X)),
-          when Real   => Bool (Get_Float (X)),
-          when others => raise Constraint_Error);
-
-   function Real (X : Engine_Value) return Float
-   is (case X.Class is
-          when Int    => Float (Get_Integer (X)),
-          when Real   => Get_Float (X),
-          when others => raise Constraint_Error);
 
 
    ---------
@@ -160,7 +29,7 @@ package body Protypo.API.Engine_Values is
    -- "not" --
    -----------
 
-   function "not" (X : Engine_Value) return Engine_Value is
+   function "not" (X : Engine_Value) return Integer_Value is
    begin
       if not Is_Numeric (X) then
          raise Constraint_Error with "Non-numeric value";
@@ -235,7 +104,7 @@ package body Protypo.API.Engine_Values is
    -- "=" --
    ---------
 
-   function "=" (Left, Right : Engine_Value) return Engine_Value is
+   function "=" (Left, Right : Engine_Value) return Integer_Value is
    begin
       if not (Is_Scalar (Left) and Is_Scalar (Right)) then
          raise Constraint_Error;
@@ -261,7 +130,7 @@ package body Protypo.API.Engine_Values is
    -- "<" --
    ---------
 
-   function "<" (Left, Right : Engine_Value) return Engine_Value is
+   function "<" (Left, Right : Engine_Value) return Integer_Value is
    begin
       if not (Is_Scalar (Left) and Is_Scalar (Right)) then
          raise Constraint_Error;
@@ -287,7 +156,7 @@ package body Protypo.API.Engine_Values is
    -- "and" --
    -----------
 
-   function "and" (Left, Right : Engine_Value) return Engine_Value is
+   function "and" (Left, Right : Integer_Value) return Integer_Value is
    begin
       return Create (Bool (Left) * Bool (Right));
    end "and";
@@ -296,7 +165,7 @@ package body Protypo.API.Engine_Values is
    -- "or" --
    ----------
 
-   function "or" (Left, Right : Engine_Value) return Engine_Value is
+   function "or" (Left, Right : Integer_Value) return Integer_Value is
    begin
       return Create (Bool (Left) + Bool (Right));
    end "or";
@@ -305,7 +174,7 @@ package body Protypo.API.Engine_Values is
    -- "xor" --
    -----------
 
-   function "xor" (Left, Right : Engine_Value) return Engine_Value is
+   function "xor" (Left, Right : Integer_Value) return Integer_Value is
    begin
       return Create ((Bool (Left) + Bool (Right)) mod 2);
    end "xor";

@@ -1,4 +1,8 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
+with Protypo.Api.Engine_Values.Engine_Value_Holders;
+with Protypo.Api.Engine_Values.Engine_Value_Vectors;
+with Protypo.Api.Engine_Values.Handlers;
+
 with Protypo.Api.Engine_Values.Constant_Wrappers;
 --
 -- This package provides resources to define a record-like variable
@@ -21,7 +25,8 @@ generic
 
    Prefix : String := "";
 package Protypo.Api.Engine_Values.Enumerated_Records is
-   type Aggregate_Type is array (Field_Name) of Engine_Value;
+
+   type Aggregate_Type is array (Field_Name) of Engine_Value_Holders.Holder;
    -- Type that allows to specify an enumerated record similarly
    -- to an Ada aggregate, for example,
    --
@@ -29,20 +34,20 @@ package Protypo.Api.Engine_Values.Enumerated_Records is
    --      Last_Name  => Create ("Recupero"),
    --      Telephone  => Create ("3204365972"))
 
-   Void_Aggregate : constant Aggregate_Type := (others => Void_Value);
+   Void_Aggregate : constant Aggregate_Type := (others => Engine_Value_Holders.Empty_Holder);
 
    type Multi_Aggregate is array (Positive range <>) of Aggregate_Type;
    -- Array of aggregate type.  It allows to write constant "databases"
    -- of enumerated records
 
-   function To_Array (Db : Multi_Aggregate) return Engine_Value_Array
+   function To_Array (Db : Multi_Aggregate) return Engine_Value_Vectors.Vector
      with Post => (for all Item of To_Array'Result => Item.Class = Record_Handler);
-   -- Convert an array of aggregates into an Engine_Value_Array whose
+   -- Convert an array of aggregates into an Engine_Value_Vectors.Vector whose
    -- entries are Enumerated_Records.
    -- Very useful in initializing other wrappers (e.g., from Array_Wrappers)
 
 
-   type Enumerated_Record is new Record_Interface with private;
+   type Enumerated_Record is new Handlers.Record_Interface with private;
    type Enumerated_Record_Access is access Enumerated_Record;
 
 
@@ -81,7 +86,7 @@ private
 
 
    type Enumerated_Record is
-     new Record_Interface
+     new Handlers.Record_Interface
    with
       record
          Map : Record_Maps.Map;
@@ -94,6 +99,6 @@ private
    is (if Item.Map.Contains (Apply_Prefix (Field)) then
           Constant_Wrappers.To_Handler_Value (Item.Map (Apply_Prefix (Field)))
        else
-          raise Unknown_Field);
+          raise Handlers.Unknown_Field);
 
 end Protypo.Api.Engine_Values.Enumerated_Records;

@@ -1,14 +1,17 @@
 with Protypo.Api.Interpreters;
 with Protypo.Api.Consumers.File_Writer;
-with Protypo.Api.Engine_Values.Basic_Array_Wrappers;
+with Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;
+with Protypo.Api.Engine_Values.Engine_Value_Holders;
 
 with User_Records;
 with Integer_Arrays;
 
 with Ada.Command_Line;
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_Io; use Ada.Text_Io;
 with Ada.Exceptions;
 with Protypo.Api.Engine_Values;
+with Protypo.Api.Engine_Values.Handlers;
+use Protypo.Api.Engine_Values.Handlers;
 
 procedure Prova_Interpreter is
    use Protypo.Api.Engine_Values;
@@ -31,6 +34,9 @@ procedure Prova_Interpreter is
        else
           Argument (1));
 
+   function Create_Holder (X : String) return Engine_Value_Holders.Holder
+   is (Engine_Value_Holders.To_Holder (Create (X)));
+
 
    Program  : constant Template_Type := Slurp (Source_File);
    Code     : Compiled_Code;
@@ -39,18 +45,18 @@ procedure Prova_Interpreter is
 
 
    Db : constant Multi_Aggregate :=
-          (1 => (First_Name => Create ("Pippo"),
-                 Last_Name  => Create ("Recupero"),
-                 Telephone  => Create ("3204365972")),
-           2 => (First_Name => Create ("Diego"),
-                 Last_Name  => Create ("della Vega"),
-                 Telephone  => Create ("zzzzzz")),
-           3 => (First_Name => Create ("Topolino"),
-                 Last_Name  => Create ("de Topis"),
-                 Telephone  => Create ("12345")),
-           4 => (First_Name => Create ("Paolino"),
-                 Last_Name  => Create ("Paperino"),
-                 Telephone  => Create ("1313")));
+          (1 => (First_Name => Create_Holder ("Pippo"),
+                 Last_Name  => Create_Holder ("Recupero"),
+                 Telephone  => Create_Holder ("3204365972")),
+           2 => (First_Name => Create_Holder ("Diego"),
+                 Last_Name  => Create_Holder ("della Vega"),
+                 Telephone  => Create_Holder ("zzzzzz")),
+           3 => (First_Name => Create_Holder ("Topolino"),
+                 Last_Name  => Create_Holder ("de Topis"),
+                 Telephone  => Create_Holder ("12345")),
+           4 => (First_Name => Create_Holder ("Paolino"),
+                 Last_Name  => Create_Holder ("Paperino"),
+                 Telephone  => Create_Holder ("1313")));
 
    Scores : constant Engine_Value :=
               Integer_Arrays.Wrappers.Create (Value => (1 => 18,
@@ -58,8 +64,8 @@ procedure Prova_Interpreter is
                                                         3 => 42,
                                                         4 => -5));
 
-   User_Dir : constant Basic_Array_Wrappers.Array_Wrapper_Access :=
-                Basic_Array_Wrappers.Make_Wrapper (To_Array (Db));
+   User_Dir : constant Engine_Value_Array_Wrappers.Array_Wrapper_Access :=
+                Engine_Value_Array_Wrappers.Make_Wrapper (To_Array (Db));
 
    Engine   : Interpreter_Type;
 
@@ -72,9 +78,9 @@ begin
                   Value => Scores);
 
    Engine.Define (Name  => "splitbit",
-                  Value => Create (Val            => User_Records.Split_Bit'Access,
-                                   Min_Parameters => 1,
-                                   Max_Parameters => 2));
+                  Value => Handlers.Create (Val            => User_Records.Split_Bit'Access,
+                                            Min_Parameters => 1,
+                                            Max_Parameters => 2));
 
    Compile (Target   => Code,
             Program  => Program);

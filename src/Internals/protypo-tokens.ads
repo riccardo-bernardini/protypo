@@ -40,6 +40,7 @@ package Protypo.Tokens is
       Kw_Exit,
       Kw_Function,
       Kw_Procedure,
+      Kw_capture,
       Kw_Begin,
       Kw_Return,
       Kw_End,

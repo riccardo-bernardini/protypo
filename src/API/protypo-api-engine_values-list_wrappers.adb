@@ -1,5 +1,9 @@
 pragma Ada_2012;
-with Protypo.Api.Engine_Values.Constant_Wrappers; use Protypo.Api.Engine_Values.Constant_Wrappers;
+with Protypo.Api.Engine_Values.Constant_Wrappers;
+use Protypo.Api.Engine_Values.Constant_Wrappers;
+
+with Protypo.Api.Engine_Values.Handlers;
+
 --  with Protypo.Api.Engine_Values.Iterator_Wrappers;
 
 package body Protypo.Api.Engine_Values.List_Wrappers is
@@ -10,11 +14,11 @@ package body Protypo.Api.Engine_Values.List_Wrappers is
    --          Element     => Engine_Value_Lists.Element,
    --          Iterators   => Engine_Value_Lists.List_Iterator_Interfaces);
 
-   type Iterator_Type is new Iterator_Interface
+   type Iterator_Type is new Handlers.Iterator_Interface
    with
       record
-         Container : Value_List_Access;
-         Pos       : Engine_Value_Lists.Cursor;
+         First :  Engine_Value_Lists.Cursor;
+         Pos   : Engine_Value_Lists.Cursor;
       end record;
 
    overriding procedure Reset (Iter : in out Iterator_Type);
@@ -25,7 +29,7 @@ package body Protypo.Api.Engine_Values.List_Wrappers is
    procedure Reset (Iter : in out Iterator_Type)
    is
    begin
-      Iter.Pos := Iter.Container.First;
+      Iter.Pos := Iter.First;
    end Reset;
 
    procedure Next (Iter : in out Iterator_Type)
@@ -58,12 +62,13 @@ package body Protypo.Api.Engine_Values.List_Wrappers is
    -- Iterator --
    --------------
 
-   function Iterator (Item : List) return Iterator_Interface_Access is
-
+   function Iterator (Item : List) return Handlers.Iterator_Interface_Access
+   is
+      use Handlers;
 
    begin
-      return Iterator_Interface_Access'(new Iterator_Type'(Container => Item.L,
-                                                           Pos       => Item.L.First));
+      return Iterator_Interface_Access'(new Iterator_Type'(First => Item.L.First,
+                                                           Pos   => Item.L.First));
    end Iterator;
 
    ----------------

@@ -1,10 +1,14 @@
---  with Ada.Containers.Indefinite_Vectors;
+with Protypo.Api.Engine_Values.Handlers;
+with Protypo.Api.Engine_Values.Engine_Value_Holders;
+with Protypo.Api.Engine_Values.Engine_Value_Vectors;
+with Protypo.Api.Engine_Values.Array_Wrappers;
 
-with Protypo.Api.Engine_Values.Value_Vectors;
 with Ada.Containers.Indefinite_Ordered_Maps;
 
 package Protypo.Api.Engine_Values.Table_Wrappers is
-   type Table_Wrapper (<>) is new Ambivalent_Interface with private;
+   use type Ada.Containers.Count_Type;
+
+   type Table_Wrapper (<>) is new Handlers.Ambivalent_Interface with private;
    type Table_Wrapper_Access is access Table_Wrapper;
 
    type Title_Array is array (Positive range <>) of Unbounded_String;
@@ -34,19 +38,19 @@ package Protypo.Api.Engine_Values.Table_Wrappers is
    function N_Rows (Item : Table_Wrapper) return Natural;
 
    procedure Append (Table : in out Table_Wrapper;
-                     Row   :        Engine_Value_Array)
+                     Row   :        Engine_Value_Vectors.Vector)
      with
-       Pre => Row'Length = Table.N_Columns,
+       Pre => Natural(Row.Length) = Table.N_Columns,
        Post => Table.N_Rows = Table.N_Rows'Old + 1;
 
    function Get (X     : Table_Wrapper;
-                 Index : Engine_Value_Array)
+                 Index : Engine_Value_Vectors.Vector)
                  return Handler_Value
      with
-       Pre => Index'Length = 1
-       and then Index (Index'First).Class = Int
-     and then Get_Integer (Index (Index'First)) > 0
-     and then Get_Integer (Index (Index'First)) <= X.N_Rows,
+       Pre => Index.Length = 1
+       and then Index.First_Element.Class = Int
+     and then Get_Integer (Index.First_Element) > 0
+     and then Get_Integer (Index.First_Element) <= X.N_Rows,
      Post => Get'Result.Class = Ambivalent_Handler;
 
    function Get (X     : Table_Wrapper;
@@ -58,7 +62,7 @@ package Protypo.Api.Engine_Values.Table_Wrappers is
    generic
       type Field_Type is (<>);
    package Enumerated_Rows is
-      type Aggregate_Type is array (Field_Type) of Engine_Value;
+      type Aggregate_Type is array (Field_Type) of Engine_Value_Holders.Holder;
 
       type Enumerated_Title_Array is array (Field_Type) of Unbounded_String;
 
@@ -93,15 +97,12 @@ package Protypo.Api.Engine_Values.Table_Wrappers is
 
    end Enumerated_Rows;
 private
-   package Engine_Value_Vectors is
-     new Value_Vectors (Index_Type => Positive);
-
    package Label_Maps is
      new Ada.Containers.Indefinite_Ordered_Maps (Key_Type     => ID,
                                                  Element_Type => Positive);
 
    type Row_Wrapper is
-     new Engine_Value_Vectors.Vector_Handler
+     new Array_Wrappers.Array_Wrapper
    with
       record
          Label_To_Column : Label_Maps.Map;
@@ -110,7 +111,7 @@ private
 
    type Row_Wrapper_Access is access Row_Wrapper;
 
-   function Make_Row (Data   : Engine_Value_Array;
+   function Make_Row (Data   : Engine_Value_Vectors.Vector;
                       Labels : Label_Maps.Map) return Row_Wrapper_Access;
 
    function Make_Map (Labels : Label_Array) return Label_Maps.Map
@@ -125,7 +126,7 @@ private
                             return Handler_Value;
 
    overriding function Get (X     : Row_Wrapper;
-                            Index : Engine_Value_Array)
+                            Index : Engine_Value_Vectors.Vector)
                             return Handler_Value;
 
    overriding function Is_Field (X : Row_Wrapper; Field : Id) return Boolean;

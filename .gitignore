@@ -14,3 +14,6 @@ obj/gnatinspect.db-shm
 obj/gnatinspect.db-wal
 obj/gpsauto.cgpr
 obj/*
+
+test/obj/[^.]*
+lib/[^.]*

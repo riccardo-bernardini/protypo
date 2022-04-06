@@ -12,11 +12,12 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
    -------------
 
    overriding function Process (Fun       : Compiled_Function;
-                                Parameter : Engine_Value_Array)
-                                return Engine_Value_Array
+                                Parameter : Engine_Value_Vectors.Vector)
+                                return Engine_Value_Vectors.Vector
    is
+      use type ada.Containers.Count_Type;
    begin
-      if Parameter'Length /= Integer (Fun.Parameters.Names.Length) then
+      if Parameter.Length /= Fun.Parameters.Names.Length then
          raise Program_Error;
       end if;
 
@@ -24,7 +25,7 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
 
       declare
          Name_To_Param : constant Integer :=
-                           Parameter'First - Fun.Parameters.Names.First_Index;
+                           Parameter.First_Index - Fun.Parameters.Names.First_Index;
       begin
          for Name_Index in Fun.Parameters.Names.First_Index .. Fun.Parameters.Names.Last_Index loop
             Fun.Status.Symbol_Table.Create
@@ -43,12 +44,12 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
             raise Constraint_Error;
 
          when None =>
-            return No_Value;
+            return engine_value_vectors.Empty_Vector;
 
          when Return_Statement =>
 
             declare
-               Result : constant Engine_Value_Array := Expressions.To_Array (Fun.Status.Break.Result);
+               Result : constant Engine_Value_Vectors.Vector := Fun.Status.Break.Result;
             begin
                Fun.Status.Break := No_Break;
                return Result;
@@ -61,18 +62,16 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
    ------------------------
 
    function Signature (Fun : Compiled_Function)
-                                return Api.Engine_Values.Parameter_Signature
+                       return Api.Engine_Values.Parameter_Lists.Parameter_Signature
    is
-      Result : Api.Engine_Values.Parameter_Signature
-        (Fun.Parameters.Default.First_Index .. Fun.Parameters.Default.Last_Index);
+
+      Result : Parameter_Lists.Parameter_Signature (Fun.Parameters.Default.First_Index .. Fun.Parameters.Default.Last_Index);
    begin
       for K in Result'Range loop
          if Fun.Parameters.Default (K) /= null then
-            Result (K) := Parameter_Spec'
-              (Class   => Optional,
-               Default => Expressions.Eval_Scalar (Fun.Status, Fun.Parameters.Default (K)));
+            Result (K) := Parameter_Lists.Optional (Expressions.Eval_Scalar (Fun.Status, Fun.Parameters.Default (K)));
          else
-            Result (K) := Parameter_Spec'(Class   => Mandatory);
+            Result (K) := Parameter_Lists.Mandatory;
          end if;
       end loop;
 
