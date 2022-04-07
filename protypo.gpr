@@ -17,9 +17,6 @@ library project Protypo is
       for Switches ("ada") use ("-E");
    end Binder;
 
-   package Linker is
-      for Switches ("ada") use ("-g");
-   end Linker;
 
 end Protypo;
 
