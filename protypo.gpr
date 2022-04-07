@@ -2,12 +2,11 @@ library project Protypo is
 
    for Source_Dirs use ("src", "src/lib/Generic_Symbol_Table", "src/lib/Generic_Symbol_Table/test", "src/lib/Readable_Sequences", "src/lib/Utilities", "src/API", "src/Internals");
    for Object_Dir use "obj";
-
    for Library_Name use "protypo";
    for Library_Dir use "lib";
-   
+
    package Builder is
-      for Switches ("ada") use ("-s");
+      for Switches ("ada") use ("-s", "-g", "-k");
    end Builder;
 
    package Compiler is
@@ -17,6 +16,10 @@ library project Protypo is
    package Binder is
       for Switches ("ada") use ("-E");
    end Binder;
+
+   package Linker is
+      for Switches ("ada") use ("-g");
+   end Linker;
 
 end Protypo;
 
