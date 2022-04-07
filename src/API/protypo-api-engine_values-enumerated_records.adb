@@ -68,7 +68,7 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
    -- Make_Value --
    ----------------
 
-   function Make_Value (Init : Aggregate_Type) return Engine_Value
+   function Make_Value (Init : Aggregate_Type) return Record_Value
    is (Handlers.Create (Handlers.Record_Interface_Access (Make_Record (Init))));
 
    ----------

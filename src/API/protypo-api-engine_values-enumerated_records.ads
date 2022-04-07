@@ -56,7 +56,7 @@ package Protypo.Api.Engine_Values.Enumerated_Records is
    -- Create a new record-like handler initialized with the values
    -- specified in the aggregate
 
-   function Make_Value (Init : Aggregate_Type) return Engine_Value;
+   function Make_Value (Init : Aggregate_Type) return Record_Value;
    -- Syntactic sugar that creates the handler and embed it into
    -- an Engine_Value. Equivalent to
    --

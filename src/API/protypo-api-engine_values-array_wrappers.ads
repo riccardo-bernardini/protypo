@@ -40,7 +40,7 @@ package Protypo.Api.Engine_Values.Array_Wrappers is
    function Make_Wrapper (Init : Array_Type)
                           return Handlers.Ambivalent_Interface_Access;
 
-   function Create (Value : Array_Type) return Engine_Value;
+   function Create (Value : Array_Type) return Ambivalent_Value;
    -- Syntactic sugar equivalent to Create(Make_Wrapper(Value))
 
    procedure Set (Container : in out Array_Wrapper;
@@ -81,7 +81,7 @@ private
    function Is_Field (X : Array_Wrapper; Field : Id) return Boolean
    is (X.A.Is_Field (Field));
 
-   function Create (Value : Array_Type) return Engine_Value
+   function Create (Value : Array_Type) return Ambivalent_Value
    is (Handlers.Create (Make_Wrapper (Value)));
 
 end Protypo.Api.Engine_Values.Array_Wrappers;
