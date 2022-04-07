@@ -1,5 +1,5 @@
 with Ada.Finalization;
-with Ada.Text_IO;
+with Ada.Text_Io;
 
 --
 -- ## What is this?
@@ -12,26 +12,27 @@ with Ada.Text_IO;
 -- is created.  This can be done with the function `Open`. Special
 -- constant to write to standard output/error are provided.
 --
-package Protypo.API.Consumers.File_Writer is
+package Protypo.Api.Consumers.File_Writer is
    type Writer (<>) is
      new Ada.Finalization.Limited_Controlled and Consumer_Interface
    with private;
+
 
    overriding procedure Process (Consumer  : in out Writer;
                                  Parameter : String);
 
 
 
-   Standard_Output : constant String;
-   Standard_Error  : constant String;
+   Standard_Output_Special_Name : constant String;
+   Standard_Error_Special_Name  : constant String;
 
    function Open (Target : String) return Consumer_Access;
 
    procedure Close (Consumer : in out Writer);
 private
-   type Target_class is (Stderr, Stdout, File);
+   type Target_Class is (Stderr, Stdout, File);
 
-   type Target_Name (Class : Target_class; Length : Natural) is
+   type Target_Name (Class : Target_Class; Length : Natural) is
       record
          case Class is
             when Stderr | Stdout =>
@@ -44,14 +45,14 @@ private
 
    function Open (Target : Target_Name) return Consumer_Access;
 
-   Standard_Output : constant string := ".";
-   Standard_Error  : constant String := "..";
+   Standard_Output_Special_Name : constant String := ".";
+   Standard_Error_Special_Name  : constant String := "..";
 
 
    function To_Target (X : String) return Target_Name
-   is (if X = Standard_Output then
+   is (if X = Standard_Output_Special_Name then
           Target_Name'(Class =>  Stdout, Length => 0)
-       elsif X = Standard_Error then
+       elsif X = Standard_Error_Special_Name then
           Target_Name'(Class =>  Stderr, Length => 0)
        else
           Target_Name'(Class  => File,
@@ -66,10 +67,10 @@ private
      new Ada.Finalization.Limited_Controlled and Consumer_Interface
    with
       record
-         Target : Target_class;
+         Target : Target_Class;
          Open   : Boolean;
-         Output : Ada.Text_IO.File_Type;
+         Output : Ada.Text_Io.File_Type;
       end record;
 
    overriding procedure Finalize (Obj : in out Writer);
-end Protypo.API.Consumers.File_Writer;
+end Protypo.Api.Consumers.File_Writer;

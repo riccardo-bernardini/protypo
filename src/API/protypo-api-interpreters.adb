@@ -59,15 +59,16 @@ package body Protypo.API.Interpreters is
    is
       use Consumers.File_Writer;
 
-      Cons     : constant Consumers.Consumer_Access :=
-                   Open (if Target_Filenane = "-"
-                         then
-                            Consumers.File_Writer.Standard_Output
-                         else
-                            Target_Filenane);
+      Cons     : Consumers.Consumer_Access;
 
       Template : constant Template_Type := Slurp (Input_Filename);
    begin
+      Cons :=   Open (if Target_Filenane = "-"
+                      then
+                         Consumers.File_Writer.Standard_Output_Special_Name
+                      else
+                         Target_Filenane);
+
       Run (Interpreter => Interpreter,
            Program     => Template,
            Consumer    => Cons);

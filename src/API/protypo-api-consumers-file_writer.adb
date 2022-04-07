@@ -2,15 +2,14 @@ pragma Ada_2012;
 with Ada.Text_IO; use Ada.Text_IO;
 package body Protypo.API.Consumers.File_Writer is
 
+   type Writer_Access is access Writer;
+
    ----------
    -- Open --
    ----------
 
    function Open (Target : Target_Name) return Consumer_Access is
       use Ada.Finalization;
-
-      type Writer_Access is access Writer;
-
 
       Result : constant Writer_Access := new Writer'(Limited_Controlled with
                                                      Target        => Target.Class,
@@ -23,7 +22,7 @@ package body Protypo.API.Consumers.File_Writer is
                              Name => Target.Name);
       end if;
 
-      return Result;
+      return Consumer_Access(Result);
    end Open;
 
    -------------
@@ -55,7 +54,7 @@ package body Protypo.API.Consumers.File_Writer is
    is
    begin
       if Consumer.Open and Consumer.Target = File then
-         Ada.Text_IO.Close (Consumer.Output);
+         Ada.Text_Io.Close (Consumer.Output);
          Consumer.Open := False;
       end if;
    end Close;
