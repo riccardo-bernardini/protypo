@@ -13,6 +13,7 @@ package Protypo.Code_Trees.Interpreter is
 
    Bad_Iterator : exception;
    Bad_Field    : exception;
+
 private
    type Symbol_Table_Access is not null access Api.Symbols.Table;
 
@@ -59,4 +60,10 @@ private
                             Consumer    : Api.Consumers.Consumer_Access);
 
    procedure Pop_Consumer (Interpreter :  Interpreter_Access);
+
+   function Do_Escape (Status : Interpreter_Access;
+                       Input  : String)
+                       return String;
+   --  Apply the #...# escape expression inside Input.
+
 end Protypo.Code_Trees.Interpreter;

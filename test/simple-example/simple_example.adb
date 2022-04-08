@@ -14,7 +14,7 @@ procedure Simple_Example is
                 "#{  [sin(1.5)=#sin(1.5)#, 42=#the_answer#] }#";
 
    Consumer : constant Consumer_Access :=
-                File_Writer.Open (File_Writer.Standard_Error);
+                File_Writer.Open (File_Writer.Standard_Error_Special_Name);
 
    Z        : constant Interpreters.Compiled_Code := Interpreters.Compile (Program);
 

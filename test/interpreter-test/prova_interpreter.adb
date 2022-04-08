@@ -41,7 +41,7 @@ procedure Prova_Interpreter is
    Program  : constant Template_Type := Slurp (Source_File);
    Code     : Compiled_Code;
    Consumer : constant Consumer_Access :=
-                File_Writer.Open (File_Writer.Standard_Error);
+                File_Writer.Open (File_Writer.Standard_Error_Special_Name);
 
 
    Db : constant Multi_Aggregate :=

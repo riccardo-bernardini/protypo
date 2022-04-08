@@ -4,15 +4,104 @@ with Ada.Strings.Fixed;
 
 with Protypo.Api.Engine_Values.Range_Iterators;
 with Protypo.Api.Engine_Values.Handlers;
+with Protypo.Api.Interpreters;
 with Protypo.Code_Trees.Interpreter.Statements;
+with Protypo.Code_Trees.Interpreter.Expressions;
 with Protypo.Code_Trees.Interpreter.Consumer_Handlers;
 with Protypo.Scanning;
+with Protypo.Parsing;
+
+with Readable_Sequences.String_Sequences; use Readable_Sequences;
+
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_Io; use Ada.Text_Io;
+with Ada.Characters.Latin_1;
+with Protypo.Api.Engine_Values;
 
 package body Protypo.Code_Trees.Interpreter is
    use Ada.Strings;
+
+
+   ---------------
+   -- Do_Escape --
+   ---------------
+
+   function Do_Escape (Status : Interpreter_Access;
+                       Input  : String)
+                       return String
+   is
+      function To_String (X : Engine_Value) return String
+      is (case X.Class is
+             when Int    => Get_Integer (X)'Image,
+             when Real   => Get_Float (X)'Image,
+             when Text   => Get_String (X),
+             when others => raise Constraint_Error);
+
+      --------------------
+      -- Parse_And_Eval --
+      --------------------
+
+      function Parse_And_Eval (Status : Interpreter_Access;
+                               Input  : String)
+                               return Engine_Value
+      is
+         Tk   : Scanning.Token_List :=
+                  Scanning.Tokenize (Api.Interpreters.Template_Type ("#{" & Input & "}#"), "");
+
+         Code : constant Code_Trees.Parsed_Code :=
+                  Parsing.Parse_Expression (Tk);
+      begin
+         --        Scanning.Dump (Tk);
+         --        Code_Trees.Dump (Code);
+
+         return Expressions.Eval_Scalar (Status, Code.Pt);
+      end Parse_And_Eval;
+
+      type Automata_State is (Reading_Text, Reading_Expression);
+
+      Eof           : constant Character := Character'Val (0);
+      Seq           : String_Sequences.Sequence := String_Sequences.Create (Input, Eof);
+      Current_State : Automata_State := Reading_Text;
+
+      Result : String_Sequences.Sequence;
+      Expr   : String_Sequences.Sequence;
+   begin
+      while not Seq.End_Of_Sequence loop
+         case Current_State is
+            when Reading_Text =>
+
+               if Seq.Read = '#' and Seq.Read (1) /= '#' then
+                  Seq.Next;
+                  Expr.Clear;
+
+                  Current_State := Reading_Expression;
+               elsif Seq.Read = '#' and Seq.Read (1) = '#' then
+                  Seq.Next (2);
+
+                  Result.Append ('#');
+               else
+                  Result.Append (Seq.Next);
+               end if;
+
+            when Reading_Expression =>
+
+               if Seq.Read = '#' then
+                  Seq.Next;
+
+                  Current_State := Reading_Text;
+
+                  --                    Put_Line ("<" & Expr.Dump & ">");
+                  Result.Append (To_String (Parse_And_Eval (Status, Expr.Dump)));
+               else
+                  Expr.Append (Seq.Next);
+               end if;
+         end case;
+      end loop;
+
+      return Result.Dump;
+   end Do_Escape;
+
 
    function To_String (X : Engine_Value) return String
    is (case X.Class is
@@ -76,18 +165,24 @@ package body Protypo.Code_Trees.Interpreter is
    procedure Update_Consumer (Inter    : Interpreter_Access;
                               Consumer : Api.Consumers.Consumer_Access)
    is
+      use Consumer_Handlers;
       use Api.Symbols.Protypo_Tables;
+      use Ada.Characters.Latin_1;
    begin
       Update
         (Pos          => Inter.Consumer_Without_Escape_Cursor,
-         New_Value    => Handlers.Create (Consumer_Handlers.Create (Consumer    => Consumer,
-                                                                    With_Escape => False,
-                                                                    Status      => Inter)));
+         New_Value    =>
+           Handlers.Create (Create (Consumer    => Consumer,
+                                    With_Escape => False,
+                                    End_Of_Line => Null_Unbounded_String,
+                                    Status      => Inter)));
       Update
         (Pos          => Inter.Consumer_With_Escape_Cursor,
-         New_Value    => Handlers.Create (Consumer_Handlers.Create (Consumer    => Consumer,
-                                                                    With_Escape => True,
-                                                                    Status      => Inter)));
+         New_Value    =>
+           Handlers.Create (Create (Consumer    => Consumer,
+                                    With_Escape => True,
+                                    End_Of_Line => To_Unbounded_String ("" & Lf),
+                                    Status      => Inter)));
 
    end Update_Consumer;
 
@@ -105,20 +200,27 @@ package body Protypo.Code_Trees.Interpreter is
       procedure Add_Builtin_Values (Table    : in out Api.Symbols.Table;
                                     Inter    : Interpreter_Access)
       is
+         use Consumer_Handlers;
+         use Api.Symbols.Protypo_Tables;
+         use Ada.Characters.Latin_1;
       begin
          Table.Create
            (Name            => Scanning.Consume_Procedure_Name,
-            Initial_Value   => Handlers.Create (Consumer_Handlers.Create (Consumer    => Consumer,
-                                                                          With_Escape => False,
-                                                                          Status      => Inter)),
+            Initial_Value   =>
+              Handlers.Create (Create (Consumer    => Consumer,
+                                       With_Escape => False,
+                                       End_Of_Line => Null_Unbounded_String,
+                                       Status      => Inter)),
             Position        => Inter.Consumer_Without_Escape_Cursor);
 
 
          Table.Create
            (Name            => Scanning.Consume_With_Escape_Procedure_Name,
-            Initial_Value   => Handlers.Create (Consumer_Handlers.Create (Consumer    => Consumer,
-                                                                          With_Escape => True,
-                                                                          Status      => Inter)),
+            Initial_Value   =>
+              Handlers.Create (Create (Consumer    => Consumer,
+                                       With_Escape => True,
+                                       End_Of_Line => To_Unbounded_String ("" & Lf),
+                                       Status      => Inter)),
             Position        => Inter.Consumer_With_Escape_Cursor);
 
          Table.Create

@@ -7,6 +7,8 @@ begin
   is 
   begin
     consume("Hello world!");
+
+    [ Pippo recupero #g# ]
   end zorro;
   
   mano : while x < 4 loop
