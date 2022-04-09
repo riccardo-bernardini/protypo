@@ -33,7 +33,7 @@ procedure within(tag; body) is
 begin
   [
   <#tag#>
-  #body#
+  #body# >>#x#<<
   </#tag#>
   ]
 end within;
