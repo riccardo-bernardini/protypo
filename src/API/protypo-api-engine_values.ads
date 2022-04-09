@@ -134,6 +134,8 @@ package Protypo.Api.Engine_Values is
 
    function Create (Val : String) return String_Value;
 
+   function Create (Val : Unbounded_String) return String_Value;
+
    function Create (Val : Boolean) return Integer_Value;
 
    function Get_Integer (Val : Integer_Value) return Integer;
@@ -225,6 +227,8 @@ private
    is (Engine_Value'(Class            => Text,
                      Text_Val         => To_Unbounded_String (Val)));
 
+   function Create (Val : Unbounded_String) return String_Value
+   is (Create (To_String (Val)));
 
    function Create (Val : Boolean) return Integer_Value
    is (Engine_Value'(Class            => Int,
