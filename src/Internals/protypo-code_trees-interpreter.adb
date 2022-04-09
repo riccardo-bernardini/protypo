@@ -19,6 +19,8 @@ with Ada.Text_Io; use Ada.Text_Io;
 with Ada.Characters.Latin_1;
 with Protypo.Api.Engine_Values;
 
+with Protypo.Code_Trees.Interpreter.String_Interpolation_Handlers;
+
 package body Protypo.Code_Trees.Interpreter is
    use Ada.Strings;
 
@@ -234,6 +236,11 @@ package body Protypo.Code_Trees.Interpreter is
          Table.Create
            (Name          => "image",
             Initial_Value => Handlers.Create (Stringify'Access, 1));
+
+         Table.Create
+           (Name          => "expand",
+            Initial_Value =>
+              Handlers.Create (String_Interpolation_Handlers.Create (Inter)));
       end Add_Builtin_Values;
 
       Interpreter : constant Interpreter_Access :=

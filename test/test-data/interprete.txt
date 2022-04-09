@@ -53,6 +53,9 @@ end minnie;
 
 within("table", capture(minnie(4)));
 
+sss := "x=#x# e tutti cantano!";
+q12:=expand(sss);
+[ --#q12#--#sss#-- ]
 
 }#
 
