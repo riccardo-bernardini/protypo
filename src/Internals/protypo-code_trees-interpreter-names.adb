@@ -98,7 +98,10 @@ package body Protypo.Code_Trees.Interpreter.Names is
                Indexes : constant Engine_Value_Vectors.Vector := Expressions.Eval_Vector (Status, Expr.Indexes);
             begin
                if not (Head.Class in Indexed_References) then
-                  raise Program_Error with Head.Class'Image;
+                  raise Program_Error
+                    with
+                  Head.Class'Image & " at " & Tokens.Image (Expr.Source_Position)
+                    & Expr.Class'Image;
                end if;
 
                case Indexed_References (Head.Class) is

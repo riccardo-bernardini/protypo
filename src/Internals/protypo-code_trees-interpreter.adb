@@ -54,8 +54,9 @@ package body Protypo.Code_Trees.Interpreter is
          Code : constant Code_Trees.Parsed_Code :=
                   Parsing.Parse_Expression (Tk);
       begin
-         --        Scanning.Dump (Tk);
-         --        Code_Trees.Dump (Code);
+                 --  Scanning.Dump (Tk);
+                 --  Code_Trees.Dump (Code);
+
 
          return Expressions.Eval_Scalar (Status, Code.Pt);
       end Parse_And_Eval;
@@ -111,6 +112,21 @@ package body Protypo.Code_Trees.Interpreter is
           when Real   => Fixed.Trim (Get_Float (X)'Image, Both),
           when Text   => Get_String (X),
           when others => X.Class'Image);
+
+   function To_Stderr (Parameters : Engine_Value_Vectors.Vector)
+                       return Engine_Value_Vectors.Vector
+   is
+      use type Ada.Containers.Count_Type;
+   begin
+      if Parameters.Length /= 1 then
+         raise Run_Time_Error with "Debug needs 1 parameter";
+      end if;
+
+      Put_Line (File => Standard_Error,
+                Item => "DEBUG>> " & To_String (Parameters (Parameters.First)));
+
+      return Engine_Value_Vectors.Empty_Vector;
+   end To_Stderr;
 
    function Stringify (Parameters : Engine_Value_Vectors.Vector)
                        return Engine_Value_Vectors.Vector
@@ -236,6 +252,10 @@ package body Protypo.Code_Trees.Interpreter is
          Table.Create
            (Name          => "image",
             Initial_Value => Handlers.Create (Stringify'Access, 1));
+
+         Table.Create
+           (Name          => "debug",
+            Initial_Value => Handlers.Create (To_Stderr'Access, 1));
 
          Table.Create
            (Name          => "expand",

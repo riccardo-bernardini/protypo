@@ -278,7 +278,9 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
          Result : constant Engine_Value := Tmp.First_Element;
       begin
          if not (Result.Class in Scalar_Classes) then
-            raise Constraint_Error with Result.Class'Image;
+            raise Constraint_Error
+              with
+            Result.Class'Image & " at " & Tokens.Image (Expr.Source_Position);
          end if;
 
          return Result;
