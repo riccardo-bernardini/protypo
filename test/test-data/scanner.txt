@@ -4,6 +4,7 @@
 -- Anche con un commento
    @x_3 := 4;
    @("pippo");
+   @here
 }#
 \wpitem{#WP.number}{#WP.start}
 #{ end loop; }#

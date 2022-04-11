@@ -297,6 +297,13 @@ package body Protypo.Scanning is
             end if;
          end loop;
 
+         if Id.Dump = "@here" then
+            Result.Append (Builder.Make_Token
+                           (Class => Text,
+                            Value => Image (Builder.Peek_Position)));
+            return;
+         end if;
+
          Result.Append (Builder.Make_Token (Identifier, Id.Dump));
       end Scan_Identifier;
 

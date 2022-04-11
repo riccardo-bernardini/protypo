@@ -57,6 +57,11 @@ sss := "x=#x# e tutti cantano!";
 q12:=expand(sss);
 [ --#q12#--#sss#-- ]
 
+z22:= @here + "gigetto";
+
+[ ,#z22#, ]
+
+debug(@here);
 }#
 
 un'altra riga #x

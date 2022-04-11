@@ -87,6 +87,10 @@ package Protypo.Tokens is
        Pre => Builder.Is_Position_Set,
        Post => not Builder.Is_Position_Set;
 
+   function Peek_Position (Builder : Token_Builder) return Token_Position
+     with
+       Pre => Builder.Is_Position_Set;
+
    function Make_Token (Builder : in out Token_Builder;
                         Class   : Valued_Token;
                         Value   : String)
@@ -128,6 +132,9 @@ private
          Has_Position : Boolean := False;
          Position     : Token_Position;
       end record;
+
+   function Peek_Position (Builder : Token_Builder) return Token_Position
+   is (Builder.Position);
 
    type Token is
       record
