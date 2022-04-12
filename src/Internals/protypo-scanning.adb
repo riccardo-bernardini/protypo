@@ -242,6 +242,7 @@ package body Protypo.Scanning is
                     Kw_Or        => +"or",
                     Kw_Xor       => +"xor",
                     Kw_Not       => +"not",
+                    Kw_Mod       => +"mod",
                     Kw_In        => +"in",
                     Kw_Is        => +"is",
                     Kw_Of        => +"of");

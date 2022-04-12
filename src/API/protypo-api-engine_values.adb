@@ -5,7 +5,12 @@ pragma Ada_2012;
 
 package body Protypo.API.Engine_Values is
 
-
+   function "mod" (X, Y : Integer_Value) return Integer_Value
+   is
+   begin
+      return Engine_Value'(Class   => Int,
+                           Int_Val => X.Int_Val mod Y.Int_Val);
+   end "mod";
 
    ---------
    -- "-" --

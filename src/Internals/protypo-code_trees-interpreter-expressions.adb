@@ -126,6 +126,13 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
 
       begin
          case Op is
+            when Kw_Mod      =>
+               if not (Left.Class = Int and Right.Class = Int) then
+                  raise Run_Time_Error with """mod"" defined only for integer values";
+               end if;
+
+               return Embed (Left mod Right);
+
             when Plus        =>
                return Embed (Left + Right);
 

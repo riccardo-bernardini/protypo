@@ -1,7 +1,4 @@
 package body Protypo.Tokens is
-   ----------------
-   -- Make_Token --
-   ----------------
 
    ----------------
    -- Make_Token --

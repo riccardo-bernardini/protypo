@@ -78,6 +78,7 @@ package Protypo.Api.Engine_Values is
    function "not" (X : Engine_Value) return Integer_Value
      with Pre => Is_Numeric (X);
 
+   function "mod" (X, Y : Integer_Value) return Integer_Value;
 
    function "+" (Left, Right : Engine_Value) return Engine_Value
      with

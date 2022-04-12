@@ -196,7 +196,7 @@ package body Protypo.Parsing is
            with "Unexpected token "
            &  Class (Input.Read)'Image
            & " in primary expression"
-           & " at " & Image (Position(Input.Read));
+           & " at " & Image (Position (Input.Read));
       end if;
 
       --  Put_Line (Image (Input.Read));
@@ -293,7 +293,7 @@ package body Protypo.Parsing is
 
       Result := Parse_Factor (Input);
 
-      while Class (Input.Read) in Mult | Div loop
+      while Class (Input.Read) in Mult | Div | Kw_Mod loop
          Op := Class (Input.Next);
 
          Result := Code_Trees.Binary_Operation
@@ -774,7 +774,7 @@ package body Protypo.Parsing is
                  & " at " & Image (Position (Input.Read));
             end if;
 
-            Parameter_Names.Append (ID(Value (Input.Next)));
+            Parameter_Names.Append (ID (Value (Input.Next)));
 
             if Class (Input.Read) = Assign then
                Input.Next;
@@ -872,7 +872,7 @@ package body Protypo.Parsing is
       --        Scanning.Dump (Input);
       --  Put_Line ("We are back!");
       loop
-          --  Put_Line (Image (Input.read));
+         --  Put_Line (Image (Input.read));
          case Class (Input.Read) is
 
             when Identifier =>
@@ -916,7 +916,7 @@ package body Protypo.Parsing is
             when Kw_Else | Kw_Elsif | Kw_End | End_Of_Text =>
                exit;
 
-               when Int              | Text             | Plus  | Minus       |
+            when Int              | Text             | Plus  | Minus       |
                Mult             | Div              | Equal |  Different  |
                Less_Than        | Greater_Than     | Less_Or_Equal       |
                Greater_Or_Equal | Assign           | Dot                 |
@@ -925,7 +925,8 @@ package body Protypo.Parsing is
                Open_Parenthesis | Label_Separator  |
                Kw_When          | Kw_In            | Kw_Of               |
                Real             | Kw_Xor           | Kw_Not              |
-               Kw_Begin         | Kw_Is            | Kw_Capture   =>
+               Kw_Begin         | Kw_Is            | Kw_Capture          |
+               Kw_Mod =>
 
                Unexpected_Token (Class (Input.Read), End_Of_Text, Position (Input.Read));
                exit;

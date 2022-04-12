@@ -48,6 +48,7 @@ package Protypo.Tokens is
       Kw_Or,
       Kw_Xor,
       Kw_Not,
+      Kw_Mod,
       Kw_In,
       Kw_Is,
       Kw_Of,
@@ -59,7 +60,8 @@ package Protypo.Tokens is
    subtype Not_Keyword      is Unvalued_Token  range Plus .. End_Of_Statement;
    subtype Keyword_Tokens   is Unvalued_Token  range Kw_If .. Kw_Of;
    subtype Logical_Operator is Unvalued_Token  range Kw_And .. Kw_Xor;
-   subtype Comp_Operator    is Unvalued_Token range Equal .. Greater_Or_Equal;
+   subtype Rem_Operator     is Unvalued_Token  range Kw_Mod .. Kw_Mod;
+   subtype Comp_Operator    is Unvalued_Token  range Equal .. Greater_Or_Equal;
    subtype Numeric_Operator is Unvalued_Token  range Plus .. Div;
 
    subtype Unary_Operator   is Unvalued_Token
@@ -68,7 +70,7 @@ package Protypo.Tokens is
 
    subtype Binary_Operator  is Unvalued_Token
      with Static_Predicate =>
-       Binary_Operator in Numeric_Operator | Comp_Operator | Logical_Operator;
+       Binary_Operator in Numeric_Operator | Comp_Operator | Logical_Operator | Rem_Operator;
 
    type Token is private;
 
