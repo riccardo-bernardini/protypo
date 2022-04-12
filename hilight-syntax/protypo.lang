@@ -44,6 +44,7 @@
 
 	<context id="keywords" style-ref="keyword">
 	  <keyword>if</keyword>
+	  <keyword>then</keyword>
 	  <keyword>else</keyword>
 	  <keyword>for</keyword>
 	  <keyword>while</keyword>
@@ -62,6 +63,7 @@
 	  <keyword>end</keyword>
 	  <keyword>in</keyword>
 	  <keyword>of</keyword>
+	  <keyword>mod</keyword>
 	  <keyword>range</keyword>
 	</context>
       </include>
