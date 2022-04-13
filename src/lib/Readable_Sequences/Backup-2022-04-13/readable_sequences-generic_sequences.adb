@@ -31,13 +31,13 @@ package body Readable_Sequences.Generic_Sequences is
    function Dump (Seq  : Sequence;
                   From : Cursor := Beginning) return Element_Array
    is
-      --  Result : Element_Array (Integer (From) .. Integer (Seq.Buffer'Last));
+      Result : Element_Array (Integer (From) .. Integer (Seq.Vector.Last_Index));
    begin
-      --  for K in Result'Range loop
-      --     Result (K) := Seq.Buffer (Cursor (K));
-      --  end loop;
+      for K in Result'Range loop
+         Result (K) := Seq.Vector (Cursor (K));
+      end loop;
 
-      return Element_Array (Seq.Buffer.Element (From .. Seq.Buffer.Element'Last));
+      return Result;
    end Dump;
 
    -----------
@@ -47,6 +47,7 @@ package body Readable_Sequences.Generic_Sequences is
    procedure Clear (Seq : in out Sequence)
    is
    begin
+      Seq.Vector.Clear;
       Seq.Position := Beginning;
       Seq.Position_Saved := False;
    end Clear;
@@ -57,12 +58,13 @@ package body Readable_Sequences.Generic_Sequences is
 
    function Create (End_Of_Sequence_Marker : Element_Type) return Sequence
    is
-
    begin
-      return Result : Sequence := Empty_Sequence do
-         Result.End_Marker := End_Of_Sequence_Marker;
-         Result.Has_End_Marker := True;
-      end return;
+      return Sequence'(Vector         => Element_Vectors.Empty_Vector,
+                       Position       => Cursor'First,
+                       Old_Position   => <>,
+                       Position_Saved => False,
+                       Has_End_Marker => True,
+                       End_Marker     => End_Of_Sequence_Marker);
    end Create;
 
    ------------
@@ -72,7 +74,12 @@ package body Readable_Sequences.Generic_Sequences is
    function Create (Init                   : Element_Array;
                     End_Of_Sequence_Marker : Element_Type) return Sequence
    is
-      Result : Sequence := Create (End_Of_Sequence_Marker);
+      Result : Sequence := Sequence'(Vector         => Element_Vectors.Empty_Vector,
+                                     Position       => Cursor'First,
+                                     Old_Position   => <>,
+                                     Position_Saved => False,
+                                     Has_End_Marker => True,
+                                     End_Marker     => End_Of_Sequence_Marker);
    begin
       Result.Append (Init);
 
@@ -85,21 +92,19 @@ package body Readable_Sequences.Generic_Sequences is
 
    function Create (Init : Element_Array) return Sequence
    is
-      Result : Sequence := Empty_Sequence;
+      Result : Sequence := Sequence'(Vector         => Element_Vectors.Empty_Vector,
+                                     Position       => Cursor'First,
+                                     Old_Position   => <>,
+                                     Position_Saved => False,
+                                     Has_End_Marker => False,
+                                     End_Marker     => <>);
    begin
       Result.Append (Init);
 
       return Result;
    end Create;
 
-   procedure Update (Seq : in out Sequence;
-                     Data : Buffer_Type)
-   is
-   begin
-      Seq.Buffer.Replace_Element (Data);
-      Seq.First := Data'First;
-      Seq.Last  := Data'Last;
-   end Update;
+
 
 
    ------------
@@ -110,10 +115,10 @@ package body Readable_Sequences.Generic_Sequences is
      (Seq      : in out Sequence;
       Elements : Element_Array)
    is
-      New_Buffer : constant Buffer_Type :=
-                     Seq.Buffer.Element & Buffer_Type (Elements);
    begin
-      Update (Seq, New_Buffer);
+      for C of Elements loop
+         Seq.Append (C);
+      end loop;
    end Append;
 
    ------------
@@ -125,7 +130,7 @@ package body Readable_Sequences.Generic_Sequences is
       What : Element_Type)
    is
    begin
-      To.Append (Element_Array'(1 => What));
+      To.Vector.Append (What);
    end Append;
 
    ------------
@@ -136,7 +141,7 @@ package body Readable_Sequences.Generic_Sequences is
                      What : Sequence)
    is
    begin
-      To.Append (Element_Array (What.Buffer.Element));
+      To.Vector.Append (What.Vector);
    end Append;
 
    ------------
@@ -148,7 +153,7 @@ package body Readable_Sequences.Generic_Sequences is
       To  :        Cursor := Beginning)
    is
    begin
-      if To > Seq.Last then
+      if To > Seq.Vector.Last_Index then
          raise Constraint_Error;
       end if;
 
@@ -211,7 +216,7 @@ package body Readable_Sequences.Generic_Sequences is
    is
    begin
       if Seq.Remaining < Step then
-         Seq.Position := Seq.Last + 1;
+         Seq.Position := Seq.Vector.Last_Index + 1;
          return;
       end if;
 
@@ -227,8 +232,8 @@ package body Readable_Sequences.Generic_Sequences is
                    Step : Positive := 1)
    is
    begin
-      if Seq.Position < Seq.First + Cursor (Step) then
-         Seq.Position := Seq.First;
+      if Seq.Position < Seq.Vector.First_Index + Cursor (Step) then
+         Seq.Position := Seq.Vector.First_Index;
          return;
       end if;
 
@@ -244,7 +249,7 @@ package body Readable_Sequences.Generic_Sequences is
                       Callback : access procedure (Item : Element_Type))
    is
    begin
-      for El of Seq.Buffer.Element loop
+      for El of Seq.Vector loop
          Callback (El);
       end loop;
    end Process;

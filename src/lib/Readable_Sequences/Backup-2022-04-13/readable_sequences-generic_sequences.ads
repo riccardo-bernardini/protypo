@@ -1,4 +1,4 @@
-with Ada.Containers.Indefinite_Holders;
+with Ada.Containers.Vectors;
 
 generic
    type Element_Type is private;
@@ -6,12 +6,11 @@ generic
 package Readable_Sequences.Generic_Sequences is
    type Sequence is tagged private;
 
+   Empty_Sequence : constant Sequence;
 
    type Cursor is private;
 
    Beginning : constant Cursor;
-
-   function Empty_Sequence return Sequence;
 
    function Create (Init : Element_Array) return Sequence;
 
@@ -22,8 +21,8 @@ package Readable_Sequences.Generic_Sequences is
 
    function Has_End_Of_Sequence_Marker (Item : Sequence) return Boolean;
 
-   function Dump (Seq  : Sequence;
-                  From : Cursor := Beginning) return Element_Array;
+   function Dump (Seq : Sequence;
+                 From : Cursor := Beginning) return Element_Array;
 
    procedure Clear (Seq : in out Sequence)
      with
@@ -108,31 +107,23 @@ package Readable_Sequences.Generic_Sequences is
    Beyond_End : exception;
 private
 
-   type Cursor is range 0 .. Integer'Last;
-
-   type Buffer_Type is array (Cursor range <>) of Element_Type;
+   type Cursor is range 1 .. Integer'Last;
 
    Beginning : constant Cursor := Cursor'First;
 
-   package Buffer_Holders is
-     new Ada.Containers.Indefinite_Holders (Buffer_Type);
+   package Element_Vectors is
+     new Ada.Containers.Vectors (Index_Type   => Cursor,
+                                 Element_Type => Element_Type);
 
    type Sequence is tagged
       record
-         Buffer         : Buffer_Holders.Holder;
-         First          : Cursor;
-         Last           : Cursor;
+         Vector         : Element_Vectors.Vector := Element_Vectors.Empty_Vector;
          Position       : Cursor := Beginning;
          Old_Position   : Cursor;
          Position_Saved : Boolean := False;
          Has_End_Marker : Boolean := False;
          End_Marker     : Element_Type;
-      end record
-     with
-       Type_Invariant =>
-         not Sequence.Buffer.Is_Empty
-         and then Sequence.First = Sequence.Buffer.Element'First
-         and then Sequence.Last = Sequence.Buffer.Element'Last;
+      end record;
 
    function Saved_Position (Seq : Sequence)return Boolean
    is (Seq.Position_Saved);
@@ -142,21 +133,15 @@ private
    is (Seq.Position);
 
    function Length (Seq : Sequence) return Natural
-   is (if Seq.Buffer.Is_Empty then
-          0
-       else
-          Natural (Seq.Buffer.Element'Length));
+   is (Natural (Seq.Vector.Length));
 
    function Remaining (Seq : Sequence) return Natural
-   is (if Seq.Length = 0 then
-          0
-       else
-          Integer (Seq.Buffer.Element'Last - Seq.Position + 1));
+   is (Integer (Seq.Vector.Last_Index) - Integer (Seq.Position) + 1);
 
    function Read (Seq   : Sequence;
                   Ahead : Natural := 0) return Element_Type
    is (if Seq.Remaining > Ahead then
-          Seq.Buffer.Element (Cursor (Integer (Seq.Position) + Ahead))
+          Seq.Vector (Cursor (Integer (Seq.Position) + Ahead))
        elsif Seq.Has_End_Marker then
           Seq.End_Marker
        else
@@ -165,17 +150,13 @@ private
    function Has_End_Of_Sequence_Marker (Item : Sequence) return Boolean
    is (Item.Has_End_Marker);
 
-   Empty_Buffer : constant Buffer_Type (2 .. 1) := (others => <>);
-
-   function Empty_Sequence return Sequence
-   is (Sequence'(Buffer         => Buffer_Holders.To_Holder (Empty_Buffer),
-                 Position       => Cursor'First,
-                 First          => Empty_Buffer'First,
-                 Last           => Empty_Buffer'Last,
-                 Old_Position   => <>,
-                 Position_Saved => False,
-                 Has_End_Marker => False,
-                 End_Marker     => <>));
+   Empty_Sequence : constant Sequence :=
+                      Sequence'(Vector         => Element_Vectors.Empty_Vector,
+                                Position       => Cursor'First,
+                                Old_Position   => <>,
+                                Position_Saved => False,
+                                Has_End_Marker => False,
+                                End_Marker     => <>);
 
    function Index (Seq : Sequence) return Positive
    is (Positive (Seq.Position));

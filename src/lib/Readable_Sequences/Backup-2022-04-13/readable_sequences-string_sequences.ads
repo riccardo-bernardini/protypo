@@ -29,9 +29,6 @@ package Readable_Sequences.String_Sequences is
      with Pre => Pos /= No_Position;
 
    overriding
-   function Empty_Sequence return sequence;
-
-   overriding
    function Create (Init : String) return Sequence;
 
    overriding
