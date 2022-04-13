@@ -70,6 +70,12 @@ end loop;
 a:=4 mod 3; [#a#]
 
 -- b:=3.14 mod 1; -- This gives an error
+
+url := "http://www.google.com";
+url2 := "http://www.example.com";
+
+[ 1=#glob(url, "*google*")# 1=#glob(url2, "*.com")#]
+
 }#
 
 un'altra riga #x

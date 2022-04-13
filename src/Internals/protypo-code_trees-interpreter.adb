@@ -21,6 +21,8 @@ with Protypo.Api.Engine_Values;
 
 with Protypo.Code_Trees.Interpreter.String_Interpolation_Handlers;
 
+with GNAT.Regexp;
+
 package body Protypo.Code_Trees.Interpreter is
    use Ada.Strings;
 
@@ -54,8 +56,8 @@ package body Protypo.Code_Trees.Interpreter is
          Code : constant Code_Trees.Parsed_Code :=
                   Parsing.Parse_Expression (Tk);
       begin
-                 --  Scanning.Dump (Tk);
-                 --  Code_Trees.Dump (Code);
+         --  Scanning.Dump (Tk);
+         --  Code_Trees.Dump (Code);
 
 
          return Expressions.Eval_Scalar (Status, Code.Pt);
@@ -180,6 +182,33 @@ package body Protypo.Code_Trees.Interpreter is
       end;
    end Range_Callback;
 
+
+   function Glob_Callback (Parameters : Engine_Value_Vectors.Vector)
+                           return Engine_Value_Vectors.Vector
+   is
+      use GNAT.Regexp;
+      use type Ada.Containers.Count_Type;
+   begin
+      if not
+        (Parameters.Length = 2
+         and then Parameters.Element (Parameters.First_Index).Class = Text
+         and then Parameters.Element (Parameters.First_Index + 1).Class = Text)
+      then
+         raise Run_Time_Error with "glob needs 2 string parameters";
+      end if;
+
+
+      declare
+         Item    : constant String := Get_String (Parameters (Parameters.First_Index));
+         Pattern : constant String := Get_String (Parameters (Parameters.First_Index + 1));
+         Re      : constant Regexp := Compile (Pattern, Glob => True);
+         Val     : constant Engine_Value := Create (Match (Item, Re));
+      begin
+         return Engine_Value_Vectors.To_Vector (Val, 1);
+      end;
+   end Glob_Callback;
+
+
    procedure Update_Consumer (Inter    : Interpreter_Access;
                               Consumer : Api.Consumers.Consumer_Access)
    is
@@ -244,6 +273,10 @@ package body Protypo.Code_Trees.Interpreter is
          Table.Create
            (Name          => "range",
             Initial_Value => Handlers.Create (Range_Callback'Access, 2));
+
+         Table.Create
+           (Name          => "glob",
+            Initial_Value => Handlers.Create (Glob_Callback'Access, 2));
 
          Table.Create
            (Name          => "now",
