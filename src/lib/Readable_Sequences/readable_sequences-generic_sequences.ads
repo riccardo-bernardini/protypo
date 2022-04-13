@@ -121,8 +121,8 @@ private
       record
          Buffer         : Buffer_Holders.Holder;
          First          : Cursor;
-         Last           : Cursor;
-         Position       : Cursor := Beginning;
+         After_Last     : Cursor;
+         Position       : Cursor;
          Old_Position   : Cursor;
          Position_Saved : Boolean := False;
          Has_End_Marker : Boolean := False;
@@ -132,7 +132,9 @@ private
        Type_Invariant =>
          not Sequence.Buffer.Is_Empty
          and then Sequence.First = Sequence.Buffer.Element'First
-         and then Sequence.Last = Sequence.Buffer.Element'Last;
+         and then Sequence.After_Last <= Sequence.Buffer.Element'Last + 1
+         and then Sequence.Position >= Sequence.First
+         and then Sequence.Position <= Sequence.After_Last;
 
    function Saved_Position (Seq : Sequence)return Boolean
    is (Seq.Position_Saved);
@@ -142,16 +144,7 @@ private
    is (Seq.Position);
 
    function Length (Seq : Sequence) return Natural
-   is (if Seq.Buffer.Is_Empty then
-          0
-       else
-          Natural (Seq.Buffer.Element'Length));
-
-   function Remaining (Seq : Sequence) return Natural
-   is (if Seq.Length = 0 then
-          0
-       else
-          Integer (Seq.Buffer.Element'Last - Seq.Position + 1));
+   is (Natural (Seq.Buffer.Element'Length));
 
    function Read (Seq   : Sequence;
                   Ahead : Natural := 0) return Element_Type
@@ -165,13 +158,13 @@ private
    function Has_End_Of_Sequence_Marker (Item : Sequence) return Boolean
    is (Item.Has_End_Marker);
 
-   Empty_Buffer : constant Buffer_Type (2 .. 1) := (others => <>);
+   Empty_Buffer : constant Buffer_Type (1 .. 1) := (others => <>);
 
    function Empty_Sequence return Sequence
    is (Sequence'(Buffer         => Buffer_Holders.To_Holder (Empty_Buffer),
-                 Position       => Cursor'First,
+                 Position       => Empty_Buffer'First,
                  First          => Empty_Buffer'First,
-                 Last           => Empty_Buffer'Last,
+                 After_Last     => Empty_Buffer'Last + 1,
                  Old_Position   => <>,
                  Position_Saved => False,
                  Has_End_Marker => False,

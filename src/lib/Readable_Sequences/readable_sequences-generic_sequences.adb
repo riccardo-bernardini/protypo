@@ -1,4 +1,5 @@
 pragma Ada_2012;
+with Ada.Text_IO; use Ada.Text_IO;
 package body Readable_Sequences.Generic_Sequences is
 
    ------------------
@@ -98,7 +99,8 @@ package body Readable_Sequences.Generic_Sequences is
    begin
       Seq.Buffer.Replace_Element (Data);
       Seq.First := Data'First;
-      Seq.Last  := Data'Last;
+      Seq.After_Last  := Data'Last + 1;
+      Seq.Position := Seq.First;
    end Update;
 
 
@@ -111,7 +113,8 @@ package body Readable_Sequences.Generic_Sequences is
       Elements : Element_Array)
    is
       New_Buffer : constant Buffer_Type :=
-                     Seq.Buffer.Element & Buffer_Type (Elements);
+                     Seq.Buffer.Element (Seq.First .. Seq.After_Last - 1)
+                   & Buffer_Type (Elements);
    begin
       Update (Seq, New_Buffer);
    end Append;
@@ -139,6 +142,18 @@ package body Readable_Sequences.Generic_Sequences is
       To.Append (Element_Array (What.Buffer.Element));
    end Append;
 
+
+   function Remaining (Seq : Sequence) return Natural
+   is
+   begin
+      Put_Line (Seq.Buffer.Element'Last'Image);
+      Put_Line (Seq.Position'image);
+      Put_Line (cursor'(Seq.Buffer.Element'Last - Seq.Position+1 )'Image);
+      Put_Line (Seq.Length'Image);
+
+      return Integer (Seq.Buffer.Element'Last - Seq.Position + 1);
+   end Remaining;
+
    ------------
    -- Rewind --
    ------------
@@ -148,11 +163,15 @@ package body Readable_Sequences.Generic_Sequences is
       To  :        Cursor := Beginning)
    is
    begin
-      if To > Seq.Last then
+      if To >= Seq.After_Last then
          raise Constraint_Error;
       end if;
 
-      Seq.Position := To;
+      if To = Beginning then
+         Seq.Position := Seq.First;
+      else
+         Seq.Position := To;
+      end if;
    end Rewind;
 
    -------------------
@@ -211,7 +230,7 @@ package body Readable_Sequences.Generic_Sequences is
    is
    begin
       if Seq.Remaining < Step then
-         Seq.Position := Seq.Last + 1;
+         Seq.Position := Seq.After_Last;
          return;
       end if;
 
