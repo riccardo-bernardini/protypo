@@ -4,7 +4,7 @@ generic
    type Element_Type is private;
    type Element_Array is array (Positive range <>) of Element_Type;
 package Readable_Sequences.Generic_Sequences is
-   type Sequence is tagged private;
+   type Sequence is tagged limited private;
 
 
    type Cursor is private;
@@ -117,7 +117,7 @@ private
    package Buffer_Holders is
      new Ada.Containers.Indefinite_Holders (Buffer_Type);
 
-   type Sequence is tagged
+   type Sequence is tagged limited
       record
          Buffer         : Buffer_Holders.Holder;
          First          : Cursor;

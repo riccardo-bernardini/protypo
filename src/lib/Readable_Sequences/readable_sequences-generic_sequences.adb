@@ -73,11 +73,11 @@ package body Readable_Sequences.Generic_Sequences is
    function Create (Init                   : Element_Array;
                     End_Of_Sequence_Marker : Element_Type) return Sequence
    is
-      Result : Sequence := Create (End_Of_Sequence_Marker);
-   begin
-      Result.Append (Init);
 
-      return Result;
+   begin
+      return Result : Sequence := Create (End_Of_Sequence_Marker) do
+         Result.Append (Init);
+      end return;
    end Create;
 
    ------------
@@ -86,11 +86,11 @@ package body Readable_Sequences.Generic_Sequences is
 
    function Create (Init : Element_Array) return Sequence
    is
-      Result : Sequence := Empty_Sequence;
-   begin
-      Result.Append (Init);
 
-      return Result;
+   begin
+      return Result : Sequence := Empty_Sequence do
+         Result.Append (Init);
+      end return;
    end Create;
 
    procedure Update (Seq : in out Sequence;

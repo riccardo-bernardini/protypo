@@ -557,14 +557,13 @@ package body Protypo.Scanning is
       use Tokens;
 
 
-      Result  : Token_List := Token_Sequences.Create (Make_Unanchored_Token (End_Of_Text));
       Input   : String_Sequences.Sequence := String_Sequences.Create (String (Template));
       Buffer  : String_Sequences.Sequence;
 
-      procedure Handle_Escape
+      procedure Handle_Escape (Result : in out Token_List)
         with Pre => Input.Read = Escape and Input.Remaining > 1;
 
-      procedure Handle_Escape is
+      procedure Handle_Escape (Result : in out Token_List) is
       begin
          if Does_It_Follow (Input, Begin_Of_Code) then
             Dump_Buffer (Buffer, Result);
@@ -589,17 +588,19 @@ package body Protypo.Scanning is
       end Handle_Escape;
 
    begin
-      while not Input.End_Of_Sequence loop
-         if Input.Read = Escape and Input.Remaining > 1 then
-            Handle_Escape;
-         else
-            Buffer.Append (Input.Next);
-         end if;
-      end loop;
+      return Result  : Token_List :=
+        Token_Sequences.Create (Make_Unanchored_Token (End_Of_Text))
+      do
+         while not Input.End_Of_Sequence loop
+            if Input.Read = Escape and Input.Remaining > 1 then
+               Handle_Escape (Result);
+            else
+               Buffer.Append (Input.Next);
+            end if;
+         end loop;
 
-      Dump_Buffer (Buffer, Result);
-
-      return Result;
+         Dump_Buffer (Buffer, Result);
+      end return;
    end Internal_Tokenize;
 
    --------------
