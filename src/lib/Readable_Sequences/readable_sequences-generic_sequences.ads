@@ -1,10 +1,20 @@
-with Ada.Containers.Indefinite_Holders;
+with Ada.Finalization;
+
+--
+--  The model for a "readable sequence" is a sequential data buffer where
+--  new data can be only appended and data can be read sequentially,
+--  although the "cursor" to the current entry can be moved (mainly
+--  by saving the current position and restoring it)
+--
 
 generic
    type Element_Type is private;
    type Element_Array is array (Positive range <>) of Element_Type;
 package Readable_Sequences.Generic_Sequences is
-   type Sequence is tagged limited private;
+   type Sequence is
+     new Ada.Finalization.Limited_Controlled
+   with
+     private;
 
 
    type Cursor is private;
@@ -50,21 +60,48 @@ package Readable_Sequences.Generic_Sequences is
        Post => To.Length = To.Length'Old + What.Length;
 
    procedure Rewind (Seq : in out Sequence;
-                     To  :        Cursor := Beginning);
+                     To  :        Cursor := Beginning)
+     with
+       Pre =>
+         Seq.Is_Valid_Position (To),
+
+         Post =>
+           Seq.Current_Position = To;
 
    function Length (Seq : Sequence) return Natural;
+   --  Total number of data written in the buffer
 
    function Remaining (Seq : Sequence) return Natural
      with Post => Remaining'Result <= Seq.Length;
    -- Return the number of elements that still need to be read from
    -- Seq.  This includes also the current element
 
-   function Current_Position (Seq : Sequence) return Cursor;
+   function Is_Valid_Position (Seq : Sequence;
+                               C   : Cursor)
+                               return Boolean;
+
+   function Current_Position (Seq : Sequence) return Cursor
+     with
+       Post => Seq.Is_Valid_Position (Current_Position'Result);
+
+   function Next_Position (Seq : Sequence) return Cursor
+     with
+       Post => Seq.Is_Valid_Position (Next_Position'Result);
+   --  Return the position will have the reading cursor after a call to Next.
+   --  Funny?  It is useful for contracts
+
 
    procedure Set_Position (Seq : in out Sequence;
-                           Pos : Cursor);
+                           Pos : Cursor)
+     with
+       Pre =>
+         Seq.Is_Valid_Position (Pos),
 
-   function Saved_Position (Seq : Sequence)return Boolean;
+         Post =>
+           Seq.Current_Position = Pos;
+
+
+   function Saved_Position (Seq : Sequence) return Boolean;
 
    procedure Save_Position (Seq : in out Sequence)
      with
@@ -89,7 +126,14 @@ package Readable_Sequences.Generic_Sequences is
      with
        Pre => Seq.Has_End_Of_Sequence_Marker or Seq.Remaining > Ahead;
 
-   function Next (Seq : in out Sequence) return Element_Type;
+   function Next (Seq : in out Sequence) return Element_Type
+     with
+       Pre =>
+         Seq.Has_End_Of_Sequence_Marker or Seq.Remaining > 0,
+
+       Post =>
+         Next'Result = Seq.Read'Old
+         and Seq.Current_Position = Seq.Next_Position'Old;
 
 
    procedure Next (Seq  : in out Sequence;
@@ -112,16 +156,30 @@ private
 
    type Buffer_Type is array (Cursor range <>) of Element_Type;
 
+   type Buffer_Access is not null access Buffer_Type;
+
    Beginning : constant Cursor := Cursor'First;
 
-   package Buffer_Holders is
-     new Ada.Containers.Indefinite_Holders (Buffer_Type);
+   function Free_Space (Seq : Sequence) return Natural;
 
-   type Sequence is tagged limited
+   --
+   -- A "Sequence" is basically a buffer with two cursors:
+   --
+   -- * One Cursor Points To The "current" Element That is Returned
+   --   by "reading" functions
+   --
+   -- * The other cursor points to the first free location that it
+   --   has not been initialized yet.  This cursor can point beyond
+   --   the end of the buffer, if the buffer is filled.
+   --
+   -- "End of Sequence" condition happens when the two cursors are equal
+   --
+   type Sequence is
+     new Ada.Finalization.Limited_Controlled
+   with
       record
-         Buffer         : Buffer_Holders.Holder;
-         First          : Cursor;
-         After_Last     : Cursor;
+         Buffer         : Buffer_Access;
+         First_Free     : Cursor;
          Position       : Cursor;
          Old_Position   : Cursor;
          Position_Saved : Boolean := False;
@@ -130,11 +188,9 @@ private
       end record
      with
        Type_Invariant =>
-         not Sequence.Buffer.Is_Empty
-         and then Sequence.First = Sequence.Buffer.Element'First
-         and then Sequence.After_Last <= Sequence.Buffer.Element'Last + 1
-         and then Sequence.Position >= Sequence.First
-         and then Sequence.Position <= Sequence.After_Last;
+         Sequence.Buffer.all'First = Beginning
+         and then Sequence.First_Free <= Sequence.Buffer.all'Last + 1
+         and then Sequence.Is_Valid_Position (Sequence.Position);
 
    function Saved_Position (Seq : Sequence)return Boolean
    is (Seq.Position_Saved);
@@ -144,32 +200,37 @@ private
    is (Seq.Position);
 
    function Length (Seq : Sequence) return Natural
-   is (Natural (Seq.Buffer.Element'Length));
+   is (Natural (Seq.First_Free - Seq.Buffer'First + 1));
 
    function Read (Seq   : Sequence;
                   Ahead : Natural := 0) return Element_Type
    is (if Seq.Remaining > Ahead then
-          Seq.Buffer.Element (Cursor (Integer (Seq.Position) + Ahead))
+          Seq.Buffer (Cursor (Integer (Seq.Position) + Ahead))
+
        elsif Seq.Has_End_Marker then
           Seq.End_Marker
+
        else
           raise Beyond_End);
 
    function Has_End_Of_Sequence_Marker (Item : Sequence) return Boolean
    is (Item.Has_End_Marker);
 
-   Empty_Buffer : constant Buffer_Type (1 .. 1) := (others => <>);
-
-   function Empty_Sequence return Sequence
-   is (Sequence'(Buffer         => Buffer_Holders.To_Holder (Empty_Buffer),
-                 Position       => Empty_Buffer'First,
-                 First          => Empty_Buffer'First,
-                 After_Last     => Empty_Buffer'Last + 1,
-                 Old_Position   => <>,
-                 Position_Saved => False,
-                 Has_End_Marker => False,
-                 End_Marker     => <>));
-
    function Index (Seq : Sequence) return Positive
    is (Positive (Seq.Position));
+
+   function Is_Valid_Position (Seq : Sequence;
+                               C   : Cursor)
+                               return Boolean
+   is (C >= Seq.Buffer'First and C <= Seq.First_Free);
+
+   function Next_Position (Seq : Sequence) return Cursor
+   is (if Seq.End_Of_Sequence then
+          Seq.Position
+       else
+          Seq.Position + 1);
+
+
+   function Free_Space (Seq : Sequence) return Natural
+   is (Integer (Seq.Buffer'Last)-Integer (Seq.First_Free) + 1);
 end Readable_Sequences.Generic_Sequences;

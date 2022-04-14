@@ -1,5 +1,8 @@
 pragma Ada_2012;
-with Ada.Text_IO; use Ada.Text_IO;
+
+pragma Warnings (Off, "no entities of ""Ada.Text_Io"" are referenced");
+with Ada.Text_Io; use Ada.Text_Io;
+with Ada.Unchecked_Deallocation;
 package body Readable_Sequences.Generic_Sequences is
 
    ------------------
@@ -7,7 +10,7 @@ package body Readable_Sequences.Generic_Sequences is
    ------------------
 
    procedure Set_Position (Seq : in out Sequence;
-                         Pos : Cursor)
+                           Pos : Cursor)
    is
    begin
       Seq.Position := Pos;
@@ -38,7 +41,7 @@ package body Readable_Sequences.Generic_Sequences is
       --     Result (K) := Seq.Buffer (Cursor (K));
       --  end loop;
 
-      return Element_Array (Seq.Buffer.Element (From .. Seq.Buffer.Element'Last));
+      return Element_Array (Seq.Buffer (From .. Seq.Buffer'Last));
    end Dump;
 
    -----------
@@ -48,9 +51,43 @@ package body Readable_Sequences.Generic_Sequences is
    procedure Clear (Seq : in out Sequence)
    is
    begin
-      Seq.Position := Beginning;
+      Seq.Position := Seq.Buffer'First;
+      Seq.First_Free := Seq.Buffer'First;
       Seq.Position_Saved := False;
    end Clear;
+
+   function Allocate_Buffer (Min_Size : Natural) return Buffer_Access
+   is
+      Blocksize : constant Positive := 2048;
+      N_Blocks  : constant Positive := Min_Size / Blocksize + 2;
+   begin
+      --
+      -- Blocksize * (min_size/blocksize) >= min_size - Blocksize
+      --
+      -- Blocksize * N_blocks >= min_size + Blocksize
+      --
+      -- We get at least a full block free
+      --
+      pragma Assert (Blocksize * N_Blocks >= Min_Size + Blocksize);
+
+      return new Buffer_Type (1 .. Cursor (Blocksize * N_Blocks));
+   end Allocate_Buffer;
+
+   function Empty_Sequence return Sequence
+   is
+      Tmp : constant Buffer_Access := Allocate_Buffer (0);
+   begin
+      return (Sequence'(Ada.Finalization.Limited_Controlled
+              with
+                Buffer         => Tmp,
+              Position       => Tmp'First,
+              First_Free     => Tmp'First,
+              Old_Position   => <>,
+              Position_Saved => False,
+              Has_End_Marker => False,
+              End_Marker     => <>));
+   end Empty_Sequence;
+
 
    ------------
    -- Create --
@@ -93,15 +130,15 @@ package body Readable_Sequences.Generic_Sequences is
       end return;
    end Create;
 
-   procedure Update (Seq : in out Sequence;
-                     Data : Buffer_Type)
-   is
-   begin
-      Seq.Buffer.Replace_Element (Data);
-      Seq.First := Data'First;
-      Seq.After_Last  := Data'Last + 1;
-      Seq.Position := Seq.First;
-   end Update;
+   --  procedure Update (Seq  : in out Sequence;
+   --                    Data : Buffer_Type)
+   --  is
+   --  begin
+   --     Seq.Buffer.Replace_Element (Data);
+   --     Seq.First := Data'First;
+   --     Seq.After_Last  := Data'Last + 1;
+   --     Seq.Position := Seq.First;
+   --  end Update;
 
 
    ------------
@@ -112,11 +149,51 @@ package body Readable_Sequences.Generic_Sequences is
      (Seq      : in out Sequence;
       Elements : Element_Array)
    is
-      New_Buffer : constant Buffer_Type :=
-                     Seq.Buffer.Element (Seq.First .. Seq.After_Last - 1)
-                   & Buffer_Type (Elements);
    begin
-      Update (Seq, New_Buffer);
+      if Seq.Free_Space >= Elements'Length then
+
+         declare
+            Last : constant Cursor := Seq.First_Free + Cursor (Elements'Length);
+         begin
+            pragma Assert (Last <= Seq.Buffer'Last);
+
+            Seq.Buffer (Seq.First_Free .. Last) := Buffer_Type (Elements);
+            Seq.First_Free := Last + 1;
+         end;
+
+      else
+
+         declare
+            type Nullable_Buffer_Access is access all Buffer_Type;
+
+            procedure Free is
+              new Ada.Unchecked_Deallocation (Object => Buffer_Type,
+                                              Name   => Nullable_Buffer_Access);
+
+            Old_Buffer : Nullable_Buffer_Access :=
+                           Nullable_Buffer_Access (Seq.Buffer);
+
+            --
+            --  Why this?  Because Buffer_Access has been declared "not null"
+            --  but Unchecked_Deallocation set to null its paramete.
+            --
+
+            New_Length : constant Natural := Seq.Length + Elements'Length;
+            New_Buffer : constant Buffer_Access := Allocate_Buffer (New_Length);
+            Last_Written : constant Cursor :=
+                             New_Buffer'First + Cursor (Elements'Length) - 1;
+         begin
+            New_Buffer (New_Buffer'First .. Last_Written) :=
+              Buffer_Type (Seq.Dump & Elements);
+
+            Seq.Buffer := New_Buffer;
+
+            Seq.First_Free := Last_Written + 1;
+
+            Free (Old_Buffer);
+         end;
+
+      end if;
    end Append;
 
    ------------
@@ -139,19 +216,19 @@ package body Readable_Sequences.Generic_Sequences is
                      What : Sequence)
    is
    begin
-      To.Append (Element_Array (What.Buffer.Element));
+      To.Append (Element_Array (What.Buffer.all));
    end Append;
 
 
    function Remaining (Seq : Sequence) return Natural
    is
    begin
-      Put_Line (Seq.Buffer.Element'Last'Image);
-      Put_Line (Seq.Position'image);
-      Put_Line (cursor'(Seq.Buffer.Element'Last - Seq.Position+1 )'Image);
-      Put_Line (Seq.Length'Image);
+      --  Put_Line (Seq.Buffer'Last'Image);
+      --  Put_Line (Seq.Position'Image);
+      --  Put_Line (Cursor'(Seq.Buffer'Last - Seq.Position + 1 )'Image);
+      --  Put_Line (Seq.Length'Image);
 
-      return Integer (Seq.Buffer.Element'Last - Seq.Position + 1);
+      return Integer (Seq.First_Free) - Integer (Seq.Position) + 1;
    end Remaining;
 
    ------------
@@ -163,12 +240,12 @@ package body Readable_Sequences.Generic_Sequences is
       To  :        Cursor := Beginning)
    is
    begin
-      if To >= Seq.After_Last then
+      if To > Seq.First_Free then
          raise Constraint_Error;
       end if;
 
       if To = Beginning then
-         Seq.Position := Seq.First;
+         Seq.Position := Seq.Buffer'First;
       else
          Seq.Position := To;
       end if;
@@ -230,7 +307,7 @@ package body Readable_Sequences.Generic_Sequences is
    is
    begin
       if Seq.Remaining < Step then
-         Seq.Position := Seq.After_Last;
+         Seq.Position := Seq.First_Free;
          return;
       end if;
 
@@ -246,8 +323,8 @@ package body Readable_Sequences.Generic_Sequences is
                    Step : Positive := 1)
    is
    begin
-      if Seq.Position < Seq.First + Cursor (Step) then
-         Seq.Position := Seq.First;
+      if Seq.Position < Seq.Buffer'First + Cursor (Step) then
+         Seq.Position := Seq.Buffer'First;
          return;
       end if;
 
@@ -263,7 +340,7 @@ package body Readable_Sequences.Generic_Sequences is
                       Callback : access procedure (Item : Element_Type))
    is
    begin
-      for El of Seq.Buffer.Element loop
+      for El of Seq.Buffer.all loop
          Callback (El);
       end loop;
    end Process;
