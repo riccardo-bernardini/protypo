@@ -367,7 +367,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
             Apply_Default (Specs, Parameters, Result);
 
          else
-            pragma Compile_Time_Warning (True, "Varargin not implemented");
+            pragma Compile_Time_Warning (False, "Varargin not implemented");
             raise Program_Error with "Varargin not implemented";
          end if;
       end Apply_Default_And_Varargin;

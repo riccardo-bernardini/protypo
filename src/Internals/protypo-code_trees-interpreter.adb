@@ -69,8 +69,8 @@ package body Protypo.Code_Trees.Interpreter is
       Seq           : String_Sequences.Sequence := String_Sequences.Create (Input, Eof);
       Current_State : Automata_State := Reading_Text;
 
-      Result : String_Sequences.Sequence;
-      Expr   : String_Sequences.Sequence;
+      Result : String_Sequences.Sequence := String_Sequences.Empty_Sequence;
+      Expr   : String_Sequences.Sequence := String_Sequences.Empty_Sequence;
    begin
       while not Seq.End_Of_Sequence loop
          case Current_State is

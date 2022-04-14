@@ -6,7 +6,7 @@ package Readable_Sequences.String_Sequences is
      new Generic_Sequences (Element_Type  => Character,
                             Element_Array => String);
 
-   type Sequence is
+   type Sequence (<>) is
      new Basic_String_Sequences.Sequence
    with
      private;

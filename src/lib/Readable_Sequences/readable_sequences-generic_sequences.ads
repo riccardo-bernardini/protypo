@@ -19,7 +19,6 @@ package Readable_Sequences.Generic_Sequences is
 
    type Cursor is private;
 
-   Beginning : constant Cursor;
 
    function Empty_Sequence return Sequence;
 
@@ -32,35 +31,55 @@ package Readable_Sequences.Generic_Sequences is
 
    function Has_End_Of_Sequence_Marker (Item : Sequence) return Boolean;
 
+   function Dump (Seq  : Sequence) return Element_Array
+     with
+       Post => Dump'Result'Length = Seq.Length;
+
    function Dump (Seq  : Sequence;
-                  From : Cursor := Beginning) return Element_Array;
+                  From : Cursor) return Element_Array;
+
+   function First (Seq : Sequence) return Cursor
+     with
+       Post => Seq.Is_Valid_Position (First'Result);
 
    procedure Clear (Seq : in out Sequence)
      with
        Post =>
          Seq.Length = 0
          and not Seq.Saved_Position
-         and Seq.Current_Position = Beginning;
+         and Seq.Current_Position = Seq.First;
 
    function Index (Seq : Sequence) return Positive;
 
    procedure Append (Seq      : in out Sequence;
                      Elements : Element_Array)
      with
-       Post => Seq.Length = Seq.Length'Old + Elements'Length;
+       Post =>
+         Seq.Length = Seq.Length'Old + Elements'Length
+         and Seq.Remaining = Seq.Remaining'Old + Elements'Length;
 
    procedure Append (To   : in out Sequence;
                      What : Element_Type)
      with
-       Post => To.Length = To.Length'Old + 1;
+       Post =>
+         To.Length = To.Length'Old + 1
+         and to.Remaining = to.Remaining'Old + 1;
 
    procedure Append (To   : in out Sequence;
                      What : Sequence)
      with
-       Post => To.Length = To.Length'Old + What.Length;
+       Post =>
+         To.Length = To.Length'Old + What.Length
+         and to.Remaining = to.Remaining'Old + What.Length;
+
+   procedure Rewind (Seq : in out Sequence)
+     with
+       Post =>
+         Seq.Current_Position = Seq.First
+         and Seq.Remaining = Seq.Length;
 
    procedure Rewind (Seq : in out Sequence;
-                     To  :        Cursor := Beginning)
+                     To  :        Cursor)
      with
        Pre =>
          Seq.Is_Valid_Position (To),
@@ -158,7 +177,6 @@ private
 
    type Buffer_Access is not null access Buffer_Type;
 
-   Beginning : constant Cursor := Cursor'First;
 
    function Free_Space (Seq : Sequence) return Natural;
 
@@ -188,9 +206,12 @@ private
       end record
      with
        Type_Invariant =>
-         Sequence.Buffer.all'First = Beginning
-         and then Sequence.First_Free <= Sequence.Buffer.all'Last + 1
+         Sequence.First_Free <= Sequence.Buffer.all'Last + 1
          and then Sequence.Is_Valid_Position (Sequence.Position);
+
+   overriding
+   procedure Finalize (Object : in out Sequence);
+
 
    function Saved_Position (Seq : Sequence)return Boolean
    is (Seq.Position_Saved);
@@ -200,7 +221,7 @@ private
    is (Seq.Position);
 
    function Length (Seq : Sequence) return Natural
-   is (Natural (Seq.First_Free - Seq.Buffer'First + 1));
+   is (Natural (Seq.First_Free - Seq.Buffer'First));
 
    function Read (Seq   : Sequence;
                   Ahead : Natural := 0) return Element_Type
@@ -233,4 +254,8 @@ private
 
    function Free_Space (Seq : Sequence) return Natural
    is (Integer (Seq.Buffer'Last)-Integer (Seq.First_Free) + 1);
+
+   function First (Seq : Sequence) return Cursor
+   is (Seq.Buffer'First);
+
 end Readable_Sequences.Generic_Sequences;

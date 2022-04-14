@@ -400,9 +400,10 @@ package body Protypo.Parsing is
      (Input      : in out Scanning.Token_List)
       return Statement_Sequences.Sequence
    is
+      use Statement_Sequences;
    begin
 
-      return Result  : Statement_Sequences.Sequence do
+      return Result  : Sequence := Empty_Sequence do
          Result.Append (Parse_Expression (Input));
 
          while Class (Input.Read) = Comma loop
@@ -421,8 +422,9 @@ package body Protypo.Parsing is
    function Parse_Name_List
      (Input      : in out Scanning.Token_List) return Statement_Sequences.Sequence
    is
+      use Statement_Sequences;
    begin
-      return Result : Statement_Sequences.Sequence do
+      return Result : Sequence := Empty_Sequence do
          Result.Append (Parse_Name (Input));
 
          while Class (Input.Read) = Comma loop
@@ -461,8 +463,8 @@ package body Protypo.Parsing is
    function Parse_Conditional (Input : in out Scanning.Token_List)
                                return Code_Trees.Parsed_Code
    is
-      Branches    : Statement_Sequences.Sequence;
-      Conditions  : Statement_Sequences.Sequence;
+      Branches    : Statement_Sequences.Sequence := Statement_Sequences.Empty_Sequence;
+      Conditions  : Statement_Sequences.Sequence := Statement_Sequences.Empty_Sequence;
       Else_Branch : Code_Trees.Parsed_Code := Code_Trees.Empty_Tree;
    begin
       Expect_And_Eat (Input, Kw_If);
@@ -768,7 +770,8 @@ package body Protypo.Parsing is
                               return Code_Trees.Parsed_Code
       is
          In_Optional_Section : Boolean := False;
-         Default             : Statement_Sequences.Sequence;
+         Default             : Statement_Sequences.Sequence :=
+                                 Statement_Sequences.Empty_Sequence;
          Parameter_Names     : Code_Trees.Id_List;
       begin
          loop
@@ -871,7 +874,8 @@ package body Protypo.Parsing is
       end Parse_Defun;
 
 
-      Result : Statement_Sequences.Sequence;
+      Result : Statement_Sequences.Sequence :=
+                 Statement_Sequences.Empty_Sequence;
 
       Here   : constant Token_Position := Position (Input.Read);
    begin
