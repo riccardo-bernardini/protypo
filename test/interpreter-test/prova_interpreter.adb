@@ -64,7 +64,7 @@ procedure Prova_Interpreter is
                                                         3 => 42,
                                                         4 => -5));
 
-   User_Dir : constant Engine_Value_Array_Wrappers.Array_Wrapper_Access :=
+   User_Dir : constant Ambivalent_Interface_Access :=
                 Engine_Value_Array_Wrappers.Make_Wrapper (To_Array (Db));
 
    Engine   : Interpreter_Type;
@@ -72,7 +72,7 @@ procedure Prova_Interpreter is
 begin
 
    Engine.Define (Name  => "users",
-                  Value => Create (Ambivalent_Interface_Access (User_Dir)));
+                  Value => Create (User_Dir));
 
    Engine.Define (Name => "scores",
                   Value => Scores);

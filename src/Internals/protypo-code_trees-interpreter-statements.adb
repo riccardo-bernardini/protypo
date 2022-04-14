@@ -207,7 +207,9 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                      -- Only reference handlers (that allow for both reading
                      -- and writing) can be on the LHS
                      --
-                     raise Constraint_Error;
+                     raise Run_Time_Error
+                       with
+                         "Found " & Lhs.Last_Element.Class'Image & " on LHS";
                   end if;
                end loop;
                --                 Put_Line ("@@@ xx");

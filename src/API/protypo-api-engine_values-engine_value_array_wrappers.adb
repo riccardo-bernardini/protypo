@@ -104,7 +104,16 @@ package body Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
          Result.Vector.Append (El);
       end loop;
 
-      return Result;
+      return  Result;
+   end Make_Wrapper;
+
+   function Make_Wrapper
+     (Init : Engine_Value_Vectors.Vector := Engine_Value_Vectors.Empty_Vector)
+      return Handlers.Ambivalent_Interface_Access
+   is
+      Tmp : constant Array_Wrapper_Access := Make_Wrapper (Init);
+   begin
+      return Handlers.Ambivalent_Interface_Access (Tmp);
    end Make_Wrapper;
 
    ---------

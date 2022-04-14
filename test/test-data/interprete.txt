@@ -76,6 +76,23 @@ url2 := "http://www.example.com";
 
 [ 1=#glob(url, "*google*")# 1=#glob(url2, "*.com")#]
 
+q3 := split("aldo giovanni e    giacomo", " ");
+
+for i in q3.iterate loop
+  debug(i);
+end loop;
+
+q2 :="pinco";
+q2 := split("nome;cognome;;email;x", ";");
+
+for i in q2.iterate loop
+  debug(i);
+end loop;
+
+debug(substr("pipposo", 1, 1));
+debug(substr("pipposo", 4, -1));
+debug(substr("pipposo", -4, -3));
+
 }#
 
 un'altra riga #x

@@ -4,6 +4,7 @@ with Ada.Strings.Fixed;
 
 with Protypo.Api.Engine_Values.Range_Iterators;
 with Protypo.Api.Engine_Values.Handlers;
+with Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;
 with Protypo.Api.Interpreters;
 with Protypo.Code_Trees.Interpreter.Statements;
 with Protypo.Code_Trees.Interpreter.Expressions;
@@ -21,7 +22,9 @@ with Protypo.Api.Engine_Values;
 
 with Protypo.Code_Trees.Interpreter.String_Interpolation_Handlers;
 
-with GNAT.Regexp;
+with Gnat.Regexp;
+
+with Tokenize;
 
 package body Protypo.Code_Trees.Interpreter is
    use Ada.Strings;
@@ -182,17 +185,138 @@ package body Protypo.Code_Trees.Interpreter is
       end;
    end Range_Callback;
 
+   type Class_Array is array (Positive range <>) of Engine_Value_Class;
+
+   function Match_Signature (Parameters : Engine_Value_Vectors.Vector;
+                             Signature  : Class_Array)
+                             return Boolean
+   is
+      use Engine_Value_Vectors;
+
+   begin
+      if Natural (Parameters.Length) /= Signature'Length then
+         return False;
+      end if;
+
+      declare
+         Pos : Cursor := Parameters.First;
+      begin
+         for Class of Signature loop
+            if Class /= Element (Pos).Class then
+               return False;
+            end if;
+
+            Next (Pos);
+         end loop;
+      end;
+
+      return True;
+   end Match_Signature;
+
+   function Substring_Callback  (Parameters : Engine_Value_Vectors.Vector)
+                                 return Engine_Value_Vectors.Vector
+   is
+
+   begin
+      if not Match_Signature (Parameters => Parameters,
+                              Signature  => (Text, Int, Int))
+      then
+         raise Run_Time_Error with "substr needs 1 string + 2 int";
+      end if;
+
+      declare
+         Item : constant String :=
+                  Get_String (Parameters (Parameters.First_Index));
+
+         First : Integer :=
+                   Get_Integer (Parameters (Parameters.First_Index + 1));
+
+         Last : Integer :=
+                  Get_Integer (Parameters (Parameters.First_Index + 2));
+      begin
+         if First < 0 then
+            First := Item'Last + First + 1;
+         end if;
+
+         if Last < 0 then
+            Last := Item'Last + Last + 1;
+         end if;
+
+         if First < Item'First or First > Item'Last then
+            raise Run_Time_Error
+              with
+                "First index in substring " & First'Image
+                & " is outside valid range "
+              & Item'First'Image & ".." & Item'Last'Image;
+         end if;
+
+         if Last < Item'First or Last > Item'Last then
+            raise Run_Time_Error
+              with
+                "Last index in substring " & Last'Image
+                & " is outside valid range "
+              & Item'First'Image & ".." & Item'Last'Image;
+         end if;
+
+         return Engine_Value_Vectors.To_Vector (Create (Item (First .. Last)), 1);
+      end;
+   end Substring_Callback;
+
+   function Split_Callback  (Parameters : Engine_Value_Vectors.Vector)
+                                return Engine_Value_Vectors.Vector
+   is
+
+   begin
+      if not Match_Signature (Parameters => Parameters,
+                              Signature  => (Text, Text))
+      then
+         raise Run_Time_Error with "glob needs 2 string parameters";
+      end if;
+
+      declare
+         Item      : constant String :=
+                       Get_String (Parameters (Parameters.First_Index));
+
+         Separator : constant String :=
+                       Get_String (Parameters (Parameters.First_Index + 1));
+      begin
+         if Separator'Length /= 1 then
+            raise Run_Time_Error
+              with
+                "Split separator should be one character long, found "
+                & "'" & Separator & "'";
+         end if;
+
+         declare
+            use Tokenize;
+            use Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;
+
+            Tokens : constant Token_Array :=
+                       Split (Item, Separator (Separator'First));
+
+            Result : Engine_Value_Vectors.Vector;
+         begin
+            for Tk of Tokens loop
+               Result.Append (Create (Tk));
+            end loop;
+
+            return Engine_Value_Vectors.To_Vector
+              (Handlers.Create (Make_Wrapper (Result)), 1);
+         end;
+      end;
+   end Split_Callback;
 
    function Glob_Callback (Parameters : Engine_Value_Vectors.Vector)
-                           return Engine_Value_Vectors.Vector
+                              return Engine_Value_Vectors.Vector
    is
-      use GNAT.Regexp;
-      use type Ada.Containers.Count_Type;
+      use Gnat.Regexp;
    begin
-      if not
-        (Parameters.Length = 2
-         and then Parameters.Element (Parameters.First_Index).Class = Text
-         and then Parameters.Element (Parameters.First_Index + 1).Class = Text)
+      --  if not
+      --    (Parameters.Length = 2
+      --     and then Parameters.Element (Parameters.First_Index).Class = Text
+      --     and then Parameters.Element (Parameters.First_Index + 1).Class = Text)
+      if not Match_Signature (Parameters => Parameters,
+                              Signature  => (Text, Text))
       then
          raise Run_Time_Error with "glob needs 2 string parameters";
       end if;
@@ -277,6 +401,14 @@ package body Protypo.Code_Trees.Interpreter is
          Table.Create
            (Name          => "glob",
             Initial_Value => Handlers.Create (Glob_Callback'Access, 2));
+
+         Table.Create
+           (Name          => "split",
+            Initial_Value => Handlers.Create (Split_Callback'Access, 2));
+
+         Table.Create
+           (Name          => "substr",
+            Initial_Value => Handlers.Create (Substring_Callback'Access, 3));
 
          Table.Create
            (Name          => "now",

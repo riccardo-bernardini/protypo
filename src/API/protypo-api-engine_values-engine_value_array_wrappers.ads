@@ -23,8 +23,13 @@ package Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
    type Array_Wrapper is new Handlers.Ambivalent_Interface with private;
    type Array_Wrapper_Access is access Array_Wrapper;
 
-   function Make_Wrapper (Init : Engine_Value_Vectors.Vector := Engine_Value_Vectors.Empty_Vector)
-                          return Array_Wrapper_Access;
+   function Make_Wrapper
+     (Init : Engine_Value_Vectors.Vector := Engine_Value_Vectors.Empty_Vector)
+      return Handlers.Ambivalent_Interface_Access;
+
+   function Make_Wrapper
+     (Init : Engine_Value_Vectors.Vector := Engine_Value_Vectors.Empty_Vector)
+      return Array_Wrapper_Access;
 
    procedure Set (Container : in out Array_Wrapper;
                   Index     : Array_Wrapper_Index;

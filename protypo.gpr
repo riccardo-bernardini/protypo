@@ -1,3 +1,5 @@
+with "src/lib/ada-tokenizer/tokenizer.gpr";
+
 library project Protypo is
 
    for Source_Dirs use ("src", "src/lib/Generic_Symbol_Table", "src/lib/Generic_Symbol_Table/test", "src/lib/Readable_Sequences", "src/lib/Utilities", "src/API", "src/Internals");
@@ -10,13 +12,12 @@ library project Protypo is
    end Builder;
 
    package Compiler is
-      for Switches ("ada") use ("-gnatwa", "-gnat12", "-g", "-gnatE", "-fstack-check", "-gnata");
+      for Switches ("ada") use ("-gnat12", "-g", "-fstack-check", "-gnata", "-gnatE", "-gnatwa");
    end Compiler;
 
    package Binder is
       for Switches ("ada") use ("-E");
    end Binder;
-
 
 end Protypo;
 

@@ -1,0 +1,3 @@
+[submodule "src/lib/ada-tokenizer"]
+	path = src/lib/ada-tokenizer
+	url = git@github.com:fintatarta/ada-tokenizer.git
