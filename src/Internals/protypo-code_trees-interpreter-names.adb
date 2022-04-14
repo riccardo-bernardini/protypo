@@ -4,7 +4,7 @@ with Protypo.Code_Trees.Interpreter.Expressions;
 with Protypo.Code_Trees.Interpreter.Symbol_Table_References;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_Io; use Ada.Text_Io;
 
 package body Protypo.Code_Trees.Interpreter.Names is
 
@@ -67,7 +67,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
          when Selected    =>
             declare
                Head  : constant Name_Reference := Eval_Name (Status, Expr.Record_Var);
-               Field : constant ID := ID (To_String (Expr.Field_Name));
+               Field : constant Id := Id (To_String (Expr.Field_Name));
             begin
                case Head.Class is
                   when Record_Reference =>
@@ -92,10 +92,14 @@ package body Protypo.Code_Trees.Interpreter.Names is
             declare
                subtype Indexed_References is Value_Name_Class
                  with Static_Predicate => Indexed_References
-                   in Array_Reference | Function_Reference | Ambivalent_Reference;
+                   in
+                     Array_Reference | Function_Reference | Ambivalent_Reference;
 
-               Head    : constant Name_Reference := Eval_Name (Status, Expr.Indexed_Var);
-               Indexes : constant Engine_Value_Vectors.Vector := Expressions.Eval_Vector (Status, Expr.Indexes);
+               Head    : constant Name_Reference :=
+                           Eval_Name (Status, Expr.Indexed_Var);
+
+               Indexes : constant Engine_Value_Vectors.Vector :=
+                           Expressions.Eval_Vector (Status, Expr.Indexes);
             begin
                if not (Head.Class in Indexed_References) then
                   raise Program_Error
@@ -128,7 +132,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
                use Api.Symbols.Protypo_Tables;
                use Protypo.Code_Trees.Interpreter.Symbol_Table_References;
 
-               Ident    : constant ID := To_Id (Expr.ID_Value);
+               Ident    : constant Id := To_Id (Expr.Id_Value);
                Position : Cursor := Status.Symbol_Table.Find (Ident);
             begin
 
