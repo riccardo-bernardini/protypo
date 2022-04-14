@@ -6,7 +6,7 @@ package Readable_Sequences.String_Sequences is
      new Generic_Sequences (Element_Type  => Character,
                             Element_Array => String);
 
-   type Sequence (<>) is
+   type Sequence is
      new Basic_String_Sequences.Sequence
    with
      private;
@@ -27,9 +27,6 @@ package Readable_Sequences.String_Sequences is
 
    function Char (Pos : Position_Type) return Positive
      with Pre => Pos /= No_Position;
-
-   overriding
-   function Empty_Sequence return sequence;
 
    overriding
    function Create (Init : String) return Sequence;

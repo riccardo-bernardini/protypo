@@ -1,6 +1,6 @@
 pragma Ada_2012;
 pragma Warnings (Off, "no entities");
-with Ada.Text_IO;                           use Ada.Text_IO;
+with Ada.Text_Io;                           use Ada.Text_Io;
 with Ada.Exceptions;
 
 with Protypo.Tokens;                        use Protypo.Tokens;
@@ -130,14 +130,17 @@ package body Protypo.Parsing is
       return Code_Trees.Parsed_Code
    is
       Result  : Code_Trees.Parsed_Code := Code_Trees.Empty_Tree;
-      Indexes : Statement_Sequences.Sequence;
 
       procedure Parse_Indexed_Name is
       begin
          Expect_And_Eat (Input, Open_Parenthesis);
 
-         Indexes := Parse_Expression_List (Input);
-         Result := Code_Trees.Indexed_Name (Result, Indexes.Dump);
+         declare
+            Indexes : constant Statement_Sequences.Sequence :=
+                        Parse_Expression_List (Input);
+         begin
+            Result := Code_Trees.Indexed_Name (Result, Indexes.Dump);
+         end;
 
          Expect_And_Eat (Input, Close_Parenthesis);
       end Parse_Indexed_Name;
@@ -229,7 +232,6 @@ package body Protypo.Parsing is
             end if;
 
             declare
-               Parameters : Statement_Sequences.Sequence;
                Here       : constant Tokens.Token_Position := Tokens.Position (Input.Read);
 
                Name : constant Unbounded_Id  :=
@@ -237,10 +239,12 @@ package body Protypo.Parsing is
             begin
                Expect_And_Eat (Input, Open_Parenthesis, "PRIMARY 3");
 
-               Parameters := Parse_Expression_List (Input);
-
-               Result := Code_Trees.Capture (Name, Parameters.Dump, Here);
-
+               declare
+                  Parameters : constant Statement_Sequences.Sequence :=
+                                 Parse_Expression_List (Input);
+               begin
+                  Result := Code_Trees.Capture (Name, Parameters.Dump, Here);
+               end;
                -- The close parenthesis of the called function
                Expect_And_Eat (Input, Close_Parenthesis, "PRIMARY 4");
 
@@ -396,17 +400,17 @@ package body Protypo.Parsing is
      (Input      : in out Scanning.Token_List)
       return Statement_Sequences.Sequence
    is
-      Result : Statement_Sequences.Sequence;
+      use Statement_Sequences;
    begin
-      Result.Append (Parse_Expression (Input));
 
-      while Class (Input.Read) = Comma loop
-         Input.Next;
+      return Result  : Sequence := Empty_Sequence do
          Result.Append (Parse_Expression (Input));
-      end loop;
 
-
-      return Result;
+         while Class (Input.Read) = Comma loop
+            Input.Next;
+            Result.Append (Parse_Expression (Input));
+         end loop;
+      end return;
    end Parse_Expression_List;
 
 
@@ -418,16 +422,16 @@ package body Protypo.Parsing is
    function Parse_Name_List
      (Input      : in out Scanning.Token_List) return Statement_Sequences.Sequence
    is
-      Result : Statement_Sequences.Sequence;
+      use Statement_Sequences;
    begin
-      Result.Append (Parse_Name (Input));
-
-      while Class (Input.Read) = Comma loop
-         Input.Next;
+      return Result : Sequence := Empty_Sequence do
          Result.Append (Parse_Name (Input));
-      end loop;
 
-      return Result;
+         while Class (Input.Read) = Comma loop
+            Input.Next;
+            Result.Append (Parse_Name (Input));
+         end loop;
+      end return;
    end Parse_Name_List;
 
    ------------------
@@ -437,18 +441,19 @@ package body Protypo.Parsing is
    function Parse_Assign (Input : in out Scanning.Token_List)
                           return Code_Trees.Parsed_Code
    is
-      Values : Statement_Sequences.Sequence;
       Names  : constant Statement_Sequences.Sequence := Parse_Name_List (Input);
    begin
       Expect_And_Eat (Input, Assign, "ASSIGN 1");
 
-      Values := Parse_Expression_List (Input);
+      declare
+         Values : constant Statement_Sequences.Sequence :=
+                    Parse_Expression_List (Input);
+      begin
+         Expect_And_Eat (Input, End_Of_Statement, "ASSIGN 2");
 
-      Expect_And_Eat (Input, End_Of_Statement, "ASSIGN 2");
-
-
-      return Code_Trees.Assignment (LHS    => Names.Dump,
-                                    Value  => Values.Dump);
+         return Code_Trees.Assignment (Lhs    => Names.Dump,
+                                       Value  => Values.Dump);
+      end;
    end Parse_Assign;
 
    -----------------------
@@ -458,8 +463,8 @@ package body Protypo.Parsing is
    function Parse_Conditional (Input : in out Scanning.Token_List)
                                return Code_Trees.Parsed_Code
    is
-      Branches    : Statement_Sequences.Sequence;
-      Conditions  : Statement_Sequences.Sequence;
+      Branches    : Statement_Sequences.Sequence := Statement_Sequences.Empty_Sequence;
+      Conditions  : Statement_Sequences.Sequence := Statement_Sequences.Empty_Sequence;
       Else_Branch : Code_Trees.Parsed_Code := Code_Trees.Empty_Tree;
    begin
       Expect_And_Eat (Input, Kw_If);
@@ -608,21 +613,21 @@ package body Protypo.Parsing is
    function Parse_Return (Input : in out Scanning.Token_List)
                           return Code_Trees.Parsed_Code
    is
-      Return_List : Statement_Sequences.Sequence;
       Here        : constant Tokens.Token_Position := Tokens.Position (Input.Read);
    begin
       Expect_And_Eat (Input, Kw_Return);
 
-      if Class (Input.Read) = End_Of_Statement then
-         Return_List := Statement_Sequences.Empty_Sequence;
-      else
-         Return_List := Parse_Expression_List (Input);
-      end if;
+      declare
+         Return_List : constant Statement_Sequences.Sequence :=
+                         (if Class (Input.Read) = End_Of_Statement then
+                             Statement_Sequences.Empty_Sequence
+                          else
+                             Parse_Expression_List (Input));
+      begin
+         Expect_And_Eat (Input, End_Of_Statement);
 
-      Expect_And_Eat (Input, End_Of_Statement);
-
-      return Code_Trees.Return_To_Caller (Return_List.Dump, Here);
-
+         return Code_Trees.Return_To_Caller (Return_List.Dump, Here);
+      end;
    end Parse_Return;
 
    ------------------------------
@@ -664,10 +669,10 @@ package body Protypo.Parsing is
       function Parse_Assign_Or_Call (Input : in out Scanning.Token_List)
                                      return Code_Trees.Parsed_Code
       is
-         subtype ID_Follower is Unvalued_Token
+         subtype Id_Follower is Unvalued_Token
            with
              Static_Predicate =>
-               ID_Follower in
+               Id_Follower in
                  End_Of_Statement | Assign | Open_Parenthesis | Dot | Comma;
 
          Follower  : constant Token_Class := Class (Input.Read (1));
@@ -692,7 +697,7 @@ package body Protypo.Parsing is
          --
          --  Put_Line ("Assign or call " & Follower'Image & ", " & Image (Input.Read));
 
-         if not (Follower in ID_Follower) then
+         if not (Follower in Id_Follower) then
             raise Parsing_Error
               with "Unexpected token "
               &  Class (Input.Read)'Image
@@ -700,7 +705,7 @@ package body Protypo.Parsing is
               & " at " & Image (Here);
          end if;
 
-         case ID_Follower (Follower) is
+         case Id_Follower (Follower) is
             when End_Of_Statement =>
 
                declare
@@ -723,47 +728,51 @@ package body Protypo.Parsing is
                Input.Save_Position;
 
                declare
-                  ID         : constant String := Value (Input.Read);
-                  Parameters : Statement_Sequences.Sequence;
+                  Id         : constant String := Value (Input.Read);
                begin
                   Input.Next;
                   Expect_And_Eat (Input, Open_Parenthesis, "OPEN 1");
 
-                  Parameters := Parse_Expression_List (Input);
+                  declare
+                     Parameters : constant Statement_Sequences.Sequence :=
+                                    Parse_Expression_List (Input);
+                  begin
+                     Expect_And_Eat (Input, Close_Parenthesis, "OPEN 2");
 
-                  Expect_And_Eat (Input, Close_Parenthesis, "OPEN 2");
+                     case Class (Input.Read) is
+                        when End_Of_Statement | End_Of_Text =>
+                           Input.Clear_Position;
 
-                  case Class (Input.Read) is
-                     when End_Of_Statement | End_Of_Text =>
-                        Input.Clear_Position;
+                           Expect_And_Eat (Input, Class (Input.Read), "OPEN 3");
 
-                        Expect_And_Eat (Input, Class (Input.Read), "OPEN 3");
+                           return Code_Trees.Procedure_Call (Id,
+                                                             Parameters.Dump,
+                                                             Here);
 
-                        return Code_Trees.Procedure_Call (ID, Parameters.Dump, Here);
+                        when Assign | Dot =>
+                           Input.Restore_Position;
 
-                     when Assign | Dot =>
-                        Input.Restore_Position;
+                           return Parse_Assign (Input);
 
-                        return Parse_Assign (Input);
-
-                     when others =>
-                        raise Parsing_Error
-                          with "Unexpected token "
-                          &  Class (Input.Read)'Image
-                          & " after indexed identifier"
-                          & " at " & Image (Here);
-                  end case;
-
+                        when others =>
+                           raise Parsing_Error
+                             with "Unexpected token "
+                             &  Class (Input.Read)'Image
+                             & " after indexed identifier"
+                             & " at " & Image (Here);
+                     end case;
+                  end;
                end;
          end case;
       end Parse_Assign_Or_Call;
 
-      function Parse_ID_List (Input : in out Scanning.Token_List)
+      function Parse_Id_List (Input : in out Scanning.Token_List)
                               return Code_Trees.Parsed_Code
       is
          In_Optional_Section : Boolean := False;
-         Default             : Statement_Sequences.Sequence;
-         Parameter_Names     : Code_Trees.ID_List;
+         Default             : Statement_Sequences.Sequence :=
+                                 Statement_Sequences.Empty_Sequence;
+         Parameter_Names     : Code_Trees.Id_List;
       begin
          loop
             if Class (Input.Read) /= Identifier then
@@ -774,7 +783,7 @@ package body Protypo.Parsing is
                  & " at " & Image (Position (Input.Read));
             end if;
 
-            Parameter_Names.Append (ID (Value (Input.Next)));
+            Parameter_Names.Append (Id (Value (Input.Next)));
 
             if Class (Input.Read) = Assign then
                Input.Next;
@@ -796,7 +805,7 @@ package body Protypo.Parsing is
          end loop;
 
          return Code_Trees.Parameter_List (Parameter_Names, Default.Dump);
-      end Parse_ID_List;
+      end Parse_Id_List;
 
       function Parse_Defun (Input : in out Scanning.Token_List)
                             return Code_Trees.Parsed_Code;
@@ -830,7 +839,7 @@ package body Protypo.Parsing is
          if Class (Input.Read) = Open_Parenthesis then
             Expect_And_Eat (Input, Open_Parenthesis);
 
-            Parameter_Names := Parse_ID_List (Input);
+            Parameter_Names := Parse_Id_List (Input);
 
             Expect_And_Eat (Input, Close_Parenthesis);
          else
@@ -865,7 +874,8 @@ package body Protypo.Parsing is
       end Parse_Defun;
 
 
-      Result : Statement_Sequences.Sequence;
+      Result : Statement_Sequences.Sequence :=
+                 Statement_Sequences.Empty_Sequence;
 
       Here   : constant Token_Position := Position (Input.Read);
    begin
@@ -916,7 +926,7 @@ package body Protypo.Parsing is
             when Kw_Else | Kw_Elsif | Kw_End | End_Of_Text =>
                exit;
 
-            when Int              | Text             | Plus  | Minus       |
+               when Int              | Text             | Plus  | Minus       |
                Mult             | Div              | Equal |  Different  |
                Less_Than        | Greater_Than     | Less_Or_Equal       |
                Greater_Or_Equal | Assign           | Dot                 |

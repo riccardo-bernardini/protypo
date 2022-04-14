@@ -2,7 +2,7 @@ pragma Ada_2012;
 
 with Ada.Strings.Maps.Constants;     use Ada.Strings.Maps.Constants;
 with Ada.Characters.Latin_9;         use Ada.Characters.Latin_9;
-with Ada.Text_IO;                    use Ada.Text_IO;
+with Ada.Text_Io;                    use Ada.Text_Io;
 with Ada.Strings.Fixed;
 with Ada.Characters.Handling;
 with Ada.Containers.Indefinite_Ordered_Sets;
@@ -12,7 +12,7 @@ with Readable_Sequences.String_Sequences;
 use Readable_Sequences;
 
 with String_Sets;                    use String_Sets;
-with GNAT.OS_Lib;
+with Gnat.Os_Lib;
 
 package body Protypo.Scanning is
    use Ada.Strings.Unbounded;
@@ -38,7 +38,7 @@ package body Protypo.Scanning is
       Escape : Character)
       return String
    is
-      Buffer            : String_Sequences.Sequence;
+      Buffer            : String_Sequences.Sequence := String_Sequences.Empty_Sequence;
       Parenthesis_Level : Natural := 1;
    begin
       while Parenthesis_Level > 0 loop
@@ -167,12 +167,12 @@ package body Protypo.Scanning is
    -- At_End_Of_Line --
    --------------------
 
-   EOL_Markers : constant Ada.Strings.Maps.Character_Set :=
-                   Ada.Strings.Maps.To_Set ("" & CR & LF);
+   Eol_Markers : constant Ada.Strings.Maps.Character_Set :=
+                   Ada.Strings.Maps.To_Set ("" & Cr & Lf);
 
    function At_End_Of_Line (Input : String_Sequences.Sequence) return Boolean
    is (Input.End_Of_Sequence
-       or else Ada.Strings.Maps.Is_In (Input.Read, EOL_Markers));
+       or else Ada.Strings.Maps.Is_In (Input.Read, Eol_Markers));
 
    ------------------
    -- Skip_Comment --
@@ -276,7 +276,7 @@ package body Protypo.Scanning is
 
 
       procedure Skip_Spaces is
-         Whitespace : constant Character_Set := To_Set (" " & HT & LF & CR);
+         Whitespace : constant Character_Set := To_Set (" " & Ht & Lf & Cr);
       begin
          while (not Input.End_Of_Sequence) and then Is_In (Input.Read, Whitespace)  loop
             Input.Next;
@@ -284,7 +284,7 @@ package body Protypo.Scanning is
       end Skip_Spaces;
 
       procedure Scan_Identifier is
-         Id : String_Sequences.Sequence;
+         Id : String_Sequences.Sequence := String_Sequences.Empty_Sequence;
       begin
          while Is_In (Input.Read, Id_Charset) loop
             Id.Append (Input.Read);
@@ -309,7 +309,7 @@ package body Protypo.Scanning is
       end Scan_Identifier;
 
       procedure Scan_Number is
-         Buffer : String_Sequences.Sequence;
+         Buffer : String_Sequences.Sequence := String_Sequences.Empty_Sequence;
       begin
 
          while Is_In (Input.Read, Decimal_Digit_Set) loop
@@ -347,7 +347,7 @@ package body Protypo.Scanning is
       end Scan_Number;
 
       procedure Scan_Text is
-         Buffer : String_Sequences.Sequence;
+         Buffer : String_Sequences.Sequence := String_Sequences.Empty_Sequence;
       begin
          Buffer.Clear;
 
@@ -493,7 +493,7 @@ package body Protypo.Scanning is
 
       type Directive_Name is new String;
 
-      Include_Once : constant Directive_Name := "with";
+      Include_Once   : constant Directive_Name := "with";
       Include_Always : constant Directive_Name := "include";
 
       Raw : constant String := Parenthesis_String (Input  => Input,
@@ -509,9 +509,9 @@ package body Protypo.Scanning is
       Directive : constant Directive_Name :=
                     Directive_Name
                       (To_Lower (if (End_Directive_Pos = 0) then
-                                 Trimmed
-                              else
-                                 Trimmed (Trimmed'First .. End_Directive_Pos - 1)));
+                          Trimmed
+                       else
+                          Trimmed (Trimmed'First .. End_Directive_Pos - 1)));
 
       Parameter : constant String :=
                     Trim ((if End_Directive_Pos < Trimmed'Last then
@@ -521,7 +521,7 @@ package body Protypo.Scanning is
    begin
       if Directive = Include_Always or Directive = Include_Once then
          declare
-            use GNAT.OS_Lib;
+            use Gnat.Os_Lib;
             use Api;
 
             Filename : constant String :=
@@ -557,14 +557,16 @@ package body Protypo.Scanning is
       use Tokens;
 
 
-      Result  : Token_List := Token_Sequences.Create (Make_Unanchored_Token (End_Of_Text));
-      Input   : String_Sequences.Sequence := String_Sequences.Create (String (Template));
-      Buffer  : String_Sequences.Sequence;
+      Input   : String_Sequences.Sequence :=
+                  String_Sequences.Create (String (Template));
 
-      procedure Handle_Escape
+      Buffer  : String_Sequences.Sequence :=
+                  String_Sequences.Empty_Sequence;
+
+      procedure Handle_Escape (Result : in out Token_List)
         with Pre => Input.Read = Escape and Input.Remaining > 1;
 
-      procedure Handle_Escape is
+      procedure Handle_Escape (Result : in out Token_List) is
       begin
          if Does_It_Follow (Input, Begin_Of_Code) then
             Dump_Buffer (Buffer, Result);
@@ -589,17 +591,19 @@ package body Protypo.Scanning is
       end Handle_Escape;
 
    begin
-      while not Input.End_Of_Sequence loop
-         if Input.Read = Escape and Input.Remaining > 1 then
-            Handle_Escape;
-         else
-            Buffer.Append (Input.Next);
-         end if;
-      end loop;
+      return Result  : Token_List :=
+        Token_Sequences.Create (Make_Unanchored_Token (End_Of_Text))
+      do
+         while not Input.End_Of_Sequence loop
+            if Input.Read = Escape and Input.Remaining > 1 then
+               Handle_Escape (Result);
+            else
+               Buffer.Append (Input.Next);
+            end if;
+         end loop;
 
-      Dump_Buffer (Buffer, Result);
-
-      return Result;
+         Dump_Buffer (Buffer, Result);
+      end return;
    end Internal_Tokenize;
 
    --------------

@@ -1,12 +1,30 @@
 pragma Ada_2012;
-package body Readable_Sequences.Generic_Sequences is
 
+pragma Warnings (Off, "no entities of ""Ada.Text_Io"" are referenced");
+with Ada.Text_Io; use Ada.Text_Io;
+with Ada.Unchecked_Deallocation;
+package body Readable_Sequences.Generic_Sequences is
+   type Nullable_Buffer_Access is access all Buffer_Type;
+
+   procedure Free is
+     new Ada.Unchecked_Deallocation (Object => Buffer_Type,
+                                     Name   => Nullable_Buffer_Access);
+
+   Empty_Buffer : constant Buffer_Access := new Buffer_Type (2 .. 1);
+
+   procedure Finalize (Object : in out Sequence)
+   is
+      Tmp : Nullable_Buffer_Access := Nullable_Buffer_Access (Object.Buffer);
+   begin
+      Object.Buffer := Empty_Buffer;
+      Free (Tmp);
+   end Finalize;
    ------------------
    -- Set_Position --
    ------------------
 
    procedure Set_Position (Seq : in out Sequence;
-                         Pos : Cursor)
+                           Pos : Cursor)
    is
    begin
       Seq.Position := Pos;
@@ -29,16 +47,19 @@ package body Readable_Sequences.Generic_Sequences is
    ----------
 
    function Dump (Seq  : Sequence;
-                  From : Cursor := Beginning) return Element_Array
+                  From : Cursor) return Element_Array
    is
-      Result : Element_Array (Integer (From) .. Integer (Seq.Vector.Last_Index));
+      --  Result : Element_Array (Integer (From) .. Integer (Seq.Buffer'Last));
    begin
-      for K in Result'Range loop
-         Result (K) := Seq.Vector (Cursor (K));
-      end loop;
+      --  for K in Result'Range loop
+      --     Result (K) := Seq.Buffer (Cursor (K));
+      --  end loop;
 
-      return Result;
+      return Element_Array (Seq.Buffer (From .. Seq.First_Free - 1));
    end Dump;
+
+   function Dump (Seq  : Sequence) return Element_Array
+   is (Seq.Dump (Seq.First));
 
    -----------
    -- Clear --
@@ -47,10 +68,43 @@ package body Readable_Sequences.Generic_Sequences is
    procedure Clear (Seq : in out Sequence)
    is
    begin
-      Seq.Vector.Clear;
-      Seq.Position := Beginning;
+      Seq.Position := Seq.Buffer'First;
+      Seq.First_Free := Seq.Buffer'First;
       Seq.Position_Saved := False;
    end Clear;
+
+   function Allocate_Buffer (Min_Size : Natural) return Buffer_Access
+   is
+      Blocksize : constant Positive := 2048;
+      N_Blocks  : constant Positive := Min_Size / Blocksize + 2;
+   begin
+      --
+      -- Blocksize * (min_size/blocksize) >= min_size - Blocksize
+      --
+      -- Blocksize * N_blocks >= min_size + Blocksize
+      --
+      -- We get at least a full block free
+      --
+      pragma Assert (Blocksize * N_Blocks >= Min_Size + Blocksize);
+
+      return new Buffer_Type (1 .. Cursor (Blocksize * N_Blocks));
+   end Allocate_Buffer;
+
+   function Empty_Sequence return Sequence
+   is
+      Tmp : constant Buffer_Access := Allocate_Buffer (0);
+   begin
+      return (Sequence'(Ada.Finalization.Limited_Controlled
+              with
+                Buffer         => Tmp,
+              Position       => Tmp'First,
+              First_Free     => Tmp'First,
+              Old_Position   => <>,
+              Position_Saved => False,
+              Has_End_Marker => False,
+              End_Marker     => <>));
+   end Empty_Sequence;
+
 
    ------------
    -- Create --
@@ -58,13 +112,12 @@ package body Readable_Sequences.Generic_Sequences is
 
    function Create (End_Of_Sequence_Marker : Element_Type) return Sequence
    is
+
    begin
-      return Sequence'(Vector         => Element_Vectors.Empty_Vector,
-                       Position       => Cursor'First,
-                       Old_Position   => <>,
-                       Position_Saved => False,
-                       Has_End_Marker => True,
-                       End_Marker     => End_Of_Sequence_Marker);
+      return Result : Sequence := Empty_Sequence do
+         Result.End_Marker := End_Of_Sequence_Marker;
+         Result.Has_End_Marker := True;
+      end return;
    end Create;
 
    ------------
@@ -74,16 +127,11 @@ package body Readable_Sequences.Generic_Sequences is
    function Create (Init                   : Element_Array;
                     End_Of_Sequence_Marker : Element_Type) return Sequence
    is
-      Result : Sequence := Sequence'(Vector         => Element_Vectors.Empty_Vector,
-                                     Position       => Cursor'First,
-                                     Old_Position   => <>,
-                                     Position_Saved => False,
-                                     Has_End_Marker => True,
-                                     End_Marker     => End_Of_Sequence_Marker);
-   begin
-      Result.Append (Init);
 
-      return Result;
+   begin
+      return Result : Sequence := Create (End_Of_Sequence_Marker) do
+         Result.Append (Init);
+      end return;
    end Create;
 
    ------------
@@ -92,19 +140,22 @@ package body Readable_Sequences.Generic_Sequences is
 
    function Create (Init : Element_Array) return Sequence
    is
-      Result : Sequence := Sequence'(Vector         => Element_Vectors.Empty_Vector,
-                                     Position       => Cursor'First,
-                                     Old_Position   => <>,
-                                     Position_Saved => False,
-                                     Has_End_Marker => False,
-                                     End_Marker     => <>);
-   begin
-      Result.Append (Init);
 
-      return Result;
+   begin
+      return Result : Sequence := Empty_Sequence do
+         Result.Append (Init);
+      end return;
    end Create;
 
-
+   --  procedure Update (Seq  : in out Sequence;
+   --                    Data : Buffer_Type)
+   --  is
+   --  begin
+   --     Seq.Buffer.Replace_Element (Data);
+   --     Seq.First := Data'First;
+   --     Seq.After_Last  := Data'Last + 1;
+   --     Seq.Position := Seq.First;
+   --  end Update;
 
 
    ------------
@@ -116,9 +167,50 @@ package body Readable_Sequences.Generic_Sequences is
       Elements : Element_Array)
    is
    begin
-      for C of Elements loop
-         Seq.Append (C);
-      end loop;
+      if Seq.Free_Space >= Elements'Length then
+
+         declare
+            Last : constant Cursor := Seq.First_Free + Cursor (Elements'Length)-1;
+         begin
+            pragma Assert (Last <= Seq.Buffer'Last);
+
+            Seq.Buffer (Seq.First_Free .. Last) := Buffer_Type (Elements);
+            Seq.First_Free := Last + 1;
+         end;
+
+      else
+
+         declare
+            Old_Buffer : Nullable_Buffer_Access :=
+                           Nullable_Buffer_Access (Seq.Buffer);
+
+            --
+            --  Why this?  Because Buffer_Access has been declared "not null"
+            --  but Unchecked_Deallocation set to null its paramete.
+            --
+
+            New_Length : constant Natural := Seq.Length + Elements'Length;
+            New_Buffer : constant Buffer_Access := Allocate_Buffer (New_Length);
+            Last_Written : constant Cursor :=
+                             New_Buffer'First + Cursor (New_Length) - 1;
+
+            --  Q : constant Buffer_Type := Buffer_Type (Seq.Dump & Elements);
+
+         begin
+            --  Put_Line (Q'Length'Image);
+            --  Put_Line (Cursor'Image (Last_Written - New_Buffer'First + 1));
+
+            New_Buffer (New_Buffer'First .. Last_Written) :=
+              Buffer_Type (Seq.Dump & Elements);
+
+            Seq.Buffer := New_Buffer;
+
+            Seq.First_Free := Last_Written + 1;
+
+            Free (Old_Buffer);
+         end;
+
+      end if;
    end Append;
 
    ------------
@@ -130,7 +222,7 @@ package body Readable_Sequences.Generic_Sequences is
       What : Element_Type)
    is
    begin
-      To.Vector.Append (What);
+      To.Append (Element_Array'(1 => What));
    end Append;
 
    ------------
@@ -141,8 +233,20 @@ package body Readable_Sequences.Generic_Sequences is
                      What : Sequence)
    is
    begin
-      To.Vector.Append (What.Vector);
+      To.Append (What.Dump);
    end Append;
+
+
+   function Remaining (Seq : Sequence) return Natural
+   is
+   begin
+      --  Put_Line (Seq.Buffer'Last'Image);
+      --  Put_Line (Seq.Position'Image);
+      --  Put_Line (Cursor'(Seq.Buffer'Last - Seq.Position + 1 )'Image);
+      --  Put_Line (Seq.Length'Image);
+
+      return Integer (Seq.First_Free) - Integer (Seq.Position);
+   end Remaining;
 
    ------------
    -- Rewind --
@@ -150,15 +254,22 @@ package body Readable_Sequences.Generic_Sequences is
 
    procedure Rewind
      (Seq : in out Sequence;
-      To  :        Cursor := Beginning)
+      To  :        Cursor)
    is
    begin
-      if To > Seq.Vector.Last_Index then
+      if not Seq.Is_Valid_Position (To) then
          raise Constraint_Error;
       end if;
 
       Seq.Position := To;
    end Rewind;
+
+   procedure Rewind (Seq : in out Sequence)
+   is
+   begin
+      Seq.Position := Seq.First;
+   end Rewind;
+
 
    -------------------
    -- Save_Position --
@@ -216,11 +327,13 @@ package body Readable_Sequences.Generic_Sequences is
    is
    begin
       if Seq.Remaining < Step then
-         Seq.Position := Seq.Vector.Last_Index + 1;
-         return;
+         --  Put_Line (">>> a");
+         Seq.Position := Seq.First_Free;
+      else
+         --  Put_Line (">>> b");
+         Seq.Position := Seq.Position + Cursor (Step);
       end if;
 
-      Seq.Position := Seq.Position + Cursor (Step);
    end Next;
 
 
@@ -232,8 +345,8 @@ package body Readable_Sequences.Generic_Sequences is
                    Step : Positive := 1)
    is
    begin
-      if Seq.Position < Seq.Vector.First_Index + Cursor (Step) then
-         Seq.Position := Seq.Vector.First_Index;
+      if Seq.Position < Seq.Buffer'First + Cursor (Step) then
+         Seq.Position := Seq.Buffer'First;
          return;
       end if;
 
@@ -249,9 +362,11 @@ package body Readable_Sequences.Generic_Sequences is
                       Callback : access procedure (Item : Element_Type))
    is
    begin
-      for El of Seq.Vector loop
+      for El of Seq.Dump loop
          Callback (El);
       end loop;
    end Process;
+
+
 
 end Readable_Sequences.Generic_Sequences;

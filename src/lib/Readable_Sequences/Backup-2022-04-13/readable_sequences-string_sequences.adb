@@ -29,10 +29,6 @@ package body Readable_Sequences.String_Sequences is
       Seq.Set_Position (Old_Position);
    end Fill_Position;
 
-   function Empty_Sequence return Sequence
-   is (Sequence'(Basic_String_Sequences.Empty_Sequence
-       with
-         Position_Cache => Position_Vectors.Empty_Vector));
 
    overriding
    function Create (Init : String) return Sequence
