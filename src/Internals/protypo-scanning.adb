@@ -284,28 +284,57 @@ package body Protypo.Scanning is
       end Skip_Spaces;
 
       procedure Scan_Identifier is
+         function Is_A_Keyword (Id : String;
+                                Keyword : out Keyword_Tokens)
+                                return Boolean
+         is
+         begin
+            for Tk in Keywords'Range loop
+               if To_String (Keywords (Tk)) = Id then
+                  Keyword := Tk;
+                  return True;
+               end if;
+            end loop;
+
+            Keyword := Keyword_Tokens'First;  -- Just to avoid warnings
+            return false;
+         end Is_A_Keyword;
+
          Id : String_Sequences.Sequence := String_Sequences.Empty_Sequence;
       begin
          while Is_In (Input.Read, Id_Charset) loop
-            Id.Append (Input.Read);
-            Input.Next;
+            Id.Append (Input.Next);
+            --  Input.Next;
          end loop;
 
-         for Tk in Keywords'Range loop
-            if To_String (Keywords (Tk)) = Id.Dump then
-               Result.Append (Builder.Make_Token (Tk));
-               return;
-            end if;
-         end loop;
-
-         if Id.Dump = "@here" then
-            Result.Append (Builder.Make_Token
-                           (Class => Text,
-                            Value => Image (Builder.Peek_Position)));
-            return;
+         if Is_In (Input.Read, End_Id_Set) then
+            --  If the current char belongs to Id_End_Charset (just '?')
+            --  at the moment, it is still part of the identifier
+            Id.Append (Input.Next);
          end if;
 
-         Result.Append (Builder.Make_Token (Identifier, Id.Dump));
+         declare
+            Id_Image : constant String := Id.Dump;
+            Keyword  : Keyword_Tokens;
+         begin
+            if Is_A_Keyword (Id_Image, Keyword) then
+            --  for Tk in Keywords'Range loop
+            --     if To_String (Keywords (Tk)) = Id_image then
+               Result.Append (Builder.Make_Token (Keyword));
+               return;
+
+            elsif Id_Image = "@here" then
+               Result.Append (Builder.Make_Token
+                              (Class => Text,
+                               Value => Image (Builder.Peek_Position)));
+               return;
+
+            else
+               Result.Append (Builder.Make_Token (Identifier, Id_Image));
+               return;
+
+            end if;
+         end;
       end Scan_Identifier;
 
       procedure Scan_Number is

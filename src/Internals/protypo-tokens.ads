@@ -5,9 +5,11 @@ use Readable_Sequences;
 package Protypo.Tokens is
    use Ada.Strings.Unbounded;
 
-   subtype Token_Position is Readable_Sequences.String_Sequences.Position_Type;
+   subtype Token_Position is
+     Readable_Sequences.String_Sequences.Position_Type;
 
-   No_Position : constant Token_Position := Readable_Sequences.String_Sequences.No_Position;
+   No_Position : constant Token_Position :=
+                   Readable_Sequences.String_Sequences.No_Position;
 
    function Image (X    : Token_Position;
                    Full : Boolean := True) return String;

@@ -427,6 +427,14 @@ package body Protypo.Code_Trees.Interpreter is
             Position        => Inter.Consumer_With_Escape_Cursor);
 
          Table.Create
+           (Name          => "true",
+            Initial_Value => Create (True));
+
+         Table.Create
+           (Name          => "false",
+            Initial_Value => Create (False));
+
+         Table.Create
            (Name          => "range",
             Initial_Value => Handlers.Create (Range_Callback'Access, 2));
 

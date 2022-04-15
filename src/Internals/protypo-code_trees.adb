@@ -297,9 +297,10 @@ package body Protypo.Code_Trees is
       Position       : Tokens.Token_Position := Tokens.No_Position)
       return Parsed_Code
    is
-      Result : constant Node_Access := new Node'(Class           => Identifier,
-                                                 Id_Value        => To_Unbounded_String (Id),
-                                                 Source_Position => Position);
+      Result : constant Node_Access :=
+                 new Node'(Class           => Identifier,
+                           Id_Value        => To_Unbounded_String (Id),
+                           Source_Position => Position);
    begin
       return (Pt => Result);
    end Identifier;

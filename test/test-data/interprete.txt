@@ -104,7 +104,19 @@ if not match("q 12", "^[a-z0-9]*$") then
 else
    debug("bad");
 end if;
-   
+
+pippo? := true;
+
+debug(pippo?);
+
+if pippo? then
+  debug("OK");
+else
+  debug("NO");
+end if;
+
+
+
 }#
 
 un'altra riga #x

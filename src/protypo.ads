@@ -20,14 +20,14 @@ package Protypo is
                           or Strings.Maps.Constants.Decimal_Digit_Set
                               or Strings.Maps.To_Set ("_");
 
+   End_Id_Set     : constant Strings.Maps.Character_Set :=
+                      Id_Charset or Strings.Maps.To_Set ("?");
 
-   function Is_Valid_Id (ID : String) return Boolean
-   is (ID /= "" and then
-         (Strings.Maps.Is_In (ID (ID'First), Begin_Id_Set)) and then
-         (for all C of ID => Strings.Maps.Is_In (C, Id_Charset)));
+   function Is_Valid_Id (Id : String) return Boolean;
 
-   type ID is new String
-     with Dynamic_Predicate => Is_Valid_Id (String(ID));
+
+   type Id is new String
+     with Dynamic_Predicate => Is_Valid_Id (String (Id));
 
    function "<" (X, Y : Id) return Boolean
    is (Strings.Less_Case_Insensitive (String (X), String (Y)));
@@ -35,22 +35,22 @@ package Protypo is
    function "=" (X, Y : Id) return Boolean
    is (Strings.Equal_Case_Insensitive (String (X), String (Y)));
 
-   type Unbounded_ID is new Strings.Unbounded.Unbounded_String
+   type Unbounded_Id is new Strings.Unbounded.Unbounded_String
      with Dynamic_Predicate =>
        Is_Valid_Id
          (Strings.Unbounded.To_String
-            (Strings.Unbounded.Unbounded_String (Unbounded_ID)));
+            (Strings.Unbounded.Unbounded_String (Unbounded_Id)));
 
-   function To_String (X : Unbounded_ID) return string
-   is (Strings.Unbounded.To_String(Strings.Unbounded.Unbounded_String (x)));
+   function To_String (X : Unbounded_Id) return String
+   is (Strings.Unbounded.To_String (Strings.Unbounded.Unbounded_String (X)));
 
-   function To_Id (X : Unbounded_ID) return Id
-   is (ID (To_String (x)));
+   function To_Id (X : Unbounded_Id) return Id
+   is (Id (To_String (X)));
 
-   function "<" (X, Y : Unbounded_ID) return Boolean
+   function "<" (X, Y : Unbounded_Id) return Boolean
    is (To_Id (X) < To_Id (Y));
 
-   function "=" (X, Y : Unbounded_ID) return Boolean
+   function "=" (X, Y : Unbounded_Id) return Boolean
    is (To_Id (X) = To_Id (Y));
 
 end Protypo;
