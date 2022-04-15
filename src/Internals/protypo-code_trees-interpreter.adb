@@ -8,21 +8,25 @@ with Protypo.Api.Engine_Values.Range_Iterators;
 with Protypo.Api.Engine_Values.Handlers;
 with Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;
 with Protypo.Api.Interpreters;
+with Protypo.Api.Callback_Utilities;  use Protypo.Api.Callback_Utilities;
+
 with Protypo.Code_Trees.Interpreter.Statements;
 with Protypo.Code_Trees.Interpreter.Expressions;
+with Protypo.Code_Trees.Interpreter.String_Interpolation_Handlers;
 with Protypo.Code_Trees.Interpreter.Consumer_Handlers;
+
 with Protypo.Scanning;
 with Protypo.Parsing;
 
 with Readable_Sequences.String_Sequences; use Readable_Sequences;
 
 
+
+
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_Io; use Ada.Text_Io;
 with Ada.Characters.Latin_1;
-with Protypo.Api.Engine_Values;
 
-with Protypo.Code_Trees.Interpreter.String_Interpolation_Handlers;
 
 with Gnat.Regexp;
 
@@ -187,38 +191,8 @@ package body Protypo.Code_Trees.Interpreter is
       end;
    end Range_Callback;
 
-   type Class_Array is array (Positive range <>) of Engine_Value_Class;
 
-   function Match_Signature (Parameters : Engine_Value_Vectors.Vector;
-                             Signature  : Class_Array)
-                             return Boolean
-   is
-      use Engine_Value_Vectors;
 
-   begin
-      if Natural (Parameters.Length) /= Signature'Length then
-         return False;
-      end if;
-
-      declare
-         Pos : Cursor := Parameters.First;
-      begin
-         for Class of Signature loop
-            if Class /= Element (Pos).Class then
-               return False;
-            end if;
-
-            Next (Pos);
-         end loop;
-      end;
-
-      return True;
-   end Match_Signature;
-
-   function Get_Parameter (Parameters : Engine_Value_Vectors.Vector;
-                           Index      : Positive)
-                           return String
-   is (Get_String (Parameters (Parameters.First_Index + Index - 1)));
 
    function Substring_Callback  (Parameters : Engine_Value_Vectors.Vector)
                                  return Engine_Value_Vectors.Vector
