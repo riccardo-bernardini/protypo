@@ -94,9 +94,11 @@ package body Protypo.Code_Trees.Interpreter.Names is
          when Indexed     =>
             declare
                subtype Indexed_References is Value_Name_Class
-                 with Static_Predicate => Indexed_References
-                   in
-                     Array_Reference | Function_Reference | Ambivalent_Reference;
+                 with Static_Predicate =>
+                   Indexed_References
+                     in Array_Reference      |
+                        Function_Reference   |
+                        Ambivalent_Reference;
 
                Head    : constant Name_Reference :=
                            Eval_Name (Status, Expr.Indexed_Var);
@@ -105,9 +107,12 @@ package body Protypo.Code_Trees.Interpreter.Names is
                            Expressions.Eval_Vector (Status, Expr.Indexes);
             begin
                if not (Head.Class in Indexed_References) then
-                  raise Program_Error
+                  raise Run_Time_Error
                     with
-                  Head.Class'Image & " at " & Tokens.Image (Expr.Source_Position)
+                      "Indexed access to a value of class="
+                      & Head.Class'Image
+                    & " at " & Tokens.Image (Expr.Source_Position)
+                    & " in an expression of class="
                     & Expr.Class'Image;
                end if;
 

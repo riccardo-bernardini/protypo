@@ -161,8 +161,6 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                use type Ada.Containers.Count_Type;
                use type Names.Value_Name_Class;
 
-               --                 LHS : array (Program.Lhs.First_Index .. Program.Lhs.Last_Index) of Names.Name_Reference;
-
                Values : Engine_Value_Vectors.Vector;
                Lhs : Lhs_Array;
             begin

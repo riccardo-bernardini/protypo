@@ -200,7 +200,9 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
    begin
 
       if not (Expr.Class in Code_Trees.Expression) then
-         raise Program_Error;
+         raise Program_Error
+           with "Trying evaluating code that is not an expression, class="
+           & Expr.Class'Image;
       end if;
 
       case Code_Trees.Expression (Expr.Class) is
@@ -414,13 +416,16 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
                   Parameters       => Engine_Value_Vectors.Empty_Vector));
 
          when Names.Array_Reference =>
-            return Engine_Value_Vectors.To_Vector (Handlers.Create (Ref.Array_Handler), 1);
+            return Engine_Value_Vectors.To_Vector
+              (Handlers.Create (Ref.Array_Handler), 1);
 
          when Names.Record_Reference =>
-            return Engine_Value_Vectors.To_Vector (Handlers.Create (Ref.Record_Handler), 1);
+            return Engine_Value_Vectors.To_Vector
+              (Handlers.Create (Ref.Record_Handler), 1);
 
          when Names.Ambivalent_Reference =>
-            return Engine_Value_Vectors.To_Vector(Handlers.Create (Ref.Ambivalent_Handler), 1);
+            return Engine_Value_Vectors.To_Vector
+              (Handlers.Create (Ref.Ambivalent_Handler), 1);
 
       end case;
    end To_Value;
