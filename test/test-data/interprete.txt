@@ -93,6 +93,18 @@ debug(substr("pipposo", 1, 1));
 debug(substr("pipposo", 4, -1));
 debug(substr("pipposo", -4, -3));
 
+if match("a44", "^[a-z0-9]*$") then
+   debug("ok");
+else
+   debug("bad");
+end if;
+
+if not match("q 12", "^[a-z0-9]*$") then
+   debug("ok");
+else
+   debug("bad");
+end if;
+   
 }#
 
 un'altra riga #x

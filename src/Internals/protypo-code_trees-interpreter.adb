@@ -1,6 +1,8 @@
 pragma Ada_2012;
 with Ada.Calendar.Formatting;
+with Ada.Exceptions;
 with Ada.Strings.Fixed;
+with Gnat.Regpat;
 
 with Protypo.Api.Engine_Values.Range_Iterators;
 with Protypo.Api.Engine_Values.Handlers;
@@ -213,6 +215,11 @@ package body Protypo.Code_Trees.Interpreter is
       return True;
    end Match_Signature;
 
+   function Get_Parameter (Parameters : Engine_Value_Vectors.Vector;
+                           Index      : Positive)
+                           return String
+   is (Get_String (Parameters (Parameters.First_Index + Index - 1)));
+
    function Substring_Callback  (Parameters : Engine_Value_Vectors.Vector)
                                  return Engine_Value_Vectors.Vector
    is
@@ -263,7 +270,7 @@ package body Protypo.Code_Trees.Interpreter is
    end Substring_Callback;
 
    function Split_Callback  (Parameters : Engine_Value_Vectors.Vector)
-                                return Engine_Value_Vectors.Vector
+                             return Engine_Value_Vectors.Vector
    is
 
    begin
@@ -306,15 +313,40 @@ package body Protypo.Code_Trees.Interpreter is
       end;
    end Split_Callback;
 
+   function Regexp_Callback (Parameters : Engine_Value_Vectors.Vector)
+                             return Engine_Value_Vectors.Vector
+   is
+      use Gnat.Regpat;
+   begin
+      if not Match_Signature (Parameters => Parameters,
+                              Signature  => (Text, Text))
+      then
+         raise Run_Time_Error with "regexp needs 2 string parameters";
+      end if;
+
+      declare
+         Item    : constant String := Get_Parameter (Parameters, 1);
+         Regexp  : constant String := Get_Parameter (Parameters, 2);
+         Matcher : constant Pattern_Matcher := Compile (Regexp);
+         Matched : Match_Array (0 .. Paren_Count (matcher));
+      begin
+         Match (Matcher, Item, Matched);
+
+         return Engine_Value_Vectors.To_Vector (Create (Matched (0) /= No_Match), 1);
+      end;
+   exception
+      when E : Gnat.Regpat.Expression_Error =>
+         raise Run_Time_Error
+           with
+             "Bad Regexp '" & Get_Parameter (Parameters, 2) & "' :"
+           & Ada.Exceptions.Exception_Message (E);
+   end Regexp_Callback;
+
    function Glob_Callback (Parameters : Engine_Value_Vectors.Vector)
-                              return Engine_Value_Vectors.Vector
+                           return Engine_Value_Vectors.Vector
    is
       use Gnat.Regexp;
    begin
-      --  if not
-      --    (Parameters.Length = 2
-      --     and then Parameters.Element (Parameters.First_Index).Class = Text
-      --     and then Parameters.Element (Parameters.First_Index + 1).Class = Text)
       if not Match_Signature (Parameters => Parameters,
                               Signature  => (Text, Text))
       then
@@ -401,6 +433,10 @@ package body Protypo.Code_Trees.Interpreter is
          Table.Create
            (Name          => "glob",
             Initial_Value => Handlers.Create (Glob_Callback'Access, 2));
+
+         Table.Create
+           (Name          => "match",
+            Initial_Value => Handlers.Create (Regexp_Callback'Access, 2));
 
          Table.Create
            (Name          => "split",
