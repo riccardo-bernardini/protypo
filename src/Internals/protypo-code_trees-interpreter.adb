@@ -31,6 +31,7 @@ with Ada.Characters.Latin_1;
 with Gnat.Regexp;
 
 with Tokenize;
+with Protypo.Match_Data_Wrappers;
 
 package body Protypo.Code_Trees.Interpreter is
    use Ada.Strings;
@@ -299,6 +300,9 @@ package body Protypo.Code_Trees.Interpreter is
       end if;
 
       declare
+         use Engine_Value_Vectors;
+         use Protypo.Match_Data_Wrappers;
+
          Item    : constant String := Get_Parameter (Parameters, 1);
          Regexp  : constant String := Get_Parameter (Parameters, 2);
          Matcher : constant Pattern_Matcher := Compile (Regexp);
@@ -306,7 +310,7 @@ package body Protypo.Code_Trees.Interpreter is
       begin
          Match (Matcher, Item, Matched);
 
-         return Engine_Value_Vectors.To_Vector (Create (Matched (0) /= No_Match), 1);
+         return To_Vector (Wrap (Matched, Item), 1);
       end;
    exception
       when E : Gnat.Regpat.Expression_Error =>

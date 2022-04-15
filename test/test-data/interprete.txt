@@ -93,17 +93,27 @@ debug(substr("pipposo", 1, 1));
 debug(substr("pipposo", 4, -1));
 debug(substr("pipposo", -4, -3));
 
-if match("a44", "^[a-z0-9]*$") then
-   debug("ok");
+q := match("a44", "^[a-z0-9]*$");
+if q.matched? then
+   debug("ok ++");
 else
    debug("bad");
 end if;
 
-if not match("q 12", "^[a-z0-9]*$") then
-   debug("ok");
+q1 := match("q 12", "^[a-z0-9]*$");
+if not q1.matched? then
+   debug("ok" + @here);
 else
    debug("bad");
 end if;
+
+r := match("33 + pippo11 - c", "([a-z]+)([0-9]*)");
+
+debug(expand("match?=#r.matched?#"));
+
+for k in range(0, 2) loop
+  debug(expand("#k# -> #r(k)#"));
+end loop;
 
 pippo? := true;
 

@@ -13,6 +13,7 @@ package Protypo.Api.Engine_Values.Constant_Wrappers is
 
    function Make_Wrapper (Value : Engine_Value) return Constant_Wrapper_Access;
    function Make_Wrapper (Value : Integer) return Constant_Wrapper_Access;
+   function Make_Wrapper (Value : Boolean) return Constant_Wrapper_Access;
    function Make_Wrapper (Value : Float) return Constant_Wrapper_Access;
    function Make_Wrapper (Value : String) return Constant_Wrapper_Access;
 
@@ -22,13 +23,16 @@ package Protypo.Api.Engine_Values.Constant_Wrappers is
    function To_Handler_Value (Value : Integer) return Handler_Value;
    -- Equivalent to Create(Make_Wrapper(Value))
 
+   function To_Handler_Value (Value : Boolean) return Handler_Value;
+   -- Equivalent to Create(Make_Wrapper(Value))
+
    function To_Handler_Value (Value : Float) return Handler_Value;
    -- Equivalent to Create(Make_Wrapper(Value))
 
    function To_Handler_Value (Value : String) return Handler_Value;
    -- Equivalent to Create(Make_Wrapper(Value))
 
-   function To_Handler_Value (Value : Boolean) return Handler_Value;
+   function To_Handler_Value (Value : Unbounded_String) return Handler_Value;
    -- Equivalent to Create(Make_Wrapper(Value))
 
 private
@@ -46,6 +50,9 @@ private
    is (new Constant_Wrapper'(Value => Engine_Value_Holders.To_Holder (Value)));
 
    function Make_Wrapper (Value : Integer) return Constant_Wrapper_Access
+   is (Make_Wrapper (Create (Value)));
+
+   function Make_Wrapper (Value : Boolean) return Constant_Wrapper_Access
    is (Make_Wrapper (Create (Value)));
 
    function Make_Wrapper (Value : Float) return Constant_Wrapper_Access
@@ -66,5 +73,8 @@ private
    function To_Handler_Value (Value : Boolean) return Handler_Value
    is (To_Handler_Value (Create (Value)));
 
+
+   function To_Handler_Value (Value : Unbounded_String) return Handler_Value
+   is (To_Handler_Value (To_String (Value)));
 
 end Protypo.Api.Engine_Values.Constant_Wrappers;

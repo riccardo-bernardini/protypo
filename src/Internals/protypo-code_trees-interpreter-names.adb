@@ -85,7 +85,10 @@ package body Protypo.Code_Trees.Interpreter.Names is
                      return + Head.Ambivalent_Handler.Get (Field);
 
                   when others =>
-                     raise Run_Time_Error with "Record access to non-record value";
+                     raise Run_Time_Error
+                       with
+                         "Record access to non-record value, class="
+                         & Head.Class'Image;
                end case;
             end;
          when Indexed     =>
