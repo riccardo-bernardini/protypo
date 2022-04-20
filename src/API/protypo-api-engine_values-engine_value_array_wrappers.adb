@@ -1,9 +1,10 @@
 pragma Ada_2012;
 with Ada.Containers;
-with Protypo.Api.Engine_Values.Constant_Wrappers;
 
 with Protypo.Api.Engine_Values.Range_Iterators;
 with Protypo.Api.Field_Names;
+
+with Protypo.Api.References.Constant_References;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_Io; use Ada.Text_Io;
@@ -145,8 +146,11 @@ package body Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
    ---------
 
    function Get
-     (X : Array_Wrapper; Index : Engine_Value_Vectors.Vector) return Handler_Value
+     (X     : Array_Wrapper;
+      Index : Engine_Value_Vectors.Vector)
+      return References.Reference'Class
    is
+      use References;
       use type Ada.Containers.Count_Type;
    begin
       if Index.Length /= 1 then
@@ -164,7 +168,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
             raise Handlers.Out_Of_Range with "Out of bounds index";
          end if;
 
-         return Constant_Wrappers.To_Handler_Value (X.Vector (Idx));
+         return Constant_References.To_Reference (X.Vector (Idx));
       end;
    end Get;
 
@@ -172,28 +176,30 @@ package body Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
    -- Get --
    ---------
 
-   function Get (X : Array_Wrapper; Field : Id) return Handler_Value is
-      use Constant_Wrappers;
+   function Get (X     : Array_Wrapper;
+                 Field : Id)
+                 return References.Reference'Class is
+      use Protypo.Api.References.Constant_References;
    begin
       case To_Field (Field) is
          when Field_First =>
-            return To_Handler_Value (X.Vector.First_Index);
+            return To_Reference (Create (X.Vector.First_Index));
 
          when Field_Last =>
-            return To_Handler_Value (X.Vector.Last_Index);
+            return To_Reference (Create (X.Vector.Last_Index));
 
          when Field_Length =>
-            return To_Handler_Value (Integer (X.Vector.Length));
+            return To_Reference (Create (Integer (X.Vector.Length)));
 
          when Field_Iterate =>
-            return To_Handler_Value
+            return To_Reference
               (Handlers.Create
                  (Handlers.Iterator_Interface_Access'
                       (new Array_Iterator'(Cursor    => X.Vector.First,
                                            First     => X.Vector.First))));
 
          when Field_Range =>
-            return To_Handler_Value
+            return To_Reference
               (Handlers.Create
                  (Range_Iterators.Create (Start     => X.Vector.First_Index,
                                           Stop      => X.Vector.Last_Index)));

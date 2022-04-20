@@ -1,6 +1,6 @@
 pragma Ada_2012;
 with Ada.Containers;
-with Protypo.Api.Engine_Values.Constant_Wrappers;
+with Protypo.Api.References.Constant_References;
 
 package body Protypo.Match_Data_Wrappers is
 
@@ -49,10 +49,13 @@ package body Protypo.Match_Data_Wrappers is
    -- Get --
    ---------
 
-   function Get (X : Match_Data_Wrapper; Field : Id) return Handler_Value is
+   function Get (X     : Match_Data_Wrapper;
+                 Field : Id)
+                 return Api.References.Reference'Class is
+      use Api.References;
    begin
       if Field = Matched_Field_Name then
-         return Constant_Wrappers.To_Handler_Value (X.Matched);
+         return Constant_References.To_Reference (create(X.Matched));
 
       else
          raise Run_Time_Error
@@ -65,8 +68,9 @@ package body Protypo.Match_Data_Wrappers is
    ---------
 
    function Get
-     (X : Match_Data_Wrapper; Index : Engine_Value_Vectors.Vector)
-      return Handler_Value
+     (X     : Match_Data_Wrapper;
+                 Index : Engine_Value_Vectors.Vector)
+      return API.References.Reference'Class
    is
       use type Ada.Containers.Count_Type;
    begin
@@ -79,7 +83,7 @@ package body Protypo.Match_Data_Wrappers is
       end if;
 
       declare
-         use Constant_Wrappers;
+         use Api.References;
 
          Idx : constant Integer := Get_Integer (Index.First_Element);
       begin
@@ -91,7 +95,7 @@ package body Protypo.Match_Data_Wrappers is
               & X.Submatches'First'Image & ".." & X.Submatches'Last'Image;
          end if;
 
-         return To_Handler_Value (X.Submatches (Idx));
+         return Constant_References.To_Reference (Create (X.Submatches (Idx)));
       end;
    end Get;
 

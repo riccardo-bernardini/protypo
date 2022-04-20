@@ -1,5 +1,7 @@
 with Protypo.Api.Engine_Values.Handlers;
 with Protypo.Api.Engine_Values.Engine_Value_Vectors;
+with Protypo.Api.References;
+
 --
 -- ## What is this?
 --
@@ -40,11 +42,11 @@ package Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
 
    function Get (X     : Array_Wrapper;
                  Index : Engine_Value_Vectors.Vector)
-                 return Handler_Value;
+                 return References.Reference'Class;
 
    function Get (X     : Array_Wrapper;
                  Field : ID)
-                 return Handler_Value;
+                 return References.Reference'Class;
 
    function Is_Field (X : Array_Wrapper; Field : Id) return Boolean;
 private

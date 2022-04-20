@@ -4,6 +4,7 @@ with Gnat.Regpat;
 
 with Protypo.Api.Engine_Values.Handlers;
 with Protypo.Api.Engine_Values.Engine_Value_Vectors;
+with Protypo.Api.References;
 
 use Protypo.Api.Engine_Values;
 
@@ -27,11 +28,11 @@ package Protypo.Match_Data_Wrappers is
 
    function Get (X     : Match_Data_Wrapper;
                  Field : Id)
-                 return Handler_Value;
+                 return API.References.Reference'Class;
 
    function Get (X     : Match_Data_Wrapper;
                  Index : Engine_Value_Vectors.Vector)
-                 return Handler_Value;
+                 return API.References.Reference'Class;
 
 private
    use Ada.Strings.Unbounded;

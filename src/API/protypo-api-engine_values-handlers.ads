@@ -4,15 +4,17 @@ use  Protypo.Api.Engine_Values.Engine_Value_Vectors;
 with Protypo.Api.Engine_Values.Parameter_Lists;
 use Protypo.Api.Engine_Values.Parameter_Lists;
 
+with Protypo.Api.References;
+use Protypo.Api.References;
+
 package Protypo.Api.Engine_Values.Handlers is
    type Array_Interface is interface;
    type Array_Interface_Access is access all Array_Interface'Class;
 
    function Get (X     : Array_Interface;
-                 Index : Engine_Value_vectors.Vector)
-                 return Handler_Value
-                 is abstract
-     with Post'Class => Get'Result.Class in Handler_Classes;
+                 Index : Engine_Value_Vectors.Vector)
+                 return References.Reference'Class
+                 is abstract;
 
    function Create (Val : Array_Interface_Access) return Engine_Value
      with Post => Create'Result.Class = Array_Handler;
@@ -28,9 +30,8 @@ package Protypo.Api.Engine_Values.Handlers is
 
    function Get (X     : Record_Interface;
                  Field : Id)
-                 return Handler_Value
-                 is abstract
-     with Post'Class => Get'Result.Class in Handler_Classes;
+                 return References.Reference'Class
+                 is abstract;
 
    Unknown_Field : exception;
 
@@ -57,15 +58,15 @@ package Protypo.Api.Engine_Values.Handlers is
    function Create (Val : Constant_Interface_Access) return Engine_Value
      with Post => Create'Result.Class = Constant_Handler;
 
-   type Reference_Interface is interface and Constant_Interface;
-   type Reference_Interface_Access is access all Reference_Interface'Class;
-
-   procedure Write (What  : Reference_Interface;
-                    Value : Engine_Value)
-   is abstract;
-
-   function Create (Val : Reference_Interface_Access) return Engine_Value
-     with Post => Create'Result.Class = Reference_Handler;
+   --  type Reference_Interface is interface and Constant_Interface;
+   --  type Reference_Interface_Access is access all Reference_Interface'Class;
+   --
+   --  procedure Write (What  : Reference_Interface;
+   --                   Value : Engine_Value)
+   --  is abstract;
+   --
+   --  function Create (Val : Reference_Interface_Access) return Engine_Value
+   --    with Post => Create'Result.Class = Reference_Handler;
 
 
    type Iterator_Interface is limited interface;
@@ -91,7 +92,7 @@ package Protypo.Api.Engine_Values.Handlers is
    type Function_Interface_Access is access all Function_Interface'Class;
 
    function Process (Fun       : Function_Interface;
-                     Parameter : Engine_Value_vectors.Vector)
+                     Parameter : Engine_Value_Vectors.Vector)
                      return Engine_Value_Vectors.Vector is abstract;
 
    function Signature (Fun : Function_Interface)
@@ -104,7 +105,7 @@ package Protypo.Api.Engine_Values.Handlers is
 
 
    type Callback_Function_Access is
-   not null access function (Parameters : Engine_Value_vectors.Vector) return Engine_Value_Vectors.Vector;
+   not null access function (Parameters : Engine_Value_Vectors.Vector) return Engine_Value_Vectors.Vector;
 
    function Create (Val            : Callback_Function_Access;
                     Min_Parameters : Natural;
@@ -124,7 +125,7 @@ package Protypo.Api.Engine_Values.Handlers is
    function Get_Ambivalent (Val : Ambivalent_Value) return Ambivalent_Interface_Access;
    function Get_Iterator (Val : Iterator_Value) return Iterator_Interface_Access;
    function Get_Function (Val : Function_Value) return Function_Interface_Access;
-   function Get_Reference (Val : Reference_Value) return Reference_Interface_Access;
+   --  function Get_Reference (Val : Reference_Value) return Reference_Interface_Access;
    function Get_Constant (Val : Constant_Value) return Constant_Interface_Access;
 
    function Force_Handler (Item : Engine_Value) return Handler_Value
@@ -146,8 +147,8 @@ private
 
 
    function Process (Fun       : Callback_Based_Handler;
-                     Parameter : Engine_Value_vectors.Vector)
-                     return Engine_Value_vectors.Vector
+                     Parameter : Engine_Value_Vectors.Vector)
+                     return Engine_Value_Vectors.Vector
    is (Fun.Callback (Parameter));
 
    function Signature (Fun : Callback_Based_Handler)

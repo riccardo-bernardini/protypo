@@ -14,7 +14,7 @@ package Protypo.Api.Engine_Values is
       Record_Handler,
       Ambivalent_Handler,
       Function_Handler,
-      Reference_Handler,
+      --  Reference_Handler,
       Constant_Handler,
       Iterator
      );
@@ -35,7 +35,7 @@ package Protypo.Api.Engine_Values is
    subtype Ambivalent_Value is Engine_Value (Ambivalent_Handler);
    subtype Iterator_Value   is Engine_Value (Iterator);
    subtype Function_Value   is Engine_Value (Function_Handler);
-   subtype Reference_Value  is Engine_Value (Reference_Handler);
+   --  subtype Reference_Value  is Engine_Value (Reference_Handler);
    subtype Constant_Value   is Engine_Value (Constant_Handler);
 
    subtype Handler_Value is Engine_Value
@@ -183,8 +183,8 @@ private
             when Function_Handler =>
                Function_Object : access Handlers.Function_Interface;
 
-            when Reference_Handler =>
-               Reference_Object : access Handlers.Reference_Interface;
+            --  when Reference_Handler =>
+            --     Reference_Object : access Handlers.Reference_Interface;
 
             when Constant_Handler =>
                Constant_Object  : access Handlers.Constant_Interface;

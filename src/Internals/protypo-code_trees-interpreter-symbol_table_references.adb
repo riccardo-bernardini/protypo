@@ -26,11 +26,10 @@ package body Protypo.Code_Trees.Interpreter.Symbol_Table_References is
    ----------------------------
 
    function Symbol_Table_Reference (Position : Api.Symbols.Protypo_Tables.Cursor)
-                                    return Api.Engine_Values.Handlers.Reference_Interface_Access
+                                    return Symbol_Reference
    is
    begin
-
-      return Api.Engine_Values.Handlers.Reference_Interface_Access'(new Symbol_Reference'(Position => Position));
+      return Symbol_Reference'(Position => Position);
    end Symbol_Table_Reference;
 
 end Protypo.Code_Trees.Interpreter.Symbol_Table_References;
