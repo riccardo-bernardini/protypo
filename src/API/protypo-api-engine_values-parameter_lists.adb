@@ -14,7 +14,7 @@ package body Protypo.Api.Engine_Values.Parameter_Lists is
    -- Create --
    ------------
 
-   function Create (Params : Engine_Value_Vectors.Vector) return Parameter_List
+   function Create (Params : Engine_Value_Array) return Parameter_List
    is
       Result : Parameter_List;
    begin

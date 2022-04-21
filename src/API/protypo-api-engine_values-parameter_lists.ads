@@ -1,4 +1,3 @@
-with Protypo.Api.Engine_Values.Engine_Value_Vectors;
 with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 
 with Ada.Containers.Indefinite_Holders;
@@ -29,7 +28,8 @@ package Protypo.Api.Engine_Values.Parameter_Lists is
 
    function Image (Signature : Parameter_Signature) return String;
 
-   function Is_Valid_Parameter_Signature (Signature : Parameter_Signature) return Boolean;
+   function Is_Valid_Parameter_Signature (Signature : Parameter_Signature)
+                                          return Boolean;
    --
    -- Return True if Signature is a valid parameter signature that can be returned
    -- by Signature method.  A valid signature satisfies the following "regexp"
@@ -55,7 +55,7 @@ package Protypo.Api.Engine_Values.Parameter_Lists is
    -- (that removes the first element too, kind of shift in Ruby, bash, ...)
    -- or Peek (that does not change the list)
 
-   function Create (Params : Engine_Value_vectors.Vector) return Parameter_List
+   function Create (Params : Engine_Value_Array) return Parameter_List
      with Post => Length (Create'Result) = Params.Length;
 
    function Length (List : Parameter_List) return Ada.Containers.Count_Type;

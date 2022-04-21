@@ -74,13 +74,13 @@ package Protypo.Api.Engine_Values is
 
    function Last_Index (V : Engine_Value_Array) return Extended_Index;
 
-   function Length (V : Engine_Value_Array) return Natural
+   function Length (V : Engine_Value_Array) return Ada.Containers.Count_Type
    is (if V.Last_Index < V.First_Index then
           0
        else
-          V.Last_Index - V.First_Index + 1);
+          Ada.Containers.Count_Type (V.Last_Index - V.First_Index + 1));
 
-   procedure Append (V    : in out Engine_Index;
+   procedure Append (V    : in out Engine_Value_Array;
                      Item : Engine_Value);
 
    function Singleton (Item : Engine_Value)
@@ -251,19 +251,19 @@ private
                Text_Val : Unbounded_String;
 
             when Array_Handler =>
-               Array_Object : access Handlers.Array_Interface;
+               Array_Object : access Handlers.Array_Interface'Class;
 
             when Record_Handler =>
-               Record_Object : access Handlers.Record_Interface;
+               Record_Object : access Handlers.Record_Interface'Class;
 
             when Ambivalent_Handler =>
-               Ambivalent_Object : access Handlers.Ambivalent_Interface;
+               Ambivalent_Object : access Handlers.Ambivalent_Interface'Class;
 
             when Iterator =>
-               Iteration_Object : access Handlers.Iterator_Interface;
+               Iteration_Object : access Handlers.Iterator_Interface'Class;
 
             when Function_Handler =>
-               Function_Object : access Handlers.Function_Interface;
+               Function_Object : access Handlers.Function_Interface'Class;
 
                --  when Reference_Handler =>
                --     Reference_Object : access Handlers.Reference_Interface;
@@ -280,7 +280,10 @@ private
      new Ada.Containers.Indefinite_Vectors (Index_Type   => Engine_Index,
                                             Element_Type => Engine_Value);
 
-   type Engine_Value_Array is new Engine_Value_Arrays.Vector with null record;
+   type Engine_Value_Array is tagged
+      record
+         v : Engine_Value_Arrays.Vector;
+      end record;
 
    function Bool (X : Integer) return Integer
    is (if X /= 0 then 1 else 0);
