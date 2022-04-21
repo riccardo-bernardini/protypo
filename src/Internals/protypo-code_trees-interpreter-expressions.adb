@@ -234,6 +234,26 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
          when Capture_Call =>
             return Do_Capture (Status, Expr.Name, Expr.Params);
 
+
+         when Selected =>
+            declare
+               Ref : constant References.Reference'Class :=
+                       Names.Eval_Name (Status, Expr.Record_Var);
+
+               Val : constant Engine_Value := Ref.Read;
+            begin
+               if Val.Class /= Record_Value and
+                 Val.Class /= Ambivalent_Value
+               then
+                  raise Run_Time_Error
+                    with
+                      "Trying to access as a record a value of type "
+                      & Val.Class'Image
+                    & " at " & Tokens.Image (Expr.Source_Position);
+               end if;
+
+            end;
+
          when Selected | Indexed | Identifier  =>
             --              Code_Trees.Dump (Expr, 0);
             declare

@@ -14,7 +14,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
 
    function Eval_Name (Status : Interpreter_Access;
                        Expr   : not null Node_Access)
-                       return Name_Reference
+                       return api.References.Reference'Class
    is
 
       ---------

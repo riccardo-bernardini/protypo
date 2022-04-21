@@ -16,48 +16,49 @@
 --
 -- We have several types of references, see Value_Name_Class.
 --
-with Protypo.Api.Engine_Values.Handlers;
+--  with Protypo.Api.Engine_Values.Handlers;
+with Protypo.Api.References;
 
 private package Protypo.Code_Trees.Interpreter.Names is
-
-   type Value_Name_Class is
-     (
-      Array_Reference,
-      Record_Reference,
-      Ambivalent_Reference,
-      Variable_Reference,
-      Constant_Reference,
-      Function_Reference,
-      Function_Call
-     );
-
-   subtype Function_Classes is
-     Value_Name_Class range Function_Reference .. Function_Call;
-
-   type Name_Reference (Class : Value_Name_Class := Constant_Reference) is
-      record
-         case Class is
-            when Array_Reference =>
-               Array_Handler : Api.Engine_Values.Handlers.Array_Interface_Access;
-
-            when Record_Reference =>
-               Record_Handler : Api.Engine_Values.Handlers.Record_Interface_Access;
-
-            when Ambivalent_Reference =>
-               Ambivalent_Handler : Api.Engine_Values.Handlers.Ambivalent_Interface_Access;
-
-            when Variable_Reference =>
-               Variable_Handler : Api.Engine_Values.Handlers.Reference_Interface_Access;
-
-            when Constant_Reference =>
-               Costant_Handler : Api.Engine_Values.Handlers.Constant_Interface_Access;
-
-            when Function_Reference | Function_Call =>
-               Function_Handler : Api.Engine_Values.Handlers.Function_Interface_Access;
-               Parameters       : Engine_Value_Vectors.Vector;
-
-         end case;
-      end record;
+   --
+   --  type Value_Name_Class is
+   --    (
+   --     Array_Reference,
+   --     Record_Reference,
+   --     Ambivalent_Reference,
+   --     Variable_Reference,
+   --     Constant_Reference,
+   --     Function_Reference,
+   --     Function_Call
+   --    );
+   --
+   --  subtype Function_Classes is
+   --    Value_Name_Class range Function_Reference .. Function_Call;
+   --
+   --  type Name_Reference (Class : Value_Name_Class := Constant_Reference) is
+   --     record
+   --        case Class is
+   --           when Array_Reference =>
+   --              Array_Handler : Api.Engine_Values.Handlers.Array_Interface_Access;
+   --
+   --           when Record_Reference =>
+   --              Record_Handler : Api.Engine_Values.Handlers.Record_Interface_Access;
+   --
+   --           when Ambivalent_Reference =>
+   --              Ambivalent_Handler : Api.Engine_Values.Handlers.Ambivalent_Interface_Access;
+   --
+   --           when Variable_Reference =>
+   --              Variable_Handler : Api.Engine_Values.Handlers.Reference_Interface_Access;
+   --
+   --           when Constant_Reference =>
+   --              Costant_Handler : Api.Engine_Values.Handlers.Constant_Interface_Access;
+   --
+   --           when Function_Reference | Function_Call =>
+   --              Function_Handler : Api.Engine_Values.Handlers.Function_Interface_Access;
+   --              Parameters       : Engine_Value_Vectors.Vector;
+   --
+   --        end case;
+   --     end record;
    --       with
    --         Dynamic_Predicate =>
    --           (if Name_Reference.Class = Function_Reference
@@ -66,7 +67,7 @@ private package Protypo.Code_Trees.Interpreter.Names is
 
    function Eval_Name (Status : Interpreter_Access;
                        Expr   : not null Node_Access)
-                       return Name_Reference
+                       return api.References.Reference'Class
      with
        Pre => Expr.Class in Name;
 
