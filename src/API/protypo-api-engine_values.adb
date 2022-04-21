@@ -3,7 +3,7 @@ pragma Ada_2012;
 -- Protypo.API.Engine_Values --
 -------------------------------
 with Protypo.Api.Engine_Values.Handlers;
-package body Protypo.API.Engine_Values is
+package body Protypo.Api.Engine_Values is
 
    function "mod" (X, Y : Integer_Value) return Integer_Value
    is
@@ -207,6 +207,23 @@ package body Protypo.API.Engine_Values is
                        return Engine_Value_Array
    is (V =>  Engine_Value_Arrays.To_Vector (Item, 1));
 
+   function Is_Field (Val   : Engine_Value;
+                      Field : Id)
+                      return Boolean
+   is
+   begin
+      case Val.Class is
+         when Record_Handler =>
+            return Record_Value (Val).Record_Object.all.Is_Field (Field);
+
+         when Ambivalent_Handler =>
+            return Ambivalent_Value (Val).Ambivalent_Object.all.Is_Field (Field);
+
+         when others =>
+            raise Constraint_Error;
+      end case;
+   end Is_Field;
+
    function Get_Field (Val   : Engine_Value;
                        Field : Id)
                        return Reference'Class
@@ -254,7 +271,7 @@ package body Protypo.API.Engine_Values is
 
 
    function First (Object : Engine_Value_Array_Iterator) return Cursor
-   is ((pos => Object.Start));
+   is ((Pos => Object.Start));
 
 
    function Next (Object   : Engine_Value_Array_Iterator;
@@ -279,4 +296,4 @@ package body Protypo.API.Engine_Values is
    is ((Pos => Engine_Value_Arrays.Next (Pos.Pos)));
 
 
-end Protypo.API.Engine_Values;
+end Protypo.Api.Engine_Values;

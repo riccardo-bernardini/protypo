@@ -17,7 +17,7 @@
 -- We have several types of references, see Value_Name_Class.
 --
 --  with Protypo.Api.Engine_Values.Handlers;
-with Protypo.Api.References;
+with Protypo.Api.Engine_Values;
 
 private package Protypo.Code_Trees.Interpreter.Names is
    --
@@ -67,7 +67,7 @@ private package Protypo.Code_Trees.Interpreter.Names is
 
    function Eval_Name (Status : Interpreter_Access;
                        Expr   : not null Node_Access)
-                       return api.References.Reference'Class
+                       return Api.Engine_Values.Reference'Class
      with
        Pre => Expr.Class in Name;
 

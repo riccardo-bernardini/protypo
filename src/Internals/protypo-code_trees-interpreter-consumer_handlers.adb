@@ -20,8 +20,8 @@ package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is
           when others => raise Constraint_Error);
 
    overriding function Process (Fun       : Consumer_Callback;
-                                Parameter : Engine_Value_vectors.Vector)
-                                return Engine_Value_vectors.Vector
+                                Parameter : Engine_Value_Array)
+                                return Engine_Value_Array
    is
 
    begin
@@ -38,7 +38,7 @@ package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is
          end;
       end loop;
 
-      return Engine_Value_Vectors.Empty_Vector;
+      return Empty_Array;
    end Process;
 
    function Signature (Fun : Consumer_Callback)

@@ -15,7 +15,7 @@ package Protypo.Code_Trees.Interpreter.Expressions is
 
    function Eval_Expression (Status : Interpreter_Access;
                              Expr   : not null Node_Access)
-                             return Engine_Value_Vectors.Vector
+                             return Engine_Value_Array
      with
        Pre => Expr.Class in Code_Trees.Expression,
        Post => not Eval_Expression'Result.Is_Empty;

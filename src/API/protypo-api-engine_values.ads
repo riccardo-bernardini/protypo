@@ -249,6 +249,14 @@ package Protypo.Api.Engine_Values is
    function Get_String (Val : String_Value) return String;
    function Get_String (Val : Engine_Value; Default : String) return String;
 
+   function Is_Field (Val   : Engine_Value;
+                      Field : Id)
+                      return Boolean
+     with
+       Pre =>
+         Val.Class in Record_Like_Handler;
+
+
    function Get_Field (Val   : Engine_Value;
                        Field : Id)
                        return Reference'Class
@@ -327,7 +335,7 @@ private
    type Engine_Value_Array_Iterator is
      new
        Vector_Iterator_Interfaces.Forward_Iterator
-         with
+   with
       record
          Start : Engine_Value_Arrays.Cursor;
       end record;

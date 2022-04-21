@@ -6,7 +6,8 @@ package body Protypo.Code_Trees.Interpreter.Symbol_Table_References is
    -- Read --
    ----------
 
-   function Read (X : Symbol_Reference) return Engine_Value is
+   function Read (X : Symbol_Reference)
+                  return Engine_Values.Engine_Value is
    begin
       return Value (X.Position);
    end Read;
@@ -15,7 +16,8 @@ package body Protypo.Code_Trees.Interpreter.Symbol_Table_References is
    -- Write --
    -----------
 
-   procedure Write (What : Symbol_Reference; Value : Engine_Value) is
+   procedure Write (What  : Symbol_Reference;
+                    Value : Engine_Values.Engine_Value) is
    begin
       Update (Pos       => What.Position,
               New_Value => Value);

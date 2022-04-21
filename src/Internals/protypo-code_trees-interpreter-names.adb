@@ -5,6 +5,7 @@ with Protypo.Code_Trees.Interpreter.Symbol_Table_References;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_Io; use Ada.Text_Io;
+with Protypo.Api.Engine_Values; use Protypo.Api.Engine_Values;
 
 package body Protypo.Code_Trees.Interpreter.Names is
 
@@ -14,47 +15,47 @@ package body Protypo.Code_Trees.Interpreter.Names is
 
    function Eval_Name (Status : Interpreter_Access;
                        Expr   : not null Node_Access)
-                       return api.References.Reference'Class
+                       return Api.Engine_Values.Reference'Class
    is
 
-      ---------
-      -- "+" --
-      ---------
-
-      function "+" (X : Handler_Value) return Name_Reference
-      is
-      begin
-         if not (X.Class in Handler_Classes) then
-            raise Program_Error with X.Class'Image & "is not handler class";
-         end if;
-
-         case Handler_Classes (X.Class) is
-            when Array_Handler =>
-               return Name_Reference'(Class            => Array_Reference,
-                                      Array_Handler    => Handlers.Get_Array (X));
-
-            when Record_Handler =>
-               return Name_Reference'(Class             => Record_Reference,
-                                      Record_Handler    => Handlers.Get_Record (X));
-
-            when Ambivalent_Handler =>
-               return Name_Reference'(Class              => Ambivalent_Reference,
-                                      Ambivalent_Handler => Handlers.Get_Ambivalent (X));
-
-            when Function_Handler =>
-               return Name_Reference'(Class            => Function_Reference,
-                                      Function_Handler => Handlers.Get_Function (X),
-                                      Parameters       => <>);
-
-            when Reference_Handler =>
-               return Name_Reference'(Class            => Variable_Reference,
-                                      Variable_Handler => Handlers.Get_Reference (X));
-
-            when Constant_Handler =>
-               return Name_Reference'(Class             => Constant_Reference,
-                                      Costant_Handler   => Handlers.Get_Constant (X));
-         end case;
-      end "+";
+      --  ---------
+      --  -- "+" --
+      --  ---------
+      --
+      --  function "+" (X : Handler_Value) return Name_Reference
+      --  is
+      --  begin
+      --     if not (X.Class in Handler_Classes) then
+      --        raise Program_Error with X.Class'Image & "is not handler class";
+      --     end if;
+      --
+      --     case Handler_Classes (X.Class) is
+      --        when Array_Handler =>
+      --           return Name_Reference'(Class            => Array_Reference,
+      --                                  Array_Handler    => Handlers.Get_Array (X));
+      --
+      --        when Record_Handler =>
+      --           return Name_Reference'(Class             => Record_Reference,
+      --                                  Record_Handler    => Handlers.Get_Record (X));
+      --
+      --        when Ambivalent_Handler =>
+      --           return Name_Reference'(Class              => Ambivalent_Reference,
+      --                                  Ambivalent_Handler => Handlers.Get_Ambivalent (X));
+      --
+      --        when Function_Handler =>
+      --           return Name_Reference'(Class            => Function_Reference,
+      --                                  Function_Handler => Handlers.Get_Function (X),
+      --                                  Parameters       => <>);
+      --
+      --        when Reference_Handler =>
+      --           return Name_Reference'(Class            => Variable_Reference,
+      --                                  Variable_Handler => Handlers.Get_Reference (X));
+      --
+      --        when Constant_Handler =>
+      --           return Name_Reference'(Class             => Constant_Reference,
+      --                                  Costant_Handler   => Handlers.Get_Constant (X));
+      --     end case;
+      --  end "+";
 
 
    begin
@@ -66,23 +67,26 @@ package body Protypo.Code_Trees.Interpreter.Names is
       case Name (Expr.Class) is
          when Selected    =>
             declare
-               Head  : constant Name_Reference := Eval_Name (Status, Expr.Record_Var);
+               Head  : constant Engine_Value :=
+                         Expressions.Eval_Expression (Status, Expr.Record_Var);
+
                Field : constant Id := Id (To_String (Expr.Field_Name));
             begin
                case Head.Class is
-                  when Record_Reference =>
-                     if not Head.Record_Handler.Is_Field (Field) then
-                        raise Bad_Field  with "Unknown field '" & String (Field) & "'";
+                  when Record_Handler | Ambivalent_Handler =>
+                     if not Is_Field (head, Field) then
+                        raise Bad_Field
+                          with "Unknown field '" & String (Field) & "'";
                      end if;
 
-                     return + Head.Record_Handler.Get (Field);
+                     return Get_Field (Head, Field);
 
-                  when Ambivalent_Reference =>
-                     if not Head.Ambivalent_Handler.Is_Field (Field) then
-                        raise Bad_Field  with "Unknown field '" & String (Field) & "'";
-                     end if;
-
-                     return + Head.Ambivalent_Handler.Get (Field);
+                  --  when Ambivalent_Reference =>
+                  --     if not Head.Ambivalent_Handler.Is_Field (Field) then
+                  --        raise Bad_Field  with "Unknown field '" & String (Field) & "'";
+                  --     end if;
+                  --
+                  --     return + Head.Ambivalent_Handler.Get (Field);
 
                   when others =>
                      raise Run_Time_Error
@@ -93,20 +97,20 @@ package body Protypo.Code_Trees.Interpreter.Names is
             end;
          when Indexed     =>
             declare
-               subtype Indexed_References is Value_Name_Class
-                 with Static_Predicate =>
-                   Indexed_References
-                     in Array_Reference      |
-                        Function_Reference   |
-                        Ambivalent_Reference;
+               --  subtype Indexed_References is Value_Name_Class
+               --    with Static_Predicate =>
+               --      Indexed_References
+               --        in Array_Reference      |
+               --          Function_Reference   |
+               --            Ambivalent_Reference;
 
-               Head    : constant Name_Reference :=
-                           Eval_Name (Status, Expr.Indexed_Var);
+               Head    : constant Engine_Value :=
+                           Expressions.Eval_Expression (Status, Expr.Indexed_Var);
 
-               Indexes : constant Engine_Value_Vectors.Vector :=
+               Indexes : constant Engine_Value_Array :=
                            Expressions.Eval_Vector (Status, Expr.Indexes);
             begin
-               if not (Head.Class in Indexed_References) then
+               if not (Head.Class in Indexed_Handler) then
                   raise Run_Time_Error
                     with
                       "Indexed access to a value of class="
@@ -116,21 +120,16 @@ package body Protypo.Code_Trees.Interpreter.Names is
                     & Expr.Class'Image;
                end if;
 
-               case Indexed_References (Head.Class) is
-                  when Array_Reference =>
+               case Indexed_Handler (Head.Class) is
+                  when Array_Handler | Ambivalent_Handler =>
 
-                     return + Head.Array_Handler.Get (Indexes);
+                     return Get_Indexed (Head, Indexes);
 
-                  when Function_Reference =>
+                  when Function_Handler =>
 
                      return Name_Reference'(Class            => Function_Call,
                                             Function_Handler => Head.Function_Handler,
                                             Parameters       => Indexes);
-
-                  when Ambivalent_Reference =>
-                     --                       Put_Line ("@@@ index");
-                     return + Head.Ambivalent_Handler.Get (Indexes);
-
                end case;
             end;
 

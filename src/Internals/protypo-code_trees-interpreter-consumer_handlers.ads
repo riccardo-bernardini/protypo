@@ -1,18 +1,19 @@
 with Protypo.Api.Engine_Values.Handlers;
-with Protypo.Api.Engine_Values.Engine_Value_Vectors;
 with Protypo.Api.Engine_Values.Parameter_Lists;
 
 private package Protypo.Code_Trees.Interpreter.Consumer_Handlers is
+   use Protypo.Api.Engine_Values;
+
    type Consumer_Callback is
-     new Api.Engine_Values.Handlers.Function_Interface
+     new Handlers.Function_Interface
    with
      private;
 
    type Consumer_Callback_Access is access all Consumer_Callback;
 
    overriding function Process (Fun       : Consumer_Callback;
-                                Parameter : Engine_Value_Vectors.Vector)
-                                return Engine_Value_Vectors.Vector;
+                                Parameter : Engine_Value_Array)
+                                return Engine_Value_Array;
 
    overriding function Signature (Fun : Consumer_Callback)
                                   return Parameter_Lists.Parameter_Signature;
