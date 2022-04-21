@@ -173,8 +173,8 @@ package body Protypo.Code_Trees.Interpreter is
    -- Range_Callback --
    --------------------
 
-   function Range_Callback (Parameters : Engine_Value_Vectors.Vector)
-                            return Engine_Value_Vectors.Vector
+   function Range_Callback (Parameters : Engine_Value_Array)
+                            return Engine_Value_Array
    is
       use type Ada.Containers.Count_Type;
 

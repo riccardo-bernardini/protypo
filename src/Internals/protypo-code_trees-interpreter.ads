@@ -1,12 +1,10 @@
+with Protypo.Api.Engine_Values;
 with Protypo.Api.Symbols;
 with Protypo.Api.Consumers;
-with Protypo.Api.Engine_Values.Engine_Value_Vectors;
 
 with Ada.Containers.Doubly_Linked_Lists;
 
 package Protypo.Code_Trees.Interpreter is
-   use Protypo.Api.Engine_Values;
-
    procedure Run (Program      : Parsed_Code;
                   Symbol_Table : Api.Symbols.Table;
                   Consumer     : Api.Consumers.Consumer_Access);
@@ -30,7 +28,7 @@ private
                Loop_Label : Label_Type;
 
             when Return_Statement =>
-               Result : Api.Engine_Values.Engine_Value_Vectors.Vector;
+               Result : Api.Engine_Values.Engine_Value_Array;
          end case;
       end record;
 

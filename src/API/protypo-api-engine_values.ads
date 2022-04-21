@@ -62,6 +62,8 @@ package Protypo.Api.Engine_Values is
        Constant_Indexing => Element_At,
        Iterator_Element => Engine_Value;
 
+   Empty_Array : constant Engine_Value_Array;
+
    subtype Engine_Index is Positive;
 
    subtype Extended_Index is Engine_Index'Base
@@ -78,6 +80,10 @@ package Protypo.Api.Engine_Values is
 
    package Vector_Iterator_Interfaces is new
      Ada.Iterator_Interfaces (Cursor, Has_Element);
+
+   function First (Container : Engine_Value_Array) return Cursor;
+
+   function Next (Pos : Cursor) return Cursor;
 
    function Iterate (Container : in Engine_Value_Array)
                      return Vector_Iterator_Interfaces.Forward_Iterator'Class;
@@ -309,10 +315,14 @@ private
          V : Engine_Value_Arrays.Vector;
       end record;
 
+
    type Cursor is
       record
          Pos : Engine_Value_Arrays.Cursor;
       end record;
+
+   Empty_Array : constant Engine_Value_Array :=
+                   (V => Engine_Value_Arrays.Empty_Vector);
 
    type Engine_Value_Array_Iterator is
      new

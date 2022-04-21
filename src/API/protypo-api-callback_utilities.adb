@@ -5,11 +5,10 @@ package body Protypo.Api.Callback_Utilities is
    -- Match_Signature --
    ---------------------
 
-   function Match_Signature (Parameters : Engine_Value_Vectors.Vector;
+   function Match_Signature (Parameters : Engine_Value_Array;
                              Signature  : Class_Array)
                              return Boolean
    is
-      use Engine_Value_Vectors;
 
    begin
       if Natural (Parameters.Length) /= Signature'Length then
@@ -24,7 +23,7 @@ package body Protypo.Api.Callback_Utilities is
                return False;
             end if;
 
-            Next (Pos);
+            Pos := Next (Pos);
          end loop;
       end;
 
@@ -32,7 +31,7 @@ package body Protypo.Api.Callback_Utilities is
    end Match_Signature;
 
 
-   function Get (Parameters : Engine_Value_Vectors.Vector;
+   function Get (Parameters : Engine_Value_Array;
                  Index      : Positive)
                  return Engine_Value
    is (Parameters (Parameters.First_Index + Index - 1));
@@ -42,7 +41,7 @@ package body Protypo.Api.Callback_Utilities is
    ----------
 
    function Is_A
-     (Parameters : Engine_Value_Vectors.Vector; Index : Positive;
+     (Parameters : Engine_Value_Array; Index : Positive;
       Class      : Engine_Value_Class) return Boolean
    is (Get (Parameters, Index).Class = Class);
 
@@ -50,7 +49,7 @@ package body Protypo.Api.Callback_Utilities is
    -- Get_Parameter --
    -------------------
 
-   function Get_Parameter (Parameters : Engine_Value_Vectors.Vector;
+   function Get_Parameter (Parameters : Engine_Value_Array;
                            Index      : Positive)
                           return String
    is (Get_String (Get (Parameters, Index)));

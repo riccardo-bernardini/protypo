@@ -1,5 +1,5 @@
 pragma Ada_2012;
-package body Protypo.Api.References.Constant_References is
+package body Protypo.Api.Constant_References is
 
    ------------------
    -- To_Reference --
@@ -17,4 +17,4 @@ package body Protypo.Api.References.Constant_References is
    function Read (Ref : Constant_Reference) return Engine_Values.Engine_Value
    is (Ref.Value);
 
-end Protypo.Api.References.Constant_References;
+end Protypo.Api.Constant_References;

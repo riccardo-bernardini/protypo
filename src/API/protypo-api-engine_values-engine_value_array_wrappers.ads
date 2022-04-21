@@ -1,6 +1,4 @@
 with Protypo.Api.Engine_Values.Handlers;
-with Protypo.Api.Engine_Values.Engine_Value_Vectors;
-with Protypo.Api.References;
 
 --
 -- ## What is this?
@@ -26,11 +24,11 @@ package Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
    type Array_Wrapper_Access is access Array_Wrapper;
 
    function Make_Wrapper
-     (Init : Engine_Value_Vectors.Vector := Engine_Value_Vectors.Empty_Vector)
+     (Init : Engine_Value_Array := Empty_Array)
       return Handlers.Ambivalent_Interface_Access;
 
    function Make_Wrapper
-     (Init : Engine_Value_Vectors.Vector := Engine_Value_Vectors.Empty_Vector)
+     (Init : Engine_Value_Array := Empty_Array)
       return Array_Wrapper_Access;
 
    procedure Set (Container : in out Array_Wrapper;
@@ -41,12 +39,12 @@ package Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
                      Item      : Engine_Value);
 
    function Get (X     : Array_Wrapper;
-                 Index : Engine_Value_Vectors.Vector)
-                 return References.Reference'Class;
+                 Index : Engine_Value_Array)
+                 return Reference'Class;
 
    function Get (X     : Array_Wrapper;
                  Field : ID)
-                 return References.Reference'Class;
+                 return Reference'Class;
 
    function Is_Field (X : Array_Wrapper; Field : Id) return Boolean;
 private
@@ -58,6 +56,6 @@ private
      new Handlers.Ambivalent_Interface
    with
       record
-         Vector : Engine_Value_Vectors.Vector;
+         Vector : Engine_Value_Array;
       end record;
 end Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;

@@ -272,5 +272,11 @@ package body Protypo.API.Engine_Values is
                          return Engine_Value
    is (Engine_Value_Arrays.Constant_Reference (V.V, Position.Pos));
 
+   function First (Container : Engine_Value_Array) return Cursor
+   is (Cursor'(Pos => Container.V.First));
+
+   function Next (Pos : Cursor) return Cursor
+   is ((Pos => Engine_Value_Arrays.Next (Pos.Pos)));
+
 
 end Protypo.API.Engine_Values;
