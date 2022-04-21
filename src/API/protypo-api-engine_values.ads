@@ -1,5 +1,6 @@
 pragma Ada_2012;
 with Ada.Containers.Indefinite_Vectors;
+with Ada.Iterator_Interfaces;
 limited with Protypo.Api.Engine_Values.Handlers;
 
 package Protypo.Api.Engine_Values is
@@ -55,7 +56,11 @@ package Protypo.Api.Engine_Values is
    --  arrays or function calls.
    --
 
-   type Engine_Value_Array is tagged private;
+   type Engine_Value_Array is tagged private
+     with
+       Default_Iterator  => Iterate,
+       Constant_Indexing => Element_At,
+       Iterator_Element => Engine_Value;
 
    subtype Engine_Index is Positive;
 
@@ -65,10 +70,29 @@ package Protypo.Api.Engine_Values is
 
    No_Index : constant Extended_Index := Extended_Index'First;
 
+   type Cursor is private;
 
-   function Element  (V     : Engine_Value_Array;
-                      Index : Engine_Index)
-                      return Engine_Value;
+   function Has_Element (C : Cursor) return Boolean;
+
+   function Element (C : Cursor) return Engine_Value;
+
+   package Vector_Iterator_Interfaces is new
+     Ada.Iterator_Interfaces (Cursor, Has_Element);
+
+   function Iterate (Container : in Engine_Value_Array)
+                     return Vector_Iterator_Interfaces.Forward_Iterator'Class;
+
+   function Element_At  (V     : Engine_Value_Array;
+                         Index : Engine_Index)
+                         return Engine_Value
+     with
+       Pre => Index >= V.First_Index and Index <= V.Last_Index;
+
+   function Element_At  (V        : Engine_Value_Array;
+                         Position : Cursor)
+                         return Engine_Value
+     with
+       Pre => Has_Element (Position);
 
    function First_Index (V : Engine_Value_Array) return Engine_Index;
 
@@ -282,8 +306,26 @@ private
 
    type Engine_Value_Array is tagged
       record
-         v : Engine_Value_Arrays.Vector;
+         V : Engine_Value_Arrays.Vector;
       end record;
+
+   type Cursor is
+      record
+         Pos : Engine_Value_Arrays.Cursor;
+      end record;
+
+   type Engine_Value_Array_Iterator is
+     new
+       Vector_Iterator_Interfaces.Forward_Iterator
+         with
+      record
+         Start : Engine_Value_Arrays.Cursor;
+      end record;
+
+   function First (Object : Engine_Value_Array_Iterator) return Cursor;
+   function Next (Object   : Engine_Value_Array_Iterator;
+                  Position : Cursor)
+                  return Cursor;
 
    function Bool (X : Integer) return Integer
    is (if X /= 0 then 1 else 0);

@@ -184,9 +184,9 @@ package body Protypo.API.Engine_Values is
       return Create ((Bool (Left) + Bool (Right)) mod 2);
    end "xor";
 
-   function Element  (V     : Engine_Value_Array;
-                      Index : Engine_Index)
-                      return Engine_Value
+   function Element_At  (V     : Engine_Value_Array;
+                         Index : Engine_Index)
+                         return Engine_Value
    is (V.V (Index));
 
    function First_Index (V : Engine_Value_Array) return Engine_Index
@@ -241,6 +241,36 @@ package body Protypo.API.Engine_Values is
       end case;
 
    end Get_Indexed;
+
+   function Has_Element (C : Cursor) return Boolean
+   is (Engine_Value_Arrays.Has_Element (C.Pos));
+
+   function Element (C : Cursor) return Engine_Value
+   is (Engine_Value_Arrays.Element (C.Pos));
+
+   function Iterate (Container : in Engine_Value_Array)
+                     return Vector_Iterator_Interfaces.Forward_Iterator'Class
+   is (Engine_Value_Array_Iterator'(Start => Container.V.First));
+
+
+   function First (Object : Engine_Value_Array_Iterator) return Cursor
+   is ((pos => Object.Start));
+
+
+   function Next (Object   : Engine_Value_Array_Iterator;
+                  Position : Cursor)
+                  return Cursor
+   is ((Pos => Engine_Value_Arrays.Next (Position.Pos)));
+
+   --  function Element_At  (V     : Engine_Value_Array;
+   --                        Index : Engine_Index)
+   --                        return Engine_Value
+   --  is (V.V (Index));
+   --
+   function Element_At  (V        : Engine_Value_Array;
+                         Position : Cursor)
+                         return Engine_Value
+   is (Engine_Value_Arrays.Constant_Reference (V.V, Position.Pos));
 
 
 end Protypo.API.Engine_Values;

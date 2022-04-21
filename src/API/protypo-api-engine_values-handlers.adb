@@ -41,9 +41,9 @@ package body Protypo.Api.Engine_Values.Handlers is
                                            Max_Parameters => Max_Parameters,
                                            With_Varargin  => With_Varargin)));
 
-   function Create (Val : Reference_Interface_Access) return Engine_Value
-   is (Engine_Value'(Class            => Reference_Handler,
-                     Reference_Object => Val));
+   --  function Create (Val : Reference_Interface_Access) return Engine_Value
+   --  is (Engine_Value'(Class            => Reference_Handler,
+   --                    Reference_Object => Val));
 
    function Create (Val : Constant_Interface_Access) return Engine_Value
    is (Engine_Value'(Class            => Constant_Handler,
@@ -64,8 +64,8 @@ package body Protypo.Api.Engine_Values.Handlers is
    function Get_Function (Val : Function_Value) return Function_Interface_Access
    is (Val.Function_Object);
 
-   function Get_Reference (Val : Reference_Value) return Reference_Interface_Access
-   is (Val.Reference_Object);
+   --  function Get_Reference (Val : Reference_Value) return Reference_Interface_Access
+   --  is (Val.Reference_Object);
 
    function Get_Constant (Val : Constant_Value) return Constant_Interface_Access
    is (Val.Constant_Object);
