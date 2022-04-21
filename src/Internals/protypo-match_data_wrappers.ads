@@ -3,8 +3,6 @@ with Ada.Strings.Unbounded;
 with Gnat.Regpat;
 
 with Protypo.Api.Engine_Values.Handlers;
-with Protypo.Api.Engine_Values.Engine_Value_Vectors;
-with Protypo.Api.References;
 
 use Protypo.Api.Engine_Values;
 
@@ -28,11 +26,11 @@ package Protypo.Match_Data_Wrappers is
 
    function Get (X     : Match_Data_Wrapper;
                  Field : Id)
-                 return API.References.Reference'Class;
+                 return Reference'Class;
 
    function Get (X     : Match_Data_Wrapper;
-                 Index : Engine_Value_Vectors.Vector)
-                 return API.References.Reference'Class;
+                 Index : Engine_Value_Array)
+                 return Reference'Class;
 
 private
    use Ada.Strings.Unbounded;
@@ -40,7 +38,7 @@ private
    type Submatches_Array is
      array (Natural range <>) of Unbounded_String;
 
-   type Match_Data_Wrapper (N : Natural)is
+   type Match_Data_Wrapper (N : Natural) is
      new Api.Engine_Values.Handlers.Ambivalent_Interface
    with
       record

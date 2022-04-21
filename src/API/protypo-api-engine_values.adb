@@ -295,5 +295,11 @@ package body Protypo.Api.Engine_Values is
    function Next (Pos : Cursor) return Cursor
    is ((Pos => Engine_Value_Arrays.Next (Pos.Pos)));
 
+   function First_Element (Container : Engine_Value_Array) return Engine_Value
+   is (Container.V.First_Element);
+
+   function Is_Empty (Container : Engine_Value_Array) return Boolean
+   is (Container.V.Is_Empty);
+
 
 end Protypo.Api.Engine_Values;

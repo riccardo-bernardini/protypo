@@ -35,6 +35,7 @@ with Protypo.Match_Data_Wrappers;
 
 package body Protypo.Code_Trees.Interpreter is
    use Ada.Strings;
+   use Protypo.Api.Engine_Values;
 
 
    ---------------
@@ -45,6 +46,7 @@ package body Protypo.Code_Trees.Interpreter is
                        Input  : String)
                        return String
    is
+
       function To_String (X : Engine_Value) return String
       is (case X.Class is
              when Int    => Get_Integer (X)'Image,
@@ -125,8 +127,8 @@ package body Protypo.Code_Trees.Interpreter is
           when Text   => Get_String (X),
           when others => X.Class'Image);
 
-   function To_Stderr (Parameters : Engine_Value_Vectors.Vector)
-                       return Engine_Value_Vectors.Vector
+   function To_Stderr (Parameters : Engine_Value_Array)
+                       return Engine_Value_Array
    is
       use type Ada.Containers.Count_Type;
    begin
@@ -140,8 +142,8 @@ package body Protypo.Code_Trees.Interpreter is
       return Engine_Value_Vectors.Empty_Vector;
    end To_Stderr;
 
-   function Stringify (Parameters : Engine_Value_Vectors.Vector)
-                       return Engine_Value_Vectors.Vector
+   function Stringify (Parameters : Engine_Value_Array)
+                       return Engine_Value_Array
    is
       use type Ada.Containers.Count_Type;
    begin
@@ -153,8 +155,8 @@ package body Protypo.Code_Trees.Interpreter is
         (Create (To_String (Parameters (Parameters.First))), 1);
    end Stringify;
 
-   function Date_Callback  (Parameters : Engine_Value_Vectors.Vector)
-                            return Engine_Value_Vectors.Vector
+   function Date_Callback  (Parameters : Engine_Value_Array)
+                            return Engine_Value_Array
    is
 
       use type Ada.Containers.Count_Type;
@@ -195,8 +197,8 @@ package body Protypo.Code_Trees.Interpreter is
 
 
 
-   function Substring_Callback  (Parameters : Engine_Value_Vectors.Vector)
-                                 return Engine_Value_Vectors.Vector
+   function Substring_Callback  (Parameters : Engine_Value_Array)
+                                 return Engine_Value_Array
    is
 
    begin
@@ -244,8 +246,8 @@ package body Protypo.Code_Trees.Interpreter is
       end;
    end Substring_Callback;
 
-   function Split_Callback  (Parameters : Engine_Value_Vectors.Vector)
-                             return Engine_Value_Vectors.Vector
+   function Split_Callback  (Parameters : Engine_Value_Array)
+                             return Engine_Value_Array
    is
 
    begin
@@ -276,7 +278,7 @@ package body Protypo.Code_Trees.Interpreter is
             Tokens : constant Token_Array :=
                        Split (Item, Separator (Separator'First));
 
-            Result : Engine_Value_Vectors.Vector;
+            Result : Engine_Value_Array;
          begin
             for Tk of Tokens loop
                Result.Append (Create (Tk));
@@ -310,7 +312,7 @@ package body Protypo.Code_Trees.Interpreter is
       begin
          Match (Matcher, Item, Matched);
 
-         return To_Vector (Wrap (Matched, Item), 1);
+         return Singleton (Wrap (Matched, Item));
       end;
    exception
       when E : Gnat.Regpat.Expression_Error =>
@@ -320,8 +322,8 @@ package body Protypo.Code_Trees.Interpreter is
            & Ada.Exceptions.Exception_Message (E);
    end Regexp_Callback;
 
-   function Glob_Callback (Parameters : Engine_Value_Vectors.Vector)
-                           return Engine_Value_Vectors.Vector
+   function Glob_Callback (Parameters : Engine_Value_Array)
+                           return Engine_Value_Array
    is
       use Gnat.Regexp;
    begin
@@ -474,18 +476,21 @@ package body Protypo.Code_Trees.Interpreter is
    procedure Push_Consumer (Interpreter : Interpreter_Access;
                             Consumer    : Api.Consumers.Consumer_Access)
    is
-      use Api.Symbols.Protypo_Tables;
+      use Api.Symbols;
       use Consumer_Handlers;
 
-      Pos : constant Cursor := Interpreter.Symbol_Table.Find (Scanning.Consume_Procedure_Name);
+      use type Protypo_Tables.Cursor;
+
+      Pos : constant Protypo_Tables.Cursor :=
+              Interpreter.Symbol_Table.Find (Scanning.Consume_Procedure_Name);
    begin
-      if Pos = No_Element then
+      if Pos = Protypo_Tables.No_Element then
          raise Program_Error with "Consumer not found?!?";
       end if;
 
       declare
          Fun      : constant Handlers.Function_Interface_Access :=
-                      Handlers.Get_Function (Value (Pos));
+                      Handlers.Get_Function (Protypo_Tables.Value (Pos));
 
          Callback : constant Consumer_Callback := Consumer_Callback (Fun.all);
       begin

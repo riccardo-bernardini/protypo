@@ -83,10 +83,14 @@ package Protypo.Api.Engine_Values is
 
    function First (Container : Engine_Value_Array) return Cursor;
 
+   function First_Element (Container : Engine_Value_Array) return Engine_Value;
+
    function Next (Pos : Cursor) return Cursor;
 
    function Iterate (Container : in Engine_Value_Array)
                      return Vector_Iterator_Interfaces.Forward_Iterator'Class;
+
+   function Is_Empty (Container : Engine_Value_Array) return Boolean;
 
    function Element_At  (V     : Engine_Value_Array;
                          Index : Engine_Index)

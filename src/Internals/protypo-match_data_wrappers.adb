@@ -1,6 +1,6 @@
 pragma Ada_2012;
 with Ada.Containers;
-with Protypo.Api.References.Constant_References;
+with Protypo.Api.Constant_References;
 
 package body Protypo.Match_Data_Wrappers is
 
@@ -51,11 +51,11 @@ package body Protypo.Match_Data_Wrappers is
 
    function Get (X     : Match_Data_Wrapper;
                  Field : Id)
-                 return Api.References.Reference'Class is
-      use Api.References;
+                 return Reference'Class is
+      use Protypo.Api;
    begin
       if Field = Matched_Field_Name then
-         return Constant_References.To_Reference (create(X.Matched));
+         return Constant_References.To_Reference (Create (X.Matched));
 
       else
          raise Run_Time_Error
@@ -69,8 +69,8 @@ package body Protypo.Match_Data_Wrappers is
 
    function Get
      (X     : Match_Data_Wrapper;
-                 Index : Engine_Value_Vectors.Vector)
-      return API.References.Reference'Class
+      Index : Engine_Value_Array)
+      return Reference'Class
    is
       use type Ada.Containers.Count_Type;
    begin
@@ -83,7 +83,7 @@ package body Protypo.Match_Data_Wrappers is
       end if;
 
       declare
-         use Api.References;
+         use Api;
 
          Idx : constant Integer := Get_Integer (Index.First_Element);
       begin
