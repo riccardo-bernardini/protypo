@@ -1,4 +1,3 @@
-with Protypo.Code_Trees.Interpreter.Names;
 with Protypo.Api.Engine_Values.Handlers;
 
 private
@@ -34,18 +33,18 @@ package Protypo.Code_Trees.Interpreter.Expressions is
                            return Handlers.Iterator_Interface_Access;
 
 
-   subtype Function_Call_Reference is Names.Name_Reference (Names.Function_Call);
 
-   function Call_Function (Reference : Function_Call_Reference)
-                           return Engine_Value_Array;
+   --  function Call_Function (Reference  : Handlers.Function_Interface'Class;
+   --                          Parameters : Engine_Value_Array)
+   --                          return Engine_Value_Array;
 
 
-   subtype Evaluable_Classes is Names.Value_Name_Class
-     with
-       Static_Predicate =>
-         Evaluable_Classes
-           in Names.Function_Call      | Names.Constant_Reference |
-              Names.Variable_Reference | Names.Function_Reference;
+   --  subtype Evaluable_Classes is Names.Value_Name_Class
+   --    with
+   --      Static_Predicate =>
+   --        Evaluable_Classes
+   --          in Names.Function_Call      | Names.Constant_Reference |
+   --             Names.Variable_Reference | Names.Function_Reference;
 
    --  function To_Value (Ref : Names.Name_Reference) return Engine_Value_Vectors.Vector;
    --  -- Access a reference and return the value "pointed at."  Note that only

@@ -274,6 +274,12 @@ package Protypo.Api.Engine_Values is
      with
        Pre =>
          Val.Class in Indexed_Handler;
+
+
+   function Call_Function (Item       : Function_Value;
+                           Parameters : Engine_Value_Array)
+                           return Engine_Value_Array;
+
 private
    --     type Engine_Value_Vector is range 1 .. 2;
 

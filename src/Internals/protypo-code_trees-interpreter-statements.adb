@@ -71,7 +71,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
          end if;
 
          declare
-            Funct : constant Protypo.Api.Engine_Values.Handlers.Function_Interface_Access :=
+            Funct : constant Handlers.Function_Interface_Access :=
                       Handlers.Get_Function (Proc_Handler);
 
             Parameters : constant Engine_Value_Vectors.Vector :=

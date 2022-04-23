@@ -4,7 +4,7 @@ with Ada.Exceptions;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_Io; use Ada.Text_Io;
-with Protypo.Api.Engine_Values.Parameter_Lists;
+--  with Protypo.Api.Engine_Values.Parameter_Lists;
 
 with Protypo.Code_Trees.Interpreter.Statements;
 with Protypo.Api.Consumers.Buffers;
@@ -16,9 +16,9 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
    --  -- To_Vector --
    --  ---------------
    --
-   --  function To_Vector (X : Engine_Value_Vectors.Vector) return Engine_Value_Vectors.Vector
+   --  function To_Vector (X : Engine_Value_Array) return Engine_Value_Array
    --  is
-   --     Result : Engine_Value_Vectors.Vector;
+   --     Result : Engine_Value_Array;
    --  begin
    --     for Element of X loop
    --        Result.Append (Element);
@@ -31,9 +31,9 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
    --  -- To_Array --
    --  --------------
    --
-   --  function To_Array (X : Engine_Value_Vectors.Vector) return Engine_Value_Vectors.Vector
+   --  function To_Array (X : Engine_Value_Array) return Engine_Value_Array
    --  is
-   --     Result : Engine_Value_Vectors.Vector  := Engine_Value_Vectors.To_Vector (X.First_Index .. X.Last_Index);
+   --     Result : Engine_Value_Array  := Engine_Value_Vectors.To_Vector (X.First_Index .. X.Last_Index);
    --  begin
    --     for K in Result'Range loop
    --        Result (K) := X (K);
@@ -52,7 +52,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
    is
       use Ada.Containers;
 
-      Tmp    : Engine_Value_Vectors.Vector;
+      Tmp    : Engine_Value_Array;
    begin
       Tmp  := Eval_Expression (Status, Expr);
 
@@ -80,12 +80,12 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
 
    function Eval_Expression (Status : Interpreter_Access;
                              Expr   : not null Node_Access)
-                             return Engine_Value_Vectors.Vector
+                             return Engine_Value_Array
    is
 
-      function Embed (X : Engine_Value) return Engine_Value_Vectors.Vector
+      function Embed (X : Engine_Value) return Engine_Value_Array
       is
-         Result : Engine_Value_Vectors.Vector;
+         Result : Engine_Value_Array;
       begin
          Result.Append (X);
          return Result;
@@ -97,7 +97,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
 
       function Apply (Op : Tokens.Unary_Operator;
                       X  : Engine_Value)
-                      return Engine_Value_Vectors.Vector
+                      return Engine_Value_Array
       is
          use Tokens;
       begin
@@ -120,7 +120,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
       function Apply (Op    : Tokens.Binary_Operator;
                       Left  : Engine_Value;
                       Right : Engine_Value)
-                      return Engine_Value_Vectors.Vector
+                      return Engine_Value_Array
       is
          use Tokens;
 
@@ -177,7 +177,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
       function Do_Capture (Status : Interpreter_Access;
                            Name   : Unbounded_Id;
                            Params : Node_Vectors.Vector)
-                           return Engine_Value_Vectors.Vector
+                           return Engine_Value_Array
       is
          Buffer : Api.Consumers.Buffers.Buffer_Access := Api.Consumers.Buffers.New_Buffer;
       begin
@@ -189,7 +189,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
 
          Pop_Consumer (Status);
 
-         return Result : constant Engine_Value_Vectors.Vector :=
+         return Result : constant Engine_Value_Array :=
            Embed (Api.Engine_Values.Create (Buffer.Get_Data))
          do
             Api.Consumers.Buffers.Destroy (Buffer);
@@ -237,14 +237,12 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
 
          when Selected =>
             declare
-               Ref : constant References.Reference'Class :=
+               Ref : constant Reference'Class :=
                        Names.Eval_Name (Status, Expr.Record_Var);
 
                Val : constant Engine_Value := Ref.Read;
             begin
-               if Val.Class /= Record_Value and
-                 Val.Class /= Ambivalent_Value
-               then
+               if not (Val.Class in Record_Like_Handler) then
                   raise Run_Time_Error
                     with
                       "Trying to access as a record a value of type "
@@ -252,21 +250,87 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
                     & " at " & Tokens.Image (Expr.Source_Position);
                end if;
 
+               declare
+                  Result : constant Engine_Value :=
+                             Get_Field (Val, To_Id (Expr.Field_Name)).Read;
+               begin
+                  return Singleton (Result);
+               end;
             end;
 
-         when Selected | Indexed | Identifier  =>
-            --              Code_Trees.Dump (Expr, 0);
+         when Identifier  =>
             declare
-               Ref : constant Names.Name_Reference := Names.Eval_Name (Status, Expr);
+               Ref : constant Reference'Class := Names.Eval_Name (Status, Expr);
             begin
-               --  --                 Put_Line ("@@@" & Ref.Class'Image);
-               --                 if not (Ref.Class in Evaluable_Classes) then
-               --                    raise Unvaluable_Expression with Ref.Class'image;
-               --                 end if;
-
-               return To_Value (Ref);
+               return Singleton (Ref.Read);
             end;
 
+         when Indexed =>
+            --
+            --  This case is a bit special since it can represent different
+            --  things, namely: an array access or a function call.
+            --  The only possibility for a function call is when the field
+            --  Indexed_Var is an identifier (we cannot "return functions").
+            --
+            --  Note that Indexed_Var can be an identifier and still have
+            --  an array access.
+            --
+            if Expr.Indexed_Var.Class /= Identifier then
+               return Eval_Array_Access (Expr);
+            end if;
+
+            pragma Assert (Expr.Indexed_Var.Class = Identifier);
+
+            declare
+               use Protypo.Api.Symbols;
+               use type Protypo_Tables.Cursor;
+
+               Var_Name : constant Id := To_Id (Expr.Indexed_Var.Id_Value);
+
+               Pos : constant Protypo_Tables.Cursor :=
+                       Status.Symbol_Table.Find (Var_Name);
+
+               Value : constant Engine_Value :=
+                         (if Pos = Protypo_Tables.No_Element
+                          then
+                             Void_Value
+                          else
+                             Protypo_Tables.Value (Pos));
+
+               Parameters : constant Engine_Value_Array :=
+                              Eval_Vector (Status, Expr.Indexes);
+            begin
+               if Pos = Protypo_Tables.No_Element then
+                  raise Run_Time_Error
+                    with "Unknown identifier " & String (Var_Name);
+               end if;
+
+               case Value.Class is
+                  when Array_Handler | Ambivalent_Handler =>
+                     declare
+                        Ref : constant Reference'Class :=
+                                Get_Indexed (Value, Parameters);
+                     begin
+                        return Singleton (Ref.Read);
+                     end;
+
+                  when Function_Handler =>
+                     declare
+                        Result : constant Engine_Value_Array :=
+                                   Call_Function (Value, Parameters);
+                     begin
+                        if Result.Is_Empty then
+                           raise Run_Time_Error
+                             with "Procedure called in an expression context";
+                        else
+                           return Result;
+                        end if;
+                     end;
+                  when others =>
+                     raise Run_Time_Error
+                       with "Array access to wrong value type " & Value.Class'Image;
+               end case;
+            end;
       end case;
    end Eval_Expression;
 
@@ -276,9 +340,9 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
 
    function Eval_Vector (Status : Interpreter_Access;
                          Expr   : Node_Vectors.Vector)
-                         return Engine_Value_Vectors.Vector
+                         return Engine_Value_Array
    is
-      Result : Engine_Value_Vectors.Vector;
+      Result : Engine_Value_Array;
    begin
       for Ex of Expr loop
          Result.Append (Eval_Expression (Status, Ex));
@@ -297,7 +361,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
    is
       use Ada.Containers;
 
-      Tmp    : constant Engine_Value_Vectors.Vector := Eval_Expression (Status, Expr);
+      Tmp    : constant Engine_Value_Array := Eval_Expression (Status, Expr);
    begin
       if Tmp.Length /= 1 then
          raise Constraint_Error;
@@ -316,139 +380,50 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
       end;
    end Eval_Scalar;
 
-   -------------------
-   -- Call_Function --
-   -------------------
-
-   function Call_Function (Reference : Function_Call_Reference)
-                           return Engine_Value_Vectors.Vector
-   is
-      use type Parameter_Lists.Parameter_Spec;
-
-      procedure Apply_Default_And_Varargin
-        (Specs      : Parameter_Lists.Parameter_Signature;
-         Parameters : Engine_Value_Vectors.Vector;
-         Result     : in out Engine_Value_Vectors.Vector)
-        with Pre =>
-          Parameter_Lists.Is_Valid_Parameter_Signature (Specs);
-
-      procedure Apply_Default (Specs      : Parameter_Lists.Parameter_Signature;
-                               Parameters : Engine_Value_Vectors.Vector;
-                               Result     : in out Engine_Value_Vectors.Vector)
-        with Pre =>
-          Parameter_Lists.Is_Valid_Parameter_Signature (Specs)
-          and (Specs'Length = 0 or else Specs (Specs'Last) /= Parameter_Lists.Varargin);
-
-      procedure Apply_Default (Specs      : Parameter_Lists.Parameter_Signature;
-                               Parameters : Engine_Value_Vectors.Vector;
-                               Result     : in out Engine_Value_Vectors.Vector)
-      is
-      begin
-         if not Parameter_Lists.Is_Valid_Parameter_Signature (Specs) then
-            raise Program_Error with "Bad parameter signature";
-         end if;
-
-         if Natural (Parameters.Length) > Specs'Length then
-            raise Constraint_Error;
-         end if;
-
-         declare
-            use type Engine_Value_Vectors.Cursor;
-
-            Pos : Engine_Value_Vectors.Cursor := Parameters.First;
-         begin
-            for Spec of Specs loop
-               if Pos /= Engine_Value_Vectors.No_Element then
-                  Result.Append (Engine_Value_Vectors.Element (Pos));
-
-               elsif Parameter_Lists.Is_Optional (Spec) then
-                  Result.Append (Parameter_Lists.Default_Value (Spec));
-
-               else
-                  raise Constraint_Error;
-               end if;
-
-               Engine_Value_Vectors.Next (Pos);
-            end loop;
-         end;
-
-      end Apply_Default;
-
-      procedure Apply_Default_And_Varargin
-        (Specs      : Parameter_Lists.Parameter_Signature;
-         Parameters : Engine_Value_Vectors.Vector;
-         Result     : in out Engine_Value_Vectors.Vector)
-      is
-
-      begin
-         if not Parameter_Lists.Is_Valid_Parameter_Signature (Specs) then
-            raise Program_Error with "Bad parameter signature";
-         end if;
-
-         if Specs'Length = 0 or else Specs (Specs'Last) /= Parameter_Lists.Varargin then
-            Apply_Default (Specs, Parameters, Result);
-
-         else
-            pragma Compile_Time_Warning (False, "Varargin not implemented");
-            raise Program_Error with "Varargin not implemented";
-         end if;
-      end Apply_Default_And_Varargin;
-
-
-      Funct      : constant Handlers.Function_Interface_Access := Reference.Function_Handler;
-      Parameters : Engine_Value_Vectors.Vector;
-      --                       Apply_Default (Funct.Signature, Reference.Parameters);
-   begin
-      Apply_Default_And_Varargin (Specs      => Funct.Signature,
-                                  Parameters => Reference.Parameters,
-                                  Result     => Parameters);
-
-      return Funct.Process (Parameters);
-   end Call_Function;
 
 
    --------------
    -- To_Value --
    --------------
 
-   function To_Value (Ref : Names.Name_Reference) return Engine_Value_Vectors.Vector
-   is
-   begin
-      --        if not (Ref.Class in Evaluable_Classes) then
-      --           raise Program_Error;
-      --        end if;
-
-      case Ref.Class is
-         when Names.Constant_Reference =>
-            return Engine_Value_Vectors.To_Vector (Ref.Costant_Handler.Read, 1);
-
-         when Names.Variable_Reference =>
-            return Engine_Value_Vectors.To_Vector (Ref.Variable_Handler.Read, 1);
-
-         when Names.Function_Call =>
-            return Call_Function (Ref);
-
-         when Names.Function_Reference =>
-            return Call_Function
-              (Names.Name_Reference'
-                 (Class            => Names.Function_Call,
-                  Function_Handler => Ref.Function_Handler,
-                  Parameters       => Engine_Value_Vectors.Empty_Vector));
-
-         when Names.Array_Reference =>
-            return Engine_Value_Vectors.To_Vector
-              (Handlers.Create (Ref.Array_Handler), 1);
-
-         when Names.Record_Reference =>
-            return Engine_Value_Vectors.To_Vector
-              (Handlers.Create (Ref.Record_Handler), 1);
-
-         when Names.Ambivalent_Reference =>
-            return Engine_Value_Vectors.To_Vector
-              (Handlers.Create (Ref.Ambivalent_Handler), 1);
-
-      end case;
-   end To_Value;
+   --  function To_Value (Ref : Names.Name_Reference) return Engine_Value_Array
+   --  is
+   --  begin
+   --     --        if not (Ref.Class in Evaluable_Classes) then
+   --     --           raise Program_Error;
+   --     --        end if;
+   --
+   --     case Ref.Class is
+   --        when Names.Constant_Reference =>
+   --           return Engine_Value_Vectors.To_Vector (Ref.Costant_Handler.Read, 1);
+   --
+   --        when Names.Variable_Reference =>
+   --           return Engine_Value_Vectors.To_Vector (Ref.Variable_Handler.Read, 1);
+   --
+   --        when Names.Function_Call =>
+   --           return Call_Function (Ref);
+   --
+   --        when Names.Function_Reference =>
+   --           return Call_Function
+   --             (Names.Name_Reference'
+   --                (Class            => Names.Function_Call,
+   --                 Function_Handler => Ref.Function_Handler,
+   --                 Parameters       => Engine_Value_Vectors.Empty_Vector));
+   --
+   --        when Names.Array_Reference =>
+   --           return Engine_Value_Vectors.To_Vector
+   --             (Handlers.Create (Ref.Array_Handler), 1);
+   --
+   --        when Names.Record_Reference =>
+   --           return Engine_Value_Vectors.To_Vector
+   --             (Handlers.Create (Ref.Record_Handler), 1);
+   --
+   --        when Names.Ambivalent_Reference =>
+   --           return Engine_Value_Vectors.To_Vector
+   --             (Handlers.Create (Ref.Ambivalent_Handler), 1);
+   --
+   --     end case;
+   --  end To_Value;
 
 
 end Protypo.Code_Trees.Interpreter.Expressions;

@@ -3,7 +3,103 @@ pragma Ada_2012;
 -- Protypo.API.Engine_Values --
 -------------------------------
 with Protypo.Api.Engine_Values.Handlers;
+with Protypo.Api.Engine_Values.Parameter_Lists;
+
 package body Protypo.Api.Engine_Values is
+
+   -------------------
+   -- Call_Function --
+   -------------------
+
+   function Call_Function (Funct      : Handlers.Function_Interface'Class;
+                           Parameters : Engine_Value_Array)
+                           return Engine_Value_Array
+   is
+      use type Parameter_Lists.Parameter_Spec;
+
+      function Apply_Default_And_Varargin
+        (Specs      : Parameter_Lists.Parameter_Signature;
+         Parameters : Engine_Value_Array)
+         return Engine_Value_Array
+        with Pre =>
+          Parameter_Lists.Is_Valid_Parameter_Signature (Specs);
+
+      function Apply_Default (Specs      : Parameter_Lists.Parameter_Signature;
+                              Parameters : Engine_Value_Array)
+                              return Engine_Value_Array
+        with Pre =>
+          Parameter_Lists.Is_Valid_Parameter_Signature (Specs)
+          and (Specs'Length = 0
+               or else Specs (Specs'Last) /= Parameter_Lists.Varargin);
+
+      function Apply_Default (Specs      : Parameter_Lists.Parameter_Signature;
+                              Parameters : Engine_Value_Array)
+                              return Engine_Value_Array
+      is
+         Result : Engine_Value_Array;
+      begin
+         if not Parameter_Lists.Is_Valid_Parameter_Signature (Specs) then
+            raise Program_Error with "Bad parameter signature";
+         end if;
+
+         if Natural (Parameters.Length) > Specs'Length then
+            raise Constraint_Error;
+         end if;
+
+         declare
+            Pos : Cursor := Parameters.First;
+         begin
+            for Spec of Specs loop
+               if Has_Element (Pos) then
+                  Result.Append (Element (Pos));
+
+               elsif Parameter_Lists.Is_Optional (Spec) then
+                  Result.Append (Parameter_Lists.Default_Value (Spec));
+
+               else
+                  raise Constraint_Error;
+               end if;
+
+               Pos := Next (Pos);
+            end loop;
+         end;
+
+         return Result;
+      end Apply_Default;
+
+      function Apply_Default_And_Varargin
+        (Specs      : Parameter_Lists.Parameter_Signature;
+         Parameters : Engine_Value_Array)
+         return Engine_Value_Array
+      is
+
+      begin
+         if not Parameter_Lists.Is_Valid_Parameter_Signature (Specs) then
+            raise Program_Error with "Bad parameter signature";
+         end if;
+
+         if Specs'Length = 0 or else Specs (Specs'Last) /= Parameter_Lists.Varargin then
+            return Apply_Default (Specs, Parameters);
+
+         else
+            pragma Compile_Time_Warning (False, "Varargin not implemented");
+            raise Program_Error with "Varargin not implemented";
+         end if;
+      end Apply_Default_And_Varargin;
+
+   begin
+      return Funct.Process
+        (Apply_Default_And_Varargin (Funct.Signature, Parameters));
+   end Call_Function;
+
+   function Call_Function (Item       : Function_Value;
+                           Parameters : Engine_Value_Array)
+                           return Engine_Value_Array
+   is
+   begin
+      return Call_Function (Item.Function_Object.all, Parameters);
+   end Call_Function;
+
 
    function "mod" (X, Y : Integer_Value) return Integer_Value
    is
