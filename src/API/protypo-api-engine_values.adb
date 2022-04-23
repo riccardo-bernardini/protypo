@@ -7,22 +7,20 @@ with Protypo.Api.Engine_Values.Parameter_Lists;
 
 package body Protypo.Api.Engine_Values is
 
-   -------------------
-   -- Call_Function --
-   -------------------
 
-   function Call_Function (Funct      : Handlers.Function_Interface'Class;
-                           Parameters : Engine_Value_Array)
-                           return Engine_Value_Array
+   function Apply_Default_And_Varargin
+     (Specs      : Parameter_Lists.Parameter_Signature;
+      Parameters : Engine_Value_Array)
+      return Engine_Value_Array
+     with Pre =>
+       Parameter_Lists.Is_Valid_Parameter_Signature (Specs);
+
+   function Apply_Default_And_Varargin
+     (Specs      : Parameter_Lists.Parameter_Signature;
+      Parameters : Engine_Value_Array)
+      return Engine_Value_Array
    is
       use type Parameter_Lists.Parameter_Spec;
-
-      function Apply_Default_And_Varargin
-        (Specs      : Parameter_Lists.Parameter_Signature;
-         Parameters : Engine_Value_Array)
-         return Engine_Value_Array
-        with Pre =>
-          Parameter_Lists.Is_Valid_Parameter_Signature (Specs);
 
       function Apply_Default (Specs      : Parameter_Lists.Parameter_Signature;
                               Parameters : Engine_Value_Array)
@@ -67,25 +65,31 @@ package body Protypo.Api.Engine_Values is
          return Result;
       end Apply_Default;
 
-      function Apply_Default_And_Varargin
-        (Specs      : Parameter_Lists.Parameter_Signature;
-         Parameters : Engine_Value_Array)
-         return Engine_Value_Array
-      is
+   begin
+      if not Parameter_Lists.Is_Valid_Parameter_Signature (Specs) then
+         raise Program_Error with "Bad parameter signature";
+      end if;
 
-      begin
-         if not Parameter_Lists.Is_Valid_Parameter_Signature (Specs) then
-            raise Program_Error with "Bad parameter signature";
-         end if;
+      if Specs'Length = 0 or else Specs (Specs'Last) /= Parameter_Lists.Varargin then
+         return Apply_Default (Specs, Parameters);
 
-         if Specs'Length = 0 or else Specs (Specs'Last) /= Parameter_Lists.Varargin then
-            return Apply_Default (Specs, Parameters);
+      else
+         pragma Compile_Time_Warning (False, "Varargin not implemented");
+         raise Program_Error with "Varargin not implemented";
+      end if;
+   end Apply_Default_And_Varargin;
 
-         else
-            pragma Compile_Time_Warning (False, "Varargin not implemented");
-            raise Program_Error with "Varargin not implemented";
-         end if;
-      end Apply_Default_And_Varargin;
+
+   -------------------
+   -- Call_Function --
+   -------------------
+
+   function Call_Function (Funct      : Handlers.Function_Interface'Class;
+                           Parameters : Engine_Value_Array)
+                           return Engine_Value_Array
+   is
+
+
 
    begin
       return Funct.Process
@@ -99,6 +103,17 @@ package body Protypo.Api.Engine_Values is
    begin
       return Call_Function (Item.Function_Object.all, Parameters);
    end Call_Function;
+
+   procedure Call (Item       : Procedure_Value;
+                   Parameters : Engine_Value_Array)
+   is
+      Proc : constant Handlers.Procedure_Interface'Class :=
+               Item.Procedure_Object.all;
+   begin
+      Proc.Process
+        (Apply_Default_And_Varargin (Proc.Signature, Parameters));
+   end Call;
+
 
 
    function "mod" (X, Y : Integer_Value) return Integer_Value

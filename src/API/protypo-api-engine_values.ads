@@ -16,7 +16,7 @@ package Protypo.Api.Engine_Values is
       Ambivalent_Handler,
       Record_Handler,
       Function_Handler,
-      procedure_handler,
+      Procedure_Handler,
       Constant_Handler,
       Iterator
      );
@@ -46,6 +46,7 @@ package Protypo.Api.Engine_Values is
    subtype Ambivalent_Value is Engine_Value (Ambivalent_Handler);
    subtype Iterator_Value   is Engine_Value (Iterator);
    subtype Function_Value   is Engine_Value (Function_Handler);
+   subtype Procedure_Value  is Engine_Value (Procedure_Handler);
    subtype Constant_Value   is Engine_Value (Constant_Handler);
 
    subtype Handler_Value is Engine_Value
@@ -283,6 +284,9 @@ package Protypo.Api.Engine_Values is
    function Call_Function (Item       : Function_Value;
                            Parameters : Engine_Value_Array)
                            return Engine_Value_Array;
+
+   procedure Call (Item       : Procedure_Value;
+                   Parameters : Engine_Value_Array);
 
 private
    --     type Engine_Value_Vector is range 1 .. 2;
