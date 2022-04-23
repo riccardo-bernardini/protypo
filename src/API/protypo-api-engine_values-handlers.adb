@@ -27,23 +27,42 @@ package body Protypo.Api.Engine_Values.Handlers is
    function Create (Val          : Callback_Function_Access;
                     N_Parameters : Natural := 1)
                     return Engine_Value
-   is (Create (new Callback_Based_Handler'(Callback => Val,
-                                           Min_Parameters => N_Parameters,
-                                           Max_Parameters => N_Parameters,
-                                           With_Varargin  => False)));
+   is (Create (Val            => Val,
+               Min_Parameters => N_Parameters,
+               Max_Parameters => N_Parameters,
+               With_Varargin  => False));
 
    function Create (Val            : Callback_Function_Access;
                     Min_Parameters : Natural;
                     Max_Parameters : Natural;
                     With_Varargin  : Boolean := False) return Engine_Value
-   is (Create (new Callback_Based_Handler'(Callback => Val,
-                                           Min_Parameters => Min_Parameters,
-                                           Max_Parameters => Max_Parameters,
-                                           With_Varargin  => With_Varargin)));
+   is (Create
+       (new Callback_Function_Handler'(Callback => Val,
+                                       Min_Parameters => Min_Parameters,
+                                       Max_Parameters => Max_Parameters,
+                                       With_Varargin  => With_Varargin)));
 
-   --  function Create (Val : Reference_Interface_Access) return Engine_Value
-   --  is (Engine_Value'(Class            => Reference_Handler,
-   --                    Reference_Object => Val));
+   function Create (Val : Procedure_Interface_Access) return Engine_Value
+   is (Engine_Value'(Class            => Procedure_Handler,
+                     Procedure_Object  => Val));
+
+   function Create (Val          : Callback_Procedure_Access;
+                    N_Parameters : Natural := 1)
+                    return Engine_Value
+   is (Create (Val            => Val,
+               Min_Parameters => N_Parameters,
+               Max_Parameters => N_Parameters,
+               With_Varargin  => False));
+
+   function Create (Val            : Callback_Procedure_Access;
+                    Min_Parameters : Natural;
+                    Max_Parameters : Natural;
+                    With_Varargin  : Boolean := False) return Engine_Value
+   is (Create
+       (new Callback_Procedure_Handler'(Callback => Val,
+                                        Min_Parameters => Min_Parameters,
+                                        Max_Parameters => Max_Parameters,
+                                        With_Varargin  => With_Varargin)));
 
    function Create (Val : Constant_Interface_Access) return Engine_Value
    is (Engine_Value'(Class            => Constant_Handler,
@@ -88,12 +107,14 @@ package body Protypo.Api.Engine_Values.Handlers is
              raise Constraint_Error);
 
    ---------------
-   function Signature (Fun : Callback_Based_Handler)
+   function Signature (Min_Parameters : Natural;
+                       Max_Parameters : Natural;
+                       With_Varargin  : Boolean)
                        return Parameter_Signature
    is
       Tot_Parameters : constant Natural :=
-                         Fun.Max_Parameters
-                           + (if Fun.With_Varargin then 1 else 0);
+                         Max_Parameters
+                           + (if With_Varargin then 1 else 0);
 
       Result         : Parameter_Signature (2 .. Tot_Parameters + 1) :=
                          (others => No_Spec);
@@ -101,25 +122,44 @@ package body Protypo.Api.Engine_Values.Handlers is
       -- if there is some bug, it will be (with large probability)
       -- caught by the contract of Signature
 
-      Last_Mandatory : constant Natural := Result'First + Fun.Min_Parameters - 1;
-      Last_Optional  : constant Natural := Result'First + Fun.Max_Parameters - 1;
+      Last_Mandatory : constant Natural := Result'First + Min_Parameters - 1;
+      Last_Optional  : constant Natural := Result'First + Max_Parameters - 1;
    begin
-      if Fun.Min_Parameters > 0 then
+      if Min_Parameters > 0 then
          Result (Result'First .. Last_Mandatory) :=
            (others => Mandatory);
       end if;
 
-      if Fun.Max_Parameters > Fun.Min_Parameters then
+      if Max_Parameters > Min_Parameters then
          Result (Last_Mandatory + 1 .. Last_Optional) :=
            (others => Optional (Void_Value));
       end if;
 
-      if Fun.With_Varargin then
+      if With_Varargin then
          Result (Result'Last) := Varargin;
       end if;
 
       return Result;
    end Signature;
+
+   procedure Process (Fun       : Callback_Procedure_Handler;
+                      Parameter : Engine_Value_Array)
+   is
+   begin
+      Fun.Callback (Parameter);
+   end Process;
+
+   function Signature (Fun : Callback_Procedure_Handler)
+                       return Parameter_Signature
+   is (Signature (Min_Parameters => Fun.Min_Parameters,
+                  Max_Parameters => Fun.Max_Parameters,
+                  With_Varargin  => Fun.With_Varargin));
+
+   function Signature (Fun : Callback_Function_Handler)
+                       return Parameter_Signature
+   is (Signature (Min_Parameters => Fun.Min_Parameters,
+                  Max_Parameters => Fun.Max_Parameters,
+                  With_Varargin  => Fun.With_Varargin));
 
 
 end Protypo.Api.Engine_Values.Handlers;

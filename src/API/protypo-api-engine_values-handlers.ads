@@ -116,6 +116,37 @@ package Protypo.Api.Engine_Values.Handlers is
                     N_Parameters : Natural := 1) return Engine_Value
      with Post => Create'Result.Class = Function_Handler;
 
+   type Procedure_Interface is interface;
+   type Procedure_Interface_Access is access all Procedure_Interface'Class;
+
+   procedure Process (Fun       : Procedure_Interface;
+                      Parameter : Engine_Value_Array) is abstract;
+
+   function Signature (Fun : Procedure_Interface)
+                       return Parameter_Signature is abstract
+     with Post'Class =>
+       Parameter_Lists.Is_Valid_Parameter_Signature (Signature'Result);
+
+
+   type Callback_Procedure_Access is
+   not null access procedure (Parameters : Engine_Value_Array);
+
+   function Create (Val            : Callback_Procedure_Access;
+                    Min_Parameters : Natural;
+                    Max_Parameters : Natural;
+                    With_Varargin  : Boolean := False) return Engine_Value
+     with
+       Pre => Max_Parameters >= Min_Parameters,
+       Post => Create'Result.Class = Procedure_Handler;
+
+   function Create (Val          : Callback_Procedure_Access;
+                    N_Parameters : Natural := 1) return Engine_Value
+     with Post => Create'Result.Class = Procedure_Handler;
+
+
+   function Create (Val : Procedure_Interface_Access) return Engine_Value
+     with Post => Create'Result.Class = Procedure_Handler;
+
 
    function Get_Array (Val : Array_Value) return Array_Interface_Access;
    function Get_Record (Val : Record_Value) return Record_Interface_Access;
@@ -132,7 +163,7 @@ package Protypo.Api.Engine_Values.Handlers is
    --  already a handler, just return Item.
 
 private
-   type Callback_Based_Handler is
+   type Callback_Function_Handler is
      new Function_Interface
    with
       record
@@ -143,15 +174,31 @@ private
       end record;
 
 
-   function Process (Fun       : Callback_Based_Handler;
+   function Process (Fun       : Callback_Function_Handler;
                      Parameter : Engine_Value_Array)
                      return Engine_Value_Array
    is (Fun.Callback (Parameter));
 
-   function Signature (Fun : Callback_Based_Handler)
+   function Signature (Fun : Callback_Function_Handler)
                        return Parameter_Signature;
    --     is (Engine_Value_Array(2..Fun.N_Parameters+1)'(others => Void_Value));
 
+   type Callback_Procedure_Handler is
+     new Procedure_Interface
+   with
+      record
+         Callback       : Callback_Procedure_Access;
+         Min_Parameters : Natural;
+         Max_Parameters : Natural;
+         With_Varargin  : Boolean;
+      end record;
+
+
+   procedure Process (Fun       : Callback_Procedure_Handler;
+                     Parameter : Engine_Value_Array);
+
+   function Signature (Fun : Callback_Procedure_Handler)
+                       return Parameter_Signature;
 
 
 end Protypo.Api.Engine_Values.Handlers;

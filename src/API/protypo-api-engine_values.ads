@@ -16,6 +16,7 @@ package Protypo.Api.Engine_Values is
       Ambivalent_Handler,
       Record_Handler,
       Function_Handler,
+      procedure_handler,
       Constant_Handler,
       Iterator
      );
@@ -316,8 +317,8 @@ private
             when Function_Handler =>
                Function_Object : access Handlers.Function_Interface'Class;
 
-               --  when Reference_Handler =>
-               --     Reference_Object : access Handlers.Reference_Interface;
+            when Procedure_Handler =>
+               Procedure_Object : access Handlers.Procedure_Interface'Class;
 
             when Constant_Handler =>
                Constant_Object  : access Handlers.Constant_Interface;

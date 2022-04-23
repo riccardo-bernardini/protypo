@@ -282,7 +282,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
                   use type Ada.Containers.Count_Type;
 
                   Basis : constant Engine_Value_Array :=
-                          Eval_Expression (Status, Expr.Indexed_Var);
+                            Eval_Expression (Status, Expr.Indexed_Var);
 
 
                   Indexes : constant Engine_Value_Array :=
@@ -295,7 +295,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
                            else
                               Void_Value);
                begin
-                  if basis.Length /= 1 then
+                  if Basis.Length /= 1 then
                      raise Run_Time_Error
                        with
                          "Array name evaluation returns "
