@@ -88,9 +88,6 @@ package body Protypo.Api.Engine_Values is
                            Parameters : Engine_Value_Array)
                            return Engine_Value_Array
    is
-
-
-
    begin
       return Funct.Process
         (Apply_Default_And_Varargin (Funct.Signature, Parameters));

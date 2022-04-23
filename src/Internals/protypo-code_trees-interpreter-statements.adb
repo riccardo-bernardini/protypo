@@ -12,7 +12,7 @@ pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_Io; use Ada.Text_Io;
 
 package body Protypo.Code_Trees.Interpreter.Statements is
-   use type Names.Name_Reference;
+   use Protypo.Api.Engine_Values;
 
    ---------
    -- Run --
@@ -43,17 +43,18 @@ package body Protypo.Code_Trees.Interpreter.Statements is
        & X.Class'Image & ") to Boolean");
 
    package Lhs_Vectors is
-     new Ada.Containers.Vectors (Index_Type   => Positive,
-                                 Element_Type => Names.Name_Reference);
+     new Ada.Containers.Indefinite_Vectors (Index_Type   => Positive,
+                                            Element_Type => Writable_Reference'Class);
 
    procedure Do_Procedure_Call (Status : Interpreter_Access;
                                 Name   : Unbounded_Id;
                                 Params : Node_Vectors.Vector)
    is
       use Api.Symbols.Protypo_Tables;
+      use Api.Symbols;
       use type Ada.Containers.Count_Type;
 
-      Position : constant Cursor :=
+      Position : constant Protypo_Tables.Cursor :=
                    Status.Symbol_Table.Find (Id (To_String (Name)));
 
 
@@ -148,13 +149,37 @@ package body Protypo.Code_Trees.Interpreter.Statements is
             Run (Status, Program.Statements);
 
          when Defun       =>
-            Status.Symbol_Table.Create
-              (Name          =>
-                  Id (To_String (Program.Definition_Name)),
-               Initial_Value =>
-                  Handlers.Create (new Compiled_Function'(Function_Body => Program.Function_Body,
-                                                          Parameters    => Program.Parameters,
-                                                          Status        => Status)));
+            if Program.Is_Function then
+               declare
+                  Name : constant Id :=
+                           Id (To_String (Program.Definition_Name));
+
+                  Fun  : constant Engine_Value :=
+                           Handlers.Create
+                             (new Compiled_Function
+                                '(Function_Body => Program.Function_Body,
+                                  Parameters    => Program.Parameters,
+                                  Status        => Status));
+               begin
+                  Status.Symbol_Table.Create (Name, Fun);
+               end;
+
+            else
+               declare
+                  Name : constant Id :=
+                           Id (To_String (Program.Definition_Name));
+
+                  Proc : constant Engine_Value :=
+                           Handlers.Create
+                             (new Compiled_Procedure
+                                '(Function_Body => Program.Function_Body,
+                                  Parameters    => Program.Parameters,
+                                  Status        => Status));
+               begin
+                  Status.Symbol_Table.Create (Name, Proc);
+               end;
+
+            end if;
 
          when Assignment  =>
             declare
@@ -162,7 +187,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                use type Names.Value_Name_Class;
 
                Values : Engine_Value_Vectors.Vector;
-               Lhs : Lhs_Array;
+               Lhs    : Lhs_Array;
             begin
                Values  := Expressions.Eval_Vector (Status, Program.Rvalues);
 
@@ -261,7 +286,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
             declare
                use Api.Symbols;
 
-               Iterator_Ref : constant handlers.Iterator_Interface_Access :=
+               Iterator_Ref : constant Handlers.Iterator_Interface_Access :=
                                 Expressions.Eval_Iterator (Status, Program.Iterator);
 
                Variable : constant Id := Id (To_String (Program.Variable));
