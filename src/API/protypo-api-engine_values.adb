@@ -298,6 +298,17 @@ package body Protypo.Api.Engine_Values is
       V.V.Append (Item);
    end Append;
 
+   ------------
+   -- Append --
+   ------------
+
+   procedure Append (V    : in out Engine_Value_Array;
+                     Item : Engine_Value_Array)
+   is
+   begin
+      V.V.Append_Vector (Item.V);
+   end Append;
+
 
    function Singleton (Item : Engine_Value)
                        return Engine_Value_Array

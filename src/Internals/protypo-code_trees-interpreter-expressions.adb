@@ -9,6 +9,8 @@ with Ada.Text_Io; use Ada.Text_Io;
 with Protypo.Code_Trees.Interpreter.Statements;
 with Protypo.Api.Consumers.Buffers;
 
+with Protypo.Code_Trees.Interpreter.Names;
+
 package body Protypo.Code_Trees.Interpreter.Expressions is
    Unvaluable_Expression : exception;
 
@@ -276,7 +278,40 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
             --  an array access.
             --
             if Expr.Indexed_Var.Class /= Identifier then
-               return Eval_Array_Access (Expr);
+               declare
+                  use type Ada.Containers.Count_Type;
+
+                  Basis : constant Engine_Value_Array :=
+                          Eval_Expression (Status, Expr.Indexed_Var);
+
+
+                  Indexes : constant Engine_Value_Array :=
+                              Eval_Vector (Status, Expr.Indexes);
+
+                  Ref : constant Engine_Value :=
+                          (if Basis.Length = 1
+                           then
+                              Basis.First_Element
+                           else
+                              Void_Value);
+               begin
+                  if basis.Length /= 1 then
+                     raise Run_Time_Error
+                       with
+                         "Array name evaluation returns "
+                         & Basis.Length'Image & " values, one was expected";
+                  end if;
+
+                  if not (Ref.Class in Indexed_Handler) then
+                     raise Run_Time_Error
+                       with
+                         "Indexed access to value of type "
+                         & Ref.Class'Image;
+                  end if;
+
+                  return Singleton (Get_Indexed (Ref, Indexes).Read);
+               end;
+
             end if;
 
             pragma Assert (Expr.Indexed_Var.Class = Identifier);
