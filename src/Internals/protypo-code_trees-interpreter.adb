@@ -139,7 +139,7 @@ package body Protypo.Code_Trees.Interpreter is
       Put_Line (File => Standard_Error,
                 Item => "DEBUG>> " & To_String (Parameters (Parameters.First)));
 
-      return Engine_Value_Vectors.Empty_Vector;
+      return Empty_Array;
    end To_Stderr;
 
    function Stringify (Parameters : Engine_Value_Array)
@@ -151,8 +151,8 @@ package body Protypo.Code_Trees.Interpreter is
          raise Run_Time_Error with "image needs 1 parameter";
       end if;
 
-      return Engine_Value_Vectors.To_Vector
-        (Create (To_String (Parameters (Parameters.First))), 1);
+      return Singleton
+        (Create (To_String (Parameters (Parameters.First))));
    end Stringify;
 
    function Date_Callback  (Parameters : Engine_Value_Array)
@@ -167,7 +167,7 @@ package body Protypo.Code_Trees.Interpreter is
          raise Run_Time_Error with "date wants no parameter";
       end if;
 
-      return Engine_Value_Vectors.To_Vector (Create (Image (Clock)), 1);
+      return Singleton (Create (Image (Clock)));
 
    end Date_Callback;
 
@@ -190,7 +190,7 @@ package body Protypo.Code_Trees.Interpreter is
          Last  : constant Integer := Get_Integer (Parameters (Parameters.First_Index + 1));
          Val   : constant Engine_Value := Handlers.Create (Range_Iterators.Create (First, Last));
       begin
-         return Engine_Value_Vectors.To_Vector (Val, 1);
+         return Singleton (Val);
       end;
    end Range_Callback;
 
@@ -242,7 +242,7 @@ package body Protypo.Code_Trees.Interpreter is
               & Item'First'Image & ".." & Item'Last'Image;
          end if;
 
-         return Engine_Value_Vectors.To_Vector (Create (Item (First .. Last)), 1);
+         return Singleton (Create (Item (First .. Last)));
       end;
    end Substring_Callback;
 
@@ -284,14 +284,14 @@ package body Protypo.Code_Trees.Interpreter is
                Result.Append (Create (Tk));
             end loop;
 
-            return Engine_Value_Vectors.To_Vector
-              (Handlers.Create (Make_Wrapper (Result)), 1);
+            return Singleton
+              (Handlers.Create (Make_Wrapper (Result)));
          end;
       end;
    end Split_Callback;
 
-   function Regexp_Callback (Parameters : Engine_Value_Vectors.Vector)
-                             return Engine_Value_Vectors.Vector
+   function Regexp_Callback (Parameters : Engine_Value_Array)
+                             return Engine_Value_Array
    is
       use Gnat.Regpat;
    begin
@@ -302,7 +302,6 @@ package body Protypo.Code_Trees.Interpreter is
       end if;
 
       declare
-         use Engine_Value_Vectors;
          use Protypo.Match_Data_Wrappers;
 
          Item    : constant String := Get_Parameter (Parameters, 1);
@@ -340,7 +339,7 @@ package body Protypo.Code_Trees.Interpreter is
          Re      : constant Regexp := Compile (Pattern, Glob => True);
          Val     : constant Engine_Value := Create (Match (Item, Re));
       begin
-         return Engine_Value_Vectors.To_Vector (Val, 1);
+         return Singleton (Val);
       end;
    end Glob_Callback;
 

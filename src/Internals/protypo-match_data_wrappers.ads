@@ -26,11 +26,11 @@ package Protypo.Match_Data_Wrappers is
 
    function Get (X     : Match_Data_Wrapper;
                  Field : Id)
-                 return Reference'Class;
+                 return Engine_Reference'Class;
 
    function Get (X     : Match_Data_Wrapper;
                  Index : Engine_Value_Array)
-                 return Reference'Class;
+                 return Engine_Reference'Class;
 
 private
    use Ada.Strings.Unbounded;

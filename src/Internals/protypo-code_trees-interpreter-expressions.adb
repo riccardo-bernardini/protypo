@@ -239,7 +239,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
 
          when Selected =>
             declare
-               Ref : constant Reference'Class :=
+               Ref : constant Engine_Reference'Class :=
                        Names.Eval_Name (Status, Expr.Record_Var);
 
                Val : constant Engine_Value := Ref.Read;
@@ -262,7 +262,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
 
          when Identifier  =>
             declare
-               Ref : constant Reference'Class := Names.Eval_Name (Status, Expr);
+               Ref : constant Engine_Reference'Class := Names.Eval_Name (Status, Expr);
             begin
                return Singleton (Ref.Read);
             end;
@@ -343,7 +343,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
                case Value.Class is
                   when Array_Handler | Ambivalent_Handler =>
                      declare
-                        Ref : constant Reference'Class :=
+                        Ref : constant Engine_Reference'Class :=
                                 Get_Indexed (Value, Parameters);
                      begin
                         return Singleton (Ref.Read);

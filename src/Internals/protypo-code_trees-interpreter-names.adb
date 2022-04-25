@@ -1,4 +1,5 @@
 pragma Ada_2012;
+with Protypo.Api.Engine_Values.Handlers;
 
 with Protypo.Code_Trees.Interpreter.Expressions;
 with Protypo.Code_Trees.Interpreter.Symbol_Table_References;
@@ -15,7 +16,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
 
    function Eval_Name (Status : Interpreter_Access;
                        Expr   : not null Node_Access)
-                       return Api.Engine_Values.Reference'Class
+                       return Api.Engine_Values.Engine_Reference'Class
    is
 
       --  ---------
@@ -68,25 +69,25 @@ package body Protypo.Code_Trees.Interpreter.Names is
          when Selected    =>
             declare
                Head  : constant Engine_Value :=
-                         Expressions.Eval_Expression (Status, Expr.Record_Var);
+                         Expressions.Eval_Single_Expression (Status, Expr.Record_Var);
 
                Field : constant Id := Id (To_String (Expr.Field_Name));
             begin
                case Head.Class is
                   when Record_Handler | Ambivalent_Handler =>
-                     if not Is_Field (head, Field) then
+                     if not Is_Field (Head, Field) then
                         raise Bad_Field
                           with "Unknown field '" & String (Field) & "'";
                      end if;
 
                      return Get_Field (Head, Field);
 
-                  --  when Ambivalent_Reference =>
-                  --     if not Head.Ambivalent_Handler.Is_Field (Field) then
-                  --        raise Bad_Field  with "Unknown field '" & String (Field) & "'";
-                  --     end if;
-                  --
-                  --     return + Head.Ambivalent_Handler.Get (Field);
+                     --  when Ambivalent_Reference =>
+                     --     if not Head.Ambivalent_Handler.Is_Field (Field) then
+                     --        raise Bad_Field  with "Unknown field '" & String (Field) & "'";
+                     --     end if;
+                     --
+                     --     return + Head.Ambivalent_Handler.Get (Field);
 
                   when others =>
                      raise Run_Time_Error
@@ -105,7 +106,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
                --            Ambivalent_Reference;
 
                Head    : constant Engine_Value :=
-                           Expressions.Eval_Expression (Status, Expr.Indexed_Var);
+                           Expressions.Eval_Single_Expression (Status, Expr.Indexed_Var);
 
                Indexes : constant Engine_Value_Array :=
                            Expressions.Eval_Vector (Status, Expr.Indexes);
@@ -136,15 +137,17 @@ package body Protypo.Code_Trees.Interpreter.Names is
          when Identifier  =>
 
             declare
-               use Api.Symbols.Protypo_Tables;
+               use Api.Symbols;
                use Protypo.Code_Trees.Interpreter.Symbol_Table_References;
 
+               use type Protypo_Tables.Cursor;
+
                Ident    : constant Id := To_Id (Expr.Id_Value);
-               Position : Cursor := Status.Symbol_Table.Find (Ident);
+               Position : Protypo_Tables.Cursor := Status.Symbol_Table.Find (Ident);
             begin
 
                --                 Put_Line ("@@@ searching '" & String(IDent) & "'");
-               if Position = No_Element then
+               if Position = Protypo_Tables.No_Element then
 
                   --                    Put_Line ("@@@ not found '" & ID & "'");
                   --
@@ -157,7 +160,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
                                               Initial_Value => Void_Value);
 
                   --                    Put_Line ("@@@ inserted '" & ID & "' @" & Image (Position));
-                  if Position = No_Element then
+                  if Position = Protypo_Tables.No_Element then
                      raise Program_Error with "something bad";
                   end if;
 

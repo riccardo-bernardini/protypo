@@ -51,7 +51,7 @@ package body Protypo.Match_Data_Wrappers is
 
    function Get (X     : Match_Data_Wrapper;
                  Field : Id)
-                 return Reference'Class is
+                 return engine_Reference'Class is
       use Protypo.Api;
    begin
       if Field = Matched_Field_Name then
@@ -70,7 +70,7 @@ package body Protypo.Match_Data_Wrappers is
    function Get
      (X     : Match_Data_Wrapper;
       Index : Engine_Value_Array)
-      return Reference'Class
+      return engine_Reference'Class
    is
       use type Ada.Containers.Count_Type;
    begin
