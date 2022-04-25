@@ -40,11 +40,11 @@ package Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
 
    function Get (X     : Array_Wrapper;
                  Index : Engine_Value_Array)
-                 return Reference'Class;
+                 return engine_Reference'Class;
 
    function Get (X     : Array_Wrapper;
                  Field : ID)
-                 return Reference'Class;
+                 return engine_Reference'Class;
 
    function Is_Field (X : Array_Wrapper; Field : Id) return Boolean;
 private

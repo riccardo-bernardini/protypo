@@ -1,5 +1,11 @@
 pragma Ada_2012;
 package body Protypo.Api.Constant_References is
+   procedure Write (Ref  : Constant_Reference;
+                    Item : Engine_Values.Engine_Value)
+   is
+   begin
+      raise Program_Error with "Trying writing a constant reference";
+   end Write;
 
    ------------------
    -- To_Reference --

@@ -8,7 +8,7 @@ package Protypo.Code_Trees.Interpreter.Symbol_Table_References is
    use Protypo.Api;
 
    type Symbol_Reference is
-     new Engine_Values.Writable_Reference
+     new Engine_Values.Engine_Reference
    with
      private;
 
@@ -23,13 +23,18 @@ package Protypo.Code_Trees.Interpreter.Symbol_Table_References is
    overriding procedure Write (What  : Symbol_Reference;
                                Value : Engine_Values.Engine_Value);
 
+   overriding function Is_Writable (Item : Symbol_Reference) return Boolean;
+
 private
    type Symbol_Reference is
-     new Engine_Values.Writable_Reference
+     new Engine_Values.Engine_Reference
        with
       record
          Position : Api.Symbols.Protypo_Tables.Cursor;
       end record;
 
+
+   function Is_Writable (Item : Symbol_Reference) return Boolean
+   is (True);
 
   end Protypo.Code_Trees.Interpreter.Symbol_Table_References;

@@ -4,7 +4,7 @@ with Ada.Containers;
 with Protypo.Api.Engine_Values.Range_Iterators;
 with Protypo.Api.Field_Names;
 
-with Protypo.Api.References.Constant_References;
+with Protypo.Api.Constant_References;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_Io; use Ada.Text_Io;
@@ -37,8 +37,8 @@ package body Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
      new Handlers.Iterator_Interface
    with
       record
-         Cursor : Engine_Value_Vectors.Cursor;
-         First  : Engine_Value_Vectors.Cursor;
+         Cursor : Engine_Values.Cursor;
+         First  : Engine_Values.Cursor;
          --  Container : Vector_Access;
       end record;
 
@@ -77,29 +77,29 @@ package body Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
    overriding procedure Next (Iter : in out Array_Iterator)
    is
    begin
-      Engine_Value_Vectors.Next (Iter.Cursor);
+      Iter.Cursor := Engine_Values.Next (Iter.Cursor);
    end Next;
 
 
    overriding function End_Of_Iteration (Iter : Array_Iterator) return Boolean
-   is (not Engine_Value_Vectors.Has_Element (Iter.Cursor));
+   is (not Engine_Values.Has_Element (Iter.Cursor));
 
    overriding function Element (Iter : Array_Iterator) return Handler_Value
-   is (Handlers.Force_Handler (Engine_Value_Vectors.Element (Iter.Cursor)));
+   is (Handlers.Force_Handler (Element (Iter.Cursor)));
 
    ------------------
    -- Make_Wrapper --
    ------------------
 
    function Make_Wrapper
-     (Init : Engine_Value_Vectors.Vector := Engine_Value_Vectors.Empty_Vector)
+     (Init : Engine_Value_Array := Empty_Array)
       return Array_Wrapper_Access
    is
       --  V : constant Vector_Access :=
       --        new Engine_Value_Vectors.Vector'(Engine_Value_Vectors.Empty_Vector);
 
       Result : constant Array_Wrapper_Access :=
-                 new Array_Wrapper'(Vector => Engine_Value_Vectors.Empty_Vector);
+                 new Array_Wrapper'(Vector => Empty_Array);
    begin
       for El of Init loop
          Result.Vector.Append (El);
@@ -109,7 +109,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
    end Make_Wrapper;
 
    function Make_Wrapper
-     (Init : Engine_Value_Vectors.Vector := Engine_Value_Vectors.Empty_Vector)
+     (Init : Engine_Value_Array := Empty_Array)
       return Handlers.Ambivalent_Interface_Access
    is
       Tmp : constant Array_Wrapper_Access := Make_Wrapper (Init);
@@ -127,7 +127,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
       Value     :        Engine_Value)
    is
    begin
-      Container.Vector.Insert (Index, Value);
+      Container.Vector.Replace_Element (Index, Value);
    end Set;
 
    ------------
@@ -147,10 +147,9 @@ package body Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
 
    function Get
      (X     : Array_Wrapper;
-      Index : Engine_Value_Vectors.Vector)
-      return References.Reference'Class
+      Index : Engine_Value_Array)
+      return Engine_Reference'Class
    is
-      use References;
       use type Ada.Containers.Count_Type;
    begin
       if Index.Length /= 1 then

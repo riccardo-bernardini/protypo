@@ -122,6 +122,10 @@ package Protypo.Api.Engine_Values is
    procedure Append (V    : in out Engine_Value_Array;
                      Item : Engine_Value_Array);
 
+   procedure Replace_Element (V      : in out Engine_Value_Array;
+                              Index  : Engine_Index;
+                              Item   : Engine_Value);
+
    function Singleton (Item : Engine_Value)
                        return Engine_Value_Array
      with

@@ -17,8 +17,9 @@ package body Protypo.Code_Trees.Interpreter.String_Interpolation_Handlers is
    -------------
 
    function Process
-     (Fun : String_Interpolator; Parameter : Engine_Value_Vectors.Vector)
-      return Engine_Value_Vectors.Vector
+     (Fun       : String_Interpolator;
+                     Parameter : Engine_Value_Array)
+      return Engine_Value_Array
    is
       use type ada.Containers.Count_Type;
    begin
@@ -37,7 +38,7 @@ package body Protypo.Code_Trees.Interpreter.String_Interpolation_Handlers is
          Interpolated : constant String := Do_Escape (Status => Fun.Status,
                                                       Input  => Input);
 
-         Result : Engine_Value_Vectors.Vector;
+         Result : Engine_Value_Array;
       begin
          Result.Append (Create (Interpolated));
 

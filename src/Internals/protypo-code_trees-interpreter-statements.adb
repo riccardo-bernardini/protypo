@@ -1,4 +1,5 @@
 pragma Ada_2012;
+with Ada.Tags;
 
 with Protypo.Code_Trees.Interpreter.Compiled_Functions;
 with Protypo.Code_Trees.Interpreter.Names;
@@ -53,7 +54,6 @@ package body Protypo.Code_Trees.Interpreter.Statements is
    is
       use Api.Symbols.Protypo_Tables;
       use Api.Symbols;
-      use type Ada.Containers.Count_Type;
 
       Position : constant Protypo_Tables.Cursor :=
                    Status.Symbol_Table.Find (Id (To_String (Name)));
@@ -61,35 +61,24 @@ package body Protypo.Code_Trees.Interpreter.Statements is
 
    begin
       if Position = No_Element then
-         raise Constraint_Error with
-           "Unknown function '" & To_String (Name) & "'";
+         raise Run_Time_Error with
+           "Unknown procedure '" & To_String (Name) & "'";
       end if;
 
       declare
          Proc_Handler : constant Engine_Value :=  Value (Position);
       begin
-         if Proc_Handler.Class /= Function_Handler then
-            raise Constraint_Error;
+         if Proc_Handler.Class /= Procedure_Handler then
+            raise Run_Time_Error
+              with
+                "Trying to call as a procedure a " & Proc_Handler.Class'Image;
          end if;
 
          declare
-            Funct : constant Handlers.Function_Interface_Access :=
-                      Handlers.Get_Function (Proc_Handler);
-
             Parameters : constant Engine_Value_Array :=
                            Expressions.Eval_Vector (Status, Params);
-
-            Call_Ref : constant Names.Name_Reference :=
-                         (Class            => Names.Function_Call,
-                          Function_Handler => Funct,
-                          Parameters       => Parameters);
-
-            Result   : constant Engine_Value_Vectors.Vector :=
-                         Expressions.Call_Function (Call_Ref);
          begin
-            if Result.Length /= 0 then
-               raise Run_Time_Error with "Procedure call returns a value";
-            end if;
+            Call (Proc_Handler, Parameters);
          end;
       end;
    end Do_Procedure_Call;
@@ -223,17 +212,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                   --
                   --                    Put_Line ("@@@");
                   Lhs.Append (Names.Eval_Name (Status, Name));
-                  --                    Put_Line ("@@@ 1");
 
-                  if Lhs.Last_Element.Class /= Names.Variable_Reference then
-                     --
-                     -- Only reference handlers (that allow for both reading
-                     -- and writing) can be on the LHS
-                     --
-                     raise Run_Time_Error
-                       with
-                         "Found " & Lhs.Last_Element.Class'Image & " on LHS";
-                  end if;
                end loop;
                --                 Put_Line ("@@@ xx");
 
@@ -242,7 +221,16 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                begin
 
                   for K in Lhs.First_Index .. Lhs.Last_Index loop
-                     Lhs (K).Variable_Handler.Write (Values (K + Shift));
+                     if Lhs (K).Is_Writable then
+                        Lhs (K).Write (Values (K + Shift));
+
+                     else
+                        raise Run_Time_Error
+                          with
+                            "Found non writable LHS (tag="
+                            & Ada.Tags.Expanded_Name (Lhs.Last_Element'Tag)
+                          & ")";
+                     end if;
                   end loop;
 
                   --                    Put_Line ("@@@ uu");
