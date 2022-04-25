@@ -67,7 +67,7 @@ private package Protypo.Code_Trees.Interpreter.Names is
 
    function Eval_Name (Status : Interpreter_Access;
                        Expr   : not null Node_Access)
-                       return Api.Engine_Values.Reference'Class
+                       return Api.Engine_Values.Engine_Reference'Class
      with
        Pre => Expr.Class in Name;
 

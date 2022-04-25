@@ -83,9 +83,6 @@ package body Protypo.Api.Engine_Values.Handlers is
    function Get_Function (Val : Function_Value) return Function_Interface_Access
    is (Val.Function_Object);
 
-   --  function Get_Reference (Val : Reference_Value) return Reference_Interface_Access
-   --  is (Val.Reference_Object);
-
    function Get_Constant (Val : Constant_Value) return Constant_Interface_Access
    is (Val.Constant_Object);
 

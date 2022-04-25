@@ -10,6 +10,7 @@ with Ada.Exceptions;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_Io; use Ada.Text_Io;
+with Protypo.Code_Trees.Interpreter.Compiled_Procedures;
 
 package body Protypo.Code_Trees.Interpreter.Statements is
    use Protypo.Api.Engine_Values;
@@ -44,7 +45,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
 
    package Lhs_Vectors is
      new Ada.Containers.Indefinite_Vectors (Index_Type   => Positive,
-                                            Element_Type => Writable_Reference'Class);
+                                            Element_Type => Engine_Reference'Class);
 
    procedure Do_Procedure_Call (Status : Interpreter_Access;
                                 Name   : Unbounded_Id;
@@ -75,7 +76,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
             Funct : constant Handlers.Function_Interface_Access :=
                       Handlers.Get_Function (Proc_Handler);
 
-            Parameters : constant Engine_Value_Vectors.Vector :=
+            Parameters : constant Engine_Value_Array :=
                            Expressions.Eval_Vector (Status, Params);
 
             Call_Ref : constant Names.Name_Reference :=
@@ -171,8 +172,8 @@ package body Protypo.Code_Trees.Interpreter.Statements is
 
                   Proc : constant Engine_Value :=
                            Handlers.Create
-                             (new Compiled_Procedure
-                                '(Function_Body => Program.Function_Body,
+                             (new Compiled_Procedures.Compiled_Procedure
+                                '(Procedure_Body => Program.Function_Body,
                                   Parameters    => Program.Parameters,
                                   Status        => Status));
                begin
@@ -184,9 +185,8 @@ package body Protypo.Code_Trees.Interpreter.Statements is
          when Assignment  =>
             declare
                use type Ada.Containers.Count_Type;
-               use type Names.Value_Name_Class;
 
-               Values : Engine_Value_Vectors.Vector;
+               Values : Engine_Value_Array;
                Lhs    : Lhs_Array;
             begin
                Values  := Expressions.Eval_Vector (Status, Program.Rvalues);

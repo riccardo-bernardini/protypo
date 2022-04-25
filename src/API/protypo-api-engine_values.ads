@@ -138,20 +138,27 @@ package Protypo.Api.Engine_Values is
    --  references.  This allows to update (if the reference is
    --  writable) the content of the array, ...
    --
-   type Reference is interface;
+   type Engine_Reference  is interface;
 
-   type Reference_Access is access all Reference;
+   type Engine_Reference_Access is access all Engine_Reference;
 
-   function Read (Ref : Reference) return Engine_Value
+   function Read (Ref : Engine_Reference) return Engine_Value
                   is abstract;
 
-   type Writable_Reference is interface and Reference;
 
-   procedure Write (Ref       : Writable_Reference;
+   procedure Write (Ref       : Engine_Reference;
                     New_Value : Engine_Value)
-   is abstract;
+   is abstract
+     with
+       Pre'Class => Is_Writable (Ref);
+
+   function Is_Writable (Ref : Engine_Reference) return Boolean
+                         is abstract;
 
 
+   type Junk_Interface is interface and Engine_Reference;
+   --  Curious about this interface?  It is here because of a bug
+   --  in the compiler.  Without it, the compiler crashes
 
    function Is_Scalar (X : Engine_Value) return Boolean
    is (X.Class in Scalar_Classes);
@@ -268,14 +275,14 @@ package Protypo.Api.Engine_Values is
 
    function Get_Field (Val   : Engine_Value;
                        Field : Id)
-                       return Reference'Class
+                       return Engine_Reference'Class
      with
        Pre =>
          Val.Class in Record_Like_Handler;
 
    function Get_Indexed (Val   : Engine_Value;
                          Index : Engine_Value_Array)
-                         return Reference'Class
+                         return Engine_Reference'Class
      with
        Pre =>
          Val.Class in Indexed_Handler;

@@ -9,7 +9,7 @@ package Protypo.Api.Engine_Values.Handlers is
 
    function Get (X     : Array_Interface;
                  Index : Engine_Value_Array)
-                 return Reference'Class
+                 return Engine_Reference'Class
                  is abstract;
 
    function Create (Val : Array_Interface_Access) return Engine_Value
@@ -26,7 +26,7 @@ package Protypo.Api.Engine_Values.Handlers is
 
    function Get (X     : Record_Interface;
                  Field : Id)
-                 return Reference'Class
+                 return Engine_Reference'Class
                  is abstract;
 
    Unknown_Field : exception;

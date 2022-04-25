@@ -345,7 +345,7 @@ package body Protypo.Api.Engine_Values is
 
    function Get_Field (Val   : Engine_Value;
                        Field : Id)
-                       return Reference'Class
+                       return Engine_Reference'Class
    is
    begin
       case Val.Class is
@@ -362,7 +362,7 @@ package body Protypo.Api.Engine_Values is
 
    function Get_Indexed (Val   : Engine_Value;
                          Index : Engine_Value_Array)
-                         return Reference'Class
+                         return Engine_Reference'Class
    is
    begin
       case Val.Class is
