@@ -36,11 +36,11 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
    -- To_Array --
    --------------
 
-   function To_Array (Db : Multi_Aggregate) return Engine_Value_Vectors.Vector
+   function To_Array (Db : Multi_Aggregate) return Engine_Value_Array
    is
       use Handlers;
 
-      Result : Engine_Value_Vectors.Vector;
+      Result : Engine_Value_Array;
    begin
       for Element of Db loop
          Result.Append (Create (Record_Interface_Access (Make_Record (Element))));

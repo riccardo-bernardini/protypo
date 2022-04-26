@@ -1,9 +1,8 @@
 with Ada.Containers.Indefinite_Ordered_Maps;
 with Protypo.Api.Engine_Values.Engine_Value_Holders;
-with Protypo.Api.Engine_Values.Engine_Value_Vectors;
 with Protypo.Api.Engine_Values.Handlers;
 
-with Protypo.Api.Engine_Values.Constant_Wrappers;
+with Protypo.Api.Constant_References;
 --
 -- This package provides resources to define a record-like variable
 -- where the field names are specified as values of an enumerative
@@ -40,7 +39,7 @@ package Protypo.Api.Engine_Values.Enumerated_Records is
    -- Array of aggregate type.  It allows to write constant "databases"
    -- of enumerated records
 
-   function To_Array (Db : Multi_Aggregate) return Engine_Value_Vectors.Vector
+   function To_Array (Db : Multi_Aggregate) return Engine_Value_Array
      with Post => (for all Item of To_Array'Result => Item.Class = Record_Handler);
    -- Convert an array of aggregates into an Engine_Value_Vectors.Vector whose
    -- entries are Enumerated_Records.
@@ -74,7 +73,7 @@ package Protypo.Api.Engine_Values.Enumerated_Records is
 
    overriding function Get (Item  : Enumerated_Record;
                             Field : ID)
-                            return Handler_Value;
+                            return Engine_Reference'Class;
 
    overriding function Is_Field (Item : Enumerated_Record; Field : ID)
                                  return Boolean;
@@ -95,9 +94,10 @@ private
    function Apply_Prefix (X : Id) return ID
    is (ID (Prefix & String (X)));
 
-   function Get (Item : Enumerated_Record; Field : Id) return Handler_Value
+   function Get (Item : Enumerated_Record; Field : Id)
+                 return Engine_Reference'Class
    is (if Item.Map.Contains (Apply_Prefix (Field)) then
-          Constant_Wrappers.To_Handler_Value (Item.Map (Apply_Prefix (Field)))
+          Constant_References.To_Reference (Item.Map (Apply_Prefix (Field)))
        else
           raise Handlers.Unknown_Field);
 
