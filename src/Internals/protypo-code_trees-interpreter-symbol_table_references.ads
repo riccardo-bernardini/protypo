@@ -6,6 +6,7 @@ with Protypo.Api.Engine_Values;
 --
 package Protypo.Code_Trees.Interpreter.Symbol_Table_References is
    use Protypo.Api;
+   use type Protypo.Api.Symbols.Protypo_Tables.Cursor;
 
    type Symbol_Reference is
      new Engine_Values.Engine_Reference
@@ -13,8 +14,10 @@ package Protypo.Code_Trees.Interpreter.Symbol_Table_References is
      private;
 
    function Symbol_Table_Reference
-     (Position : Api.Symbols.Protypo_Tables.Cursor)
-      return Symbol_Reference;
+     (Position : Symbols.Protypo_Tables.Cursor)
+      return Symbol_Reference
+     with
+       Pre => Position /= Symbols.Protypo_Tables.No_Element;
    -- Get the reference associated with the specified table cursor
 
    overriding function Read (X : Symbol_Reference)
@@ -28,13 +31,16 @@ package Protypo.Code_Trees.Interpreter.Symbol_Table_References is
 private
    type Symbol_Reference is
      new Engine_Values.Engine_Reference
-       with
+   with
       record
-         Position : Api.Symbols.Protypo_Tables.Cursor;
-      end record;
+         Position : Symbols.Protypo_Tables.Cursor;
+      end record
+     with
+       Type_Invariant =>
+         Symbol_Reference.Position /= Symbols.Protypo_Tables.No_Element;
 
 
    function Is_Writable (Item : Symbol_Reference) return Boolean
    is (True);
 
-  end Protypo.Code_Trees.Interpreter.Symbol_Table_References;
+end Protypo.Code_Trees.Interpreter.Symbol_Table_References;

@@ -1,4 +1,6 @@
 pragma Ada_2012;
+with Protypo.Api.Constant_References;
+
 package body Protypo.Api.Engine_Values.Record_Wrappers is
 
    type Record_Access_Handler is
@@ -14,19 +16,19 @@ package body Protypo.Api.Engine_Values.Record_Wrappers is
       return Record_Maps.Element (X.Pos);
    end Read;
 
-   function To_Handler (Pos : Record_Maps.Cursor) return Engine_Value
-     with Post => To_Handler'Result.Class = Constant_Handler;
-
-   ----------------
-   -- To_Handler --
-   ----------------
-
-   function To_Handler (Pos : Record_Maps.Cursor) return Engine_Value
-   is
-      use Handlers;
-   begin
-      return Create (Constant_Interface_Access'(new Record_Access_Handler'(Pos => Pos)));
-   end To_Handler;
+   --  function To_Handler (Pos : Record_Maps.Cursor) return Engine_Value
+   --    with Post => To_Handler'Result.Class = Constant_Handler;
+   --
+   --  ----------------
+   --  -- To_Handler --
+   --  ----------------
+   --
+   --  function To_Handler (Pos : Record_Maps.Cursor) return Engine_Value
+   --  is
+   --     use Handlers;
+   --  begin
+   --     return Create (Constant_Interface_Access'(new Record_Access_Handler'(Pos => Pos)));
+   --  end To_Handler;
 
    ---------
    -- Get --
@@ -35,7 +37,7 @@ package body Protypo.Api.Engine_Values.Record_Wrappers is
    function Get
      (X     : Record_Wrapper;
       Field : ID)
-      return Handler_Value
+      return Engine_Reference'Class
    is
    begin
       if not X.Map.Contains (Field) then
@@ -46,9 +48,9 @@ package body Protypo.Api.Engine_Values.Record_Wrappers is
          Result : constant Engine_Value := X.Map (Field);
       begin
          if Result.Class in Handler_Classes then
-            return Result;
+            return To_Reference (Result);
          else
-            return To_Handler (X.Map.Find (Field));
+            return Constant_References.To_Reference (Result);
          end if;
       end;
    end Get;

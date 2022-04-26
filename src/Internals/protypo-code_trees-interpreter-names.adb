@@ -19,46 +19,6 @@ package body Protypo.Code_Trees.Interpreter.Names is
                        return Api.Engine_Values.Engine_Reference'Class
    is
 
-      --  ---------
-      --  -- "+" --
-      --  ---------
-      --
-      --  function "+" (X : Handler_Value) return Name_Reference
-      --  is
-      --  begin
-      --     if not (X.Class in Handler_Classes) then
-      --        raise Program_Error with X.Class'Image & "is not handler class";
-      --     end if;
-      --
-      --     case Handler_Classes (X.Class) is
-      --        when Array_Handler =>
-      --           return Name_Reference'(Class            => Array_Reference,
-      --                                  Array_Handler    => Handlers.Get_Array (X));
-      --
-      --        when Record_Handler =>
-      --           return Name_Reference'(Class             => Record_Reference,
-      --                                  Record_Handler    => Handlers.Get_Record (X));
-      --
-      --        when Ambivalent_Handler =>
-      --           return Name_Reference'(Class              => Ambivalent_Reference,
-      --                                  Ambivalent_Handler => Handlers.Get_Ambivalent (X));
-      --
-      --        when Function_Handler =>
-      --           return Name_Reference'(Class            => Function_Reference,
-      --                                  Function_Handler => Handlers.Get_Function (X),
-      --                                  Parameters       => <>);
-      --
-      --        when Reference_Handler =>
-      --           return Name_Reference'(Class            => Variable_Reference,
-      --                                  Variable_Handler => Handlers.Get_Reference (X));
-      --
-      --        when Constant_Handler =>
-      --           return Name_Reference'(Class             => Constant_Reference,
-      --                                  Costant_Handler   => Handlers.Get_Constant (X));
-      --     end case;
-      --  end "+";
-
-
    begin
       --              Put_Line ("#1" & Expr.Class'Image);
       if not (Expr.Class in Name) then
@@ -111,7 +71,10 @@ package body Protypo.Code_Trees.Interpreter.Names is
                Indexes : constant Engine_Value_Array :=
                            Expressions.Eval_Vector (Status, Expr.Indexes);
             begin
-               if not (Head.Class in Indexed_Handler) then
+               if Head.Class in Indexed_Handler then
+                  return Get_Indexed (Head, Indexes);
+
+               else
                   raise Run_Time_Error
                     with
                       "Indexed access to a value of class="
@@ -120,18 +83,6 @@ package body Protypo.Code_Trees.Interpreter.Names is
                     & " in an expression of class="
                     & Expr.Class'Image;
                end if;
-
-               case Indexed_Handler (Head.Class) is
-                  when Array_Handler | Ambivalent_Handler =>
-
-                     return Get_Indexed (Head, Indexes);
-
-                  when Function_Handler =>
-
-                     return Name_Reference'(Class            => Function_Call,
-                                            Function_Handler => Head.Function_Handler,
-                                            Parameters       => Indexes);
-               end case;
             end;
 
          when Identifier  =>
@@ -161,43 +112,21 @@ package body Protypo.Code_Trees.Interpreter.Names is
 
                   --                    Put_Line ("@@@ inserted '" & ID & "' @" & Image (Position));
                   if Position = Protypo_Tables.No_Element then
-                     raise Program_Error with "something bad";
+                     raise Program_Error
+                       with "I added the variable '"
+                       & String (Ident) & "' to the symbol table, "
+                       & "but it seems it is not there. Why?";
                   end if;
-
-                  declare
-                     X : constant Api.Engine_Values.Handlers.Reference_Interface_Access :=
-                           Symbol_Table_Reference (Position);
-
-                     Result : Name_Reference :=
-                                (Class            => Variable_Reference,
-                                 Variable_Handler => X);
-                  begin
-                     --                       Put_Line ("@@@ hh");
-                     Result.Variable_Handler := X;
-                     --                       Put_Line ("@@@ hhh");
-                     return Result;
-                  end;
-               else
-                  --
-                  -- The name is in the symbol table.  If its value is an
-                  -- handler, returnt the handler; otherwise return the
-                  -- reference to the symbol table.  Remember that the
-                  -- result of the evaluation of a name is always a reference.
-                  --
-                  declare
-                     Val : constant Engine_Value := Value (Position);
-                  begin
-                     if Val.Class in Handler_Classes then
-                        return + Val;
-
-                     else
-                        return Name_Reference'
-                          (Class            => Variable_Reference,
-                           Variable_Handler => Symbol_Table_Reference (Position));
-
-                     end if;
-                  end;
                end if;
+
+               --
+               --  Here Position points to an actual entry of the
+               --  symbol table
+               --
+
+               pragma Assert (Position /= Protypo_Tables.No_Element);
+
+               return Symbol_Table_Reference (Position);
             end;
       end case;
    exception

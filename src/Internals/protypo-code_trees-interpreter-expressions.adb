@@ -386,6 +386,22 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
       return Result;
    end Eval_Vector;
 
+
+   function Eval_Single_Expression (Status : Interpreter_Access;
+                                    Expr   : not null Node_Access)
+                                    return Engine_Value
+   is
+      use type Ada.Containers.Count_Type;
+      Tmp    : constant Engine_Value_Array := Eval_Expression (Status, Expr);
+   begin
+      if Tmp.Length /= 1 then
+         raise Run_Time_Error
+           with "Single value expected";
+      end if;
+
+      return Tmp.First_Element;
+   end Eval_Single_Expression;
+
    -----------------
    -- Eval_Scalar --
    -----------------
@@ -394,25 +410,15 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
                          Expr   : not null Node_Access)
                          return Engine_Value
    is
-      use Ada.Containers;
-
-      Tmp    : constant Engine_Value_Array := Eval_Expression (Status, Expr);
+      Result : constant Engine_Value := Eval_Single_Expression (Status, Expr);
    begin
-      if Tmp.Length /= 1 then
-         raise Constraint_Error;
+      if not (Result.Class in Scalar_Classes) then
+         raise Run_Time_Error
+           with
+         Result.Class'Image & " at " & Tokens.Image (Expr.Source_Position);
       end if;
 
-      declare
-         Result : constant Engine_Value := Tmp.First_Element;
-      begin
-         if not (Result.Class in Scalar_Classes) then
-            raise Constraint_Error
-              with
-            Result.Class'Image & " at " & Tokens.Image (Expr.Source_Position);
-         end if;
-
-         return Result;
-      end;
+      return Result;
    end Eval_Scalar;
 
 

@@ -31,6 +31,10 @@ package body Protypo.Code_Trees.Interpreter.Symbol_Table_References is
                                     return Symbol_Reference
    is
    begin
+      if Position = Symbols.Protypo_Tables.No_Element then
+         raise Constraint_Error;
+      end if;
+
       return Symbol_Reference'(Position => Position);
    end Symbol_Table_Reference;
 

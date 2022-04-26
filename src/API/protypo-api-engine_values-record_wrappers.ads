@@ -23,7 +23,9 @@ package Protypo.Api.Engine_Values.Record_Wrappers is
    type Record_Wrapper is new Handlers.Record_Interface with private;
    type Record_Wrapper_Access is access Record_Wrapper;
 
-   overriding function Get (X : Record_Wrapper; Field : ID) return Handler_Value;
+   overriding function Get (X : Record_Wrapper; Field : Id)
+                            return Engine_Reference'Class;
+
    overriding function Is_Field (X : Record_Wrapper; Field : ID) return Boolean;
 
    function Create_Wrapper return Record_Wrapper_Access;

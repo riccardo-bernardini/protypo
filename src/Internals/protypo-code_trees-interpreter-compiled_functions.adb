@@ -12,8 +12,8 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
    -------------
 
    overriding function Process (Fun       : Compiled_Function;
-                                Parameter : Engine_Value_Vectors.Vector)
-                                return Engine_Value_Vectors.Vector
+                                Parameter : Engine_Value_Array)
+                                return Engine_Value_Array
    is
       use type ada.Containers.Count_Type;
    begin
@@ -44,12 +44,12 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
             raise Constraint_Error;
 
          when None =>
-            return engine_value_vectors.Empty_Vector;
+            return Empty_Array;
 
          when Return_Statement =>
 
             declare
-               Result : constant Engine_Value_Vectors.Vector := Fun.Status.Break.Result;
+               Result : constant Engine_Value_Array := Fun.Status.Break.Result;
             begin
                Fun.Status.Break := No_Break;
                return Result;

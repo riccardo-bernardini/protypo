@@ -1,0 +1,92 @@
+
+
+               else
+
+                  --
+                  -- The name is in the symbol table.  If its value is an
+                  -- handler, returnt the handler; otherwise return the
+                  -- reference to the symbol table.  Remember that the
+                  -- result of the evaluation of a name is always a reference.
+                  --
+                  declare
+                     Val : constant Engine_Value := Value (Position);
+                  begin
+                     if Val.Class in Handler_Classes then
+                        return + Val;
+
+                     else
+                        return Name_Reference'
+                          (Class            => Variable_Reference,
+                           Variable_Handler => Symbol_Table_Reference (Position));
+
+                     end if;
+                  end;
+               end if;
+
+---------------------------------
+               case Indexed_Handler (Head.Class) is
+                  when Array_Handler | Ambivalent_Handler =>
+
+
+                  when Function_Handler =>
+
+                     return Name_Reference'(Class            => Function_Call,
+                                            Function_Handler => Head.Function_Handler,
+                                            Parameters       => Indexes);
+               end case;
+
+
+                  --
+                  --  declare
+                  --     Result : constant Symbol_Table_References.Symbol_Reference :=
+                  --           Symbol_Table_Reference (Position);
+                  --
+                  --     Result : Name_Reference :=
+                  --                (Class            => Variable_Reference,
+                  --                 Variable_Handler => X);
+                  --  begin
+                  --     --                       Put_Line ("@@@ hh");
+                  --     Result.Variable_Handler := X;
+                  --     --                       Put_Line ("@@@ hhh");
+                  --     return Result;
+                  --  end;
+
+
+     --  ---------
+      --  -- "+" --
+      --  ---------
+      --
+      --  function "+" (X : Handler_Value) return Name_Reference
+      --  is
+      --  begin
+      --     if not (X.Class in Handler_Classes) then
+      --        raise Program_Error with X.Class'Image & "is not handler class";
+      --     end if;
+      --
+      --     case Handler_Classes (X.Class) is
+      --        when Array_Handler =>
+      --           return Name_Reference'(Class            => Array_Reference,
+      --                                  Array_Handler    => Handlers.Get_Array (X));
+      --
+      --        when Record_Handler =>
+      --           return Name_Reference'(Class             => Record_Reference,
+      --                                  Record_Handler    => Handlers.Get_Record (X));
+      --
+      --        when Ambivalent_Handler =>
+      --           return Name_Reference'(Class              => Ambivalent_Reference,
+      --                                  Ambivalent_Handler => Handlers.Get_Ambivalent (X));
+      --
+      --        when Function_Handler =>
+      --           return Name_Reference'(Class            => Function_Reference,
+      --                                  Function_Handler => Handlers.Get_Function (X),
+      --                                  Parameters       => <>);
+      --
+      --        when Reference_Handler =>
+      --           return Name_Reference'(Class            => Variable_Reference,
+      --                                  Variable_Handler => Handlers.Get_Reference (X));
+      --
+      --        when Constant_Handler =>
+      --           return Name_Reference'(Class             => Constant_Reference,
+      --                                  Costant_Handler   => Handlers.Get_Constant (X));
+      --     end case;
+      --  end "+";

@@ -19,9 +19,15 @@ package Protypo.Code_Trees.Interpreter.Expressions is
        Pre => Expr.Class in Code_Trees.Expression,
        Post => Eval_Expression'Result /= Empty_Array;
 
+   function Eval_Single_Expression (Status : Interpreter_Access;
+                                    Expr   : not null Node_Access)
+                                    return Engine_Value;
+
    function Eval_Scalar (Status : Interpreter_Access;
                          Expr   : not null Node_Access)
-                         return Engine_Value;
+                         return Engine_Value
+     with
+       Post => Eval_Scalar'Result.Class in Scalar_Classes;
 
 
    function Eval_Vector (Status : Interpreter_Access;

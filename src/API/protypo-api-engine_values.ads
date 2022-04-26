@@ -299,6 +299,11 @@ package Protypo.Api.Engine_Values is
    procedure Call (Item       : Procedure_Value;
                    Parameters : Engine_Value_Array);
 
+   function To_Reference (Item : Engine_Value)
+                          return Engine_Reference'Class
+     with
+       Pre => Item.Class in Handler_Classes;
+
 private
    --     type Engine_Value_Vector is range 1 .. 2;
 
