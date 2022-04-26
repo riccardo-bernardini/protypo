@@ -50,13 +50,13 @@ package Protypo.Api.Engine_Values.Array_Wrappers is
                      Value     : Element_Type);
 
 
-   function Get (X     : Array_Wrapper;
-                 Index : Engine_Value_Array)
-                 return Reference'Class;
+   overriding function Get (X     : Array_Wrapper;
+                            Index : Engine_Value_Array)
+                            return Engine_Reference'Class;
 
-   function Get (X     : Array_Wrapper;
-                 Field : ID)
-                 return Reference'Class;
+   overriding function Get (X     : Array_Wrapper;
+                            Field : Id)
+                            return Engine_Reference'Class;
 
    function Is_Field (X : Array_Wrapper; Field : Id) return Boolean;
 private
@@ -69,12 +69,12 @@ private
 
    function Get (X     : Array_Wrapper;
                  Index : Engine_Value_Array)
-                 return Reference'class
+                 return Engine_Reference'Class
    is (X.A.Get (Index));
 
    function Get (X     : Array_Wrapper;
-                 Field : ID)
-                 return Reference'Class
+                 Field : Id)
+                 return Engine_Reference'Class
    is (X.A.Get (Field));
 
    function Is_Field (X : Array_Wrapper; Field : Id) return Boolean
