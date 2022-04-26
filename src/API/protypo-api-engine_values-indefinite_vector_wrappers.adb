@@ -10,7 +10,7 @@ package body Protypo.Api.Engine_Values.Indefinite_Vector_Wrappers is
      (Init : Element_Vectors.Vector)
       return Handlers.Ambivalent_Interface_Access
    is
-      Val : Engine_Value_Vectors.Vector;
+      Val : Engine_Value_Array;
    begin
       for Element of Init loop
          Val.Append (Create (Element));

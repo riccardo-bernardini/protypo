@@ -1,7 +1,6 @@
 with Ada.Containers.Indefinite_Vectors;
 
 with Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;
-with Protypo.Api.Engine_Values.Engine_Value_Vectors;
 with Protypo.Api.Engine_Values.Handlers;
 
 --
@@ -58,13 +57,13 @@ package Protypo.Api.Engine_Values.Indefinite_Vector_Wrappers is
                      Value     : Element_Type);
 
 
-   function Get (X     : Array_Wrapper;
-                 Index : Engine_Value_Vectors.Vector)
-                 return Handler_Value;
+   overriding function Get (X     : Array_Wrapper;
+                            Index : Engine_Value_Array)
+                            return Engine_Reference'Class;
 
-   function Get (X     : Array_Wrapper;
-                 Field : Id)
-                 return Handler_Value;
+   overriding function Get (X     : Array_Wrapper;
+                            Field : Id)
+                            return Engine_Reference'Class;
 
    function Is_Field (X : Array_Wrapper; Field : Id) return Boolean;
 private
@@ -76,13 +75,13 @@ private
       end record;
 
    function Get (X     : Array_Wrapper;
-                 Index : Engine_Value_Vectors.Vector)
-                 return Handler_Value
+                 Index : Engine_Value_Array)
+                 return Engine_Reference'Class
    is (X.A.Get (Index));
 
    function Get (X     : Array_Wrapper;
                  Field : Id)
-                 return Handler_Value
+                 return Engine_Reference'Class
    is (X.A.Get (Field));
 
    function Is_Field (X : Array_Wrapper; Field : Id) return Boolean
