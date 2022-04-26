@@ -177,8 +177,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
 
    function Get (X     : Array_Wrapper;
                  Field : Id)
-                 return References.Reference'Class is
-      use Protypo.Api.References.Constant_References;
+                 return Engine_Reference'Class is
    begin
       case To_Field (Field) is
          when Field_First =>

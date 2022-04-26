@@ -1,6 +1,5 @@
 with Ada.Finalization;
 with Protypo.Api.Engine_Values.Handlers;
-with Protypo.Api.Engine_Values.Engine_Value_Vectors;
 --
 -- ## What is this?
 --
@@ -20,7 +19,7 @@ with Protypo.Api.Engine_Values.Engine_Value_Vectors;
 --
 
 package Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
-   type Vector_Reference (Ref : access Engine_Value_Vectors.Vector) is limited private
+   type Vector_Reference (Ref : access Engine_Value_Array) is limited private
      with Implicit_Dereference => Ref;
 
    type Vector_Handler is
@@ -32,12 +31,12 @@ package Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    type Vector_Handler_Access is access Vector_Handler;
 
    overriding function Get (X     : Vector_Handler;
-                            Index : Engine_Value_Vectors.Vector)
-                               return Handler_Value;
+                            Index : Engine_Value_Array)
+                               return Engine_Reference'Class;
 
    overriding function Get (X     : Vector_Handler;
-                            Field : ID)
-                            return Handler_Value;
+                            Field : Id)
+                            return Engine_Reference'Class;
 
    overriding function Is_Field (X : Vector_Handler; Field : Id)
                                  return Boolean;
@@ -46,8 +45,8 @@ package Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
 
 
 private
-   type Vector_Reference (Ref : access Engine_Value_Vectors.Vector) is limited null record;
-   type Vector_Access is access Engine_Value_Vectors.Vector;
+   type Vector_Reference (Ref : access Engine_Value_Array) is limited null record;
+   type Vector_Access is access Engine_Value_Array;
 
    type Vector_Handler is
      new Ada.Finalization.Controlled

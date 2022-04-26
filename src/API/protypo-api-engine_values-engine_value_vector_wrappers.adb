@@ -2,6 +2,7 @@ pragma Ada_2012;
 with Ada.Containers;
 with Protypo.Api.Engine_Values.Constant_Wrappers;
 with Protypo.Api.Engine_Values.Range_Iterators;
+with Protypo.Api.Constant_References;
 
 with Protypo.Api.Field_Names;
 
@@ -31,8 +32,8 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
      new Handlers.Iterator_Interface
    with
       record
-         Cursor : Engine_Value_Vectors.Cursor;
-         First  : Engine_Value_Vectors.Cursor;
+         Cursor : Engine_Values.Cursor;
+         First  : Engine_Values.Cursor;
       end record;
 
 
@@ -71,22 +72,23 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    overriding procedure Next (Iter : in out Array_Iterator)
    is
    begin
-      Engine_Value_Vectors.Next (Iter.Cursor);
+      Iter.Cursor := Next (Iter.Cursor);
    end Next;
 
 
    overriding function End_Of_Iteration (Iter : Array_Iterator) return Boolean
-   is (not Engine_Value_Vectors.Has_Element (Iter.Cursor));
+   is (not Has_Element (Iter.Cursor));
 
    overriding function Element (Iter : Array_Iterator) return Handler_Value
-   is (Handlers.Force_Handler (Engine_Value_Vectors.Element (Iter.Cursor)));
+   is (Handlers.Force_Handler (Element (Iter.Cursor)));
 
    ---------
    -- Get --
    ---------
 
    function Get
-     (X : Vector_Handler; Index : Engine_Value_Vectors.Vector) return Handler_Value
+     (X : Vector_Handler; Index : Engine_Value_Array)
+      return Engine_Reference'Class
    is
       use type Ada.Containers.Count_Type;
    begin
@@ -105,7 +107,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
             raise Handlers.Out_Of_Range with "Out of bounds index";
          end if;
 
-         return Constant_Wrappers.To_Handler_Value (X.Vect.all (Idx));
+         return Constant_References.To_Reference (X.Vect.all (Idx));
       end;
    end Get;
 
@@ -113,18 +115,20 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    -- Get --
    ---------
 
-   function Get (X : Vector_Handler; Field : Id) return Handler_Value is
-      use Constant_Wrappers;
+   function Get (X : Vector_Handler; Field : Id)
+                 return Engine_Reference'Class
+   is
+      use Constant_References;
    begin
       case To_Field (Field) is
          when Field_First =>
-            return To_Handler_Value (Integer (X.Vect.First_Index));
+            return To_Reference (Create (Integer (X.Vect.First_Index)));
 
          when Field_Last =>
-            return To_Handler_Value (Integer (X.Vect.Last_Index));
+            return To_Reference (Create (Integer (X.Vect.Last_Index)));
 
          when Field_Length =>
-            return To_Handler_Value (Integer (X.Vect.Length));
+            return To_Reference (Create (Integer (X.Vect.Length)));
 
          when Field_Iterate =>
             return To_Handler_Value
