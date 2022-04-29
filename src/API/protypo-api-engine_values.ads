@@ -53,116 +53,10 @@ package Protypo.Api.Engine_Values is
      with Dynamic_Predicate =>
        (Handler_Value.Class in Array_Handler .. Constant_Handler);
 
-   --
-   --  Arrays of engine values. Used in many places like indexing of
-   --  arrays or function calls.
-   --
 
-   type Engine_Value_Array is tagged private
-     with
-       Default_Iterator  => Iterate,
-       Constant_Indexing => Element_At,
-       Iterator_Element => Engine_Value;
-
-   Empty_Array : constant Engine_Value_Array;
-
-   subtype Engine_Index is Positive;
-
-   subtype Extended_Index is Engine_Index'Base
-   range Engine_Index'First - 1 ..
-     Engine_Index'Min (Engine_Index'Base'Last - 1, Engine_Index'Last) + 1;
-
-   No_Index : constant Extended_Index := Extended_Index'First;
-
-   type Cursor is private;
-
-   function Has_Element (C : Cursor) return Boolean;
-
-   function Element (C : Cursor) return Engine_Value;
-
-   package Vector_Iterator_Interfaces is new
-     Ada.Iterator_Interfaces (Cursor, Has_Element);
-
-   function First (Container : Engine_Value_Array) return Cursor;
-
-   function First_Element (Container : Engine_Value_Array) return Engine_Value;
-
-   function Next (Pos : Cursor) return Cursor;
-
-   function Iterate (Container : in Engine_Value_Array)
-                     return Vector_Iterator_Interfaces.Forward_Iterator'Class;
-
-   function Is_Empty (Container : Engine_Value_Array) return Boolean;
-
-   function Element_At  (V     : Engine_Value_Array;
-                         Index : Engine_Index)
-                         return Engine_Value
-     with
-       Pre => Index >= V.First_Index and Index <= V.Last_Index;
-
-   function Element_At  (V        : Engine_Value_Array;
-                         Position : Cursor)
-                         return Engine_Value
-     with
-       Pre => Has_Element (Position);
-
-   function First_Index (V : Engine_Value_Array) return Engine_Index;
-
-   function Last_Index (V : Engine_Value_Array) return Extended_Index;
-
-   function Length (V : Engine_Value_Array) return Ada.Containers.Count_Type
-   is (if V.Last_Index < V.First_Index then
-          0
-       else
-          Ada.Containers.Count_Type (V.Last_Index - V.First_Index + 1));
-
-   procedure Append (V    : in out Engine_Value_Array;
-                     Item : Engine_Value);
-
-   procedure Append (V    : in out Engine_Value_Array;
-                     Item : Engine_Value_Array);
-
-   procedure Replace_Element (V      : in out Engine_Value_Array;
-                              Index  : Engine_Index;
-                              Item   : Engine_Value);
-
-   function Singleton (Item : Engine_Value)
-                       return Engine_Value_Array
-     with
-       Post =>
-         Singleton'Result.First_Index = Engine_Index'First
-         and Singleton'Result.Last_Index = Engine_Index'First;
-
-   --
-   --  A reference is a kind of "pointer" to an Engine_Value.
-   --  It can be used to get the value "pointed to" or to update it,
-   --  if the reference is a Writable_Reference.
-   --
-   --  Array, records and ambivalent interfaces always return
-   --  references.  This allows to update (if the reference is
-   --  writable) the content of the array, ...
-   --
-   type Engine_Reference  is interface;
-
-   type Engine_Reference_Access is access all Engine_Reference;
-
-   function Read (Ref : Engine_Reference) return Engine_Value
-                  is abstract;
-
-
-   procedure Write (Ref       : Engine_Reference;
-                    New_Value : Engine_Value)
-   is abstract
-     with
-       Pre'Class => Is_Writable (Ref);
-
-   function Is_Writable (Ref : Engine_Reference) return Boolean
-                         is abstract;
-
-
-   type Junk_Interface is interface and Engine_Reference;
-   --  Curious about this interface?  It is here because of a bug
-   --  in the compiler.  Without it, the compiler crashes
+   -- =========================== --
+   -- Operations on Engine_Values --
+   -- =========================== --
 
    function Is_Scalar (X : Engine_Value) return Boolean
    is (X.Class in Scalar_Classes);
@@ -248,6 +142,123 @@ package Protypo.Api.Engine_Values is
 
 
 
+   --
+   --  Arrays of engine values. Used in many places like indexing of
+   --  arrays or function calls.
+   --
+
+   type Engine_Value_Array is tagged private
+     with
+       Default_Iterator  => Iterate,
+       Constant_Indexing => Element_At,
+       Iterator_Element => Engine_Value;
+
+   Empty_Array : constant Engine_Value_Array;
+
+   subtype Engine_Index is Positive;
+
+   subtype Extended_Index is Engine_Index'Base
+   range Engine_Index'First - 1 ..
+     Engine_Index'Min (Engine_Index'Base'Last - 1, Engine_Index'Last) + 1;
+
+   No_Index : constant Extended_Index := Extended_Index'First;
+
+   type Cursor is private;
+
+   function Has_Element (C : Cursor) return Boolean;
+
+   function Element (C : Cursor) return Engine_Value;
+
+   package Vector_Iterator_Interfaces is new
+     Ada.Iterator_Interfaces (Cursor, Has_Element);
+
+   function First (Container : Engine_Value_Array) return Cursor;
+
+   function First_Element (Container : Engine_Value_Array) return Engine_Value;
+
+   function Next (Pos : Cursor) return Cursor;
+
+   function Iterate (Container : in Engine_Value_Array)
+                     return Vector_Iterator_Interfaces.Forward_Iterator'Class;
+
+   function Is_Empty (Container : Engine_Value_Array) return Boolean;
+
+   function Element_At  (V     : Engine_Value_Array;
+                         Index : Engine_Index)
+                         return Engine_Value
+     with
+       Pre => Index >= V.First_Index and Index <= V.Last_Index;
+
+   function Element_At  (V        : Engine_Value_Array;
+                         Position : Cursor)
+                         return Engine_Value
+     with
+       Pre => Has_Element (Position);
+
+   function First_Index (V : Engine_Value_Array) return Engine_Index;
+
+   function Last_Index (V : Engine_Value_Array) return Extended_Index;
+
+   function Length (V : Engine_Value_Array) return Ada.Containers.Count_Type
+   is (if V.Last_Index < V.First_Index then
+          0
+       else
+          Ada.Containers.Count_Type (V.Last_Index - V.First_Index + 1));
+
+   procedure Append (V    : in out Engine_Value_Array;
+                     Item : Engine_Value);
+
+   procedure Append (V    : in out Engine_Value_Array;
+                     Item : Engine_Value_Array);
+
+   procedure Replace_Element (V      : in out Engine_Value_Array;
+                              Index  : Engine_Index;
+                              Item   : Engine_Value);
+
+   function Singleton (Item : Engine_Value)
+                       return Engine_Value_Array
+     with
+       Post =>
+         Singleton'Result.First_Index = Engine_Index'First
+         and Singleton'Result.Last_Index = Engine_Index'First;
+
+   -- ========== --
+   -- References --
+   -- ========== --
+
+   --
+   --  A reference is a kind of "pointer" to an Engine_Value.
+   --  It can be used to get the value "pointed to" or to update it,
+   --  if the reference is a Writable_Reference.
+   --
+   --  Array, records and ambivalent interfaces always return
+   --  references.  This allows to update (if the reference is
+   --  writable) the content of the array, ...
+   --
+   type Engine_Reference  is interface;
+
+   type Engine_Reference_Access is access all Engine_Reference;
+
+   function Read (Ref : Engine_Reference) return Engine_Value
+                  is abstract;
+
+
+   procedure Write (Ref       : Engine_Reference;
+                    New_Value : Engine_Value)
+   is abstract
+     with
+       Pre'Class => Is_Writable (Ref);
+
+   function Is_Writable (Ref : Engine_Reference) return Boolean
+                         is abstract;
+
+
+   type Junk_Interface is interface and Engine_Reference;
+   --  Curious about this interface?  It is here because of a bug
+   --  in the compiler.  Without it, the compiler crashes
+
+
+
    function Create (Val : Integer) return Integer_Value;
 
    function Create (Val : Float) return Real_Value;
@@ -304,9 +315,9 @@ package Protypo.Api.Engine_Values is
      with
        Pre => Item.Class in Handler_Classes;
 
-private
-   --     type Engine_Value_Vector is range 1 .. 2;
 
+
+private
    type Engine_Value (Class : Engine_Value_Class) is
       record
          case Class is

@@ -1,6 +1,6 @@
 pragma Ada_2012;
 with Ada.Containers;
-with Protypo.Api.Engine_Values.Constant_Wrappers;
+--  with Protypo.Api.Engine_Values.Constant_Wrappers;
 with Protypo.Api.Engine_Values.Range_Iterators;
 with Protypo.Api.Constant_References;
 
@@ -131,17 +131,16 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
             return To_Reference (Create (Integer (X.Vect.Length)));
 
          when Field_Iterate =>
-            return To_Handler_Value
-              (Handlers.Create
-                 (Handlers.Iterator_Interface_Access'
-                      (new Array_Iterator'(Cursor    => X.Vect.First,
-                                           First     => X.Vect.First))));
+            return To_Reference (Handlers.Create
+                                 (Handlers.Iterator_Interface_Access'
+                                      (new Array_Iterator'(Cursor  => X.Vect.First,
+                                                           First   => X.Vect.First))));
 
          when Field_Range =>
-            return To_Handler_Value
+            return To_Reference
               (Handlers.Create
-                 (Range_Iterators.Create (Start     => Integer (X.Vect.First_Index),
-                                          Stop      => Integer (X.Vect.Last_Index))));
+                 (Range_Iterators.Create (Start => Integer (X.Vect.First_Index),
+                                          Stop  => Integer (X.Vect.Last_Index))));
       end case;
    end Get;
 
@@ -160,7 +159,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    overriding procedure Initialize (Object : in out Vector_Handler)
    is
    begin
-      Object.Vect := new Engine_Value_Vectors.Vector'(Engine_Value_Vectors.Empty_Vector);
+      Object.Vect := new Engine_Value_Array'(Empty_Array);
    end Initialize;
 
 end Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers;

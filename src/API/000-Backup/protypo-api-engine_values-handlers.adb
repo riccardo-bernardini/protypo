@@ -3,7 +3,7 @@ with Protypo.Api.Engine_Values.Constant_Wrappers;
 
 package body Protypo.Api.Engine_Values.Handlers is
 
-   function Create (Val : Array_Interface_Access) return Array_Value
+   function Create (Val : Array_Interface_Access) return Engine_Value
    is (Engine_Value'(Class            => Array_Handler,
                      Array_Object     => Val));
 

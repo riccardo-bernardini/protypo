@@ -1,25 +1,7 @@
 
 with Protypo.Api.Engine_Values.Parameter_Lists;
-use Protypo.Api.Engine_Values.Parameter_Lists;
+--  use Protypo.Api.Engine_Values.Parameter_Lists;
 
---
---  This package includes the definition of the various handlers
---  that can enter in an Engine_Value:
---
---  * Array_Interface: it returns a reference when given an array
---    of Indexes
---
---  * Record_Interface: it can be queried with a field name and
---    it returns a reference
---
---  * Ambivalent_Interface: a record and an array in the same object
---
---  * Constant_Interface (is this really needed?)
---
---  * Iterator_Interface: used in loops
---
---  * Function and Procedure interfaces
---
 
 package Protypo.Api.Engine_Values.Handlers is
    type Array_Interface is interface;
@@ -30,7 +12,9 @@ package Protypo.Api.Engine_Values.Handlers is
                  return Engine_Reference'Class
                  is abstract;
 
-   function Create (Val : Array_Interface_Access) return Array_Value;
+   function Create (Val : Array_Interface_Access) return Engine_Value
+     with Post => Create'Result.Class = Array_Handler;
+
 
    Out_Of_Range : exception;
 
@@ -61,7 +45,7 @@ package Protypo.Api.Engine_Values.Handlers is
      with Post => Create'Result.Class = Ambivalent_Handler;
 
 
-   type Constant_Interface is limited interface;
+   type Constant_Interface is interface;
    type Constant_Interface_Access  is  access all Constant_Interface'Class;
 
    function Read (X : Constant_Interface) return Engine_Value is abstract;
@@ -70,6 +54,15 @@ package Protypo.Api.Engine_Values.Handlers is
    function Create (Val : Constant_Interface_Access) return Engine_Value
      with Post => Create'Result.Class = Constant_Handler;
 
+   --  type Reference_Interface is interface and Constant_Interface;
+   --  type Reference_Interface_Access is access all Reference_Interface'Class;
+   --
+   --  procedure Write (What  : Reference_Interface;
+   --                   Value : Engine_Value)
+   --  is abstract;
+   --
+   --  function Create (Val : Reference_Interface_Access) return Engine_Value
+   --    with Post => Create'Result.Class = Reference_Handler;
 
 
    type Iterator_Interface is limited interface;

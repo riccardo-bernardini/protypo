@@ -53,6 +53,11 @@ private
      and Handlers.Ambivalent_Interface
    with
       record
+         --
+         --  Why using a Vector_Access here instead of a simple
+         --  Engine_Value_Array?  Because we need an address in
+         --  order to return the reference
+         --
          Vect : Vector_Access;
       end record;
 

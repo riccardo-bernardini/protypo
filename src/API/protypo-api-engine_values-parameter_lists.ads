@@ -34,14 +34,14 @@ package Protypo.Api.Engine_Values.Parameter_Lists is
    -- Return True if Signature is a valid parameter signature that can be returned
    -- by Signature method.  A valid signature satisfies the following "regexp"
    --
-   --   Void_Value* Non_Void_Value* Varargin_Value?
+   --   Mandatory* Optional* Varargin_Value?
    --
    -- that is,
-   -- * there is a "head" (potentially empty) of void values that
-   -- mark the parameters that are mandatory and have no default;
+   -- * there is a "head" (potentially empty) of mandatory
+   -- parameters that have no default;
    --
-   -- * a (maybe empty) sequence of non void values follows, these are
-   -- default values of optional parameters
+   -- * a (maybe empty) sequence of optional parameters with
+   -- default values
    --
    -- * the last entry can be Varargin_Value, showing that the
    -- last parameter is an array (maybe empty) that collects all the
