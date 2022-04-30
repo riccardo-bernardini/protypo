@@ -318,51 +318,57 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
             pragma Assert (Expr.Indexed_Var.Class = Identifier);
 
             declare
+               use Symbols;
                use Symbol_Tables;
                use type Protypo_Tables.Cursor;
                use type Symbols.Symbol_Value_Class;
 
-               function Extract_Value (Item : Protypo.Symbols.Symbol_Value)
-                                       return Engine_Value
-               is (if Item.Class = Symbols.Engine_Value_Class
-                   then
-                      Symbols.Get_Value (Item)
-                   else
-                      raise Constraint_Error);
+               --  function Extract_Value (Item : Protypo.Symbols.Symbol_Value)
+               --                          return Engine_Value
+               --  is (if Item.Class = Symbols.Engine_Value_Class
+               --      then
+               --         Symbols.Get_Value (Item)
+               --      else
+               --         raise Constraint_Error);
 
                Var_Name : constant Id := To_Id (Expr.Indexed_Var.Id_Value);
 
                Pos : constant Protypo_Tables.Cursor :=
                        Status.Symbol_Table.Find (Var_Name);
 
-               Value : constant Engine_Value :=
-                         (if Pos = Protypo_Tables.No_Element
-                          then
-                             Void_Value
-                          else
-                             Extract_Value (Protypo_Tables.Value (Pos)));
-
                Parameters : constant Engine_Value_Array :=
                               Eval_Vector (Status, Expr.Indexes);
-            begin
-               if Pos = Protypo_Tables.No_Element then
-                  raise Run_Time_Error
-                    with "Unknown identifier " & String (Var_Name);
-               end if;
 
+               Value      : constant Symbols.Symbol_Value :=
+                              (if Pos = Protypo_Tables.No_Element
+                               then
+                                  raise Run_Time_Error
+                                    with "Unknown identifier " & String (Var_Name)
+                               else
+                                  Protypo_Tables.Value (Pos));
+
+            begin
                case Value.Class is
-                  when Array_Handler | Ambivalent_Handler =>
+                  when Symbols.Engine_Value_Class =>
                      declare
-                        Ref : constant Engine_Reference'Class :=
-                                Get_Indexed (Value, Parameters);
+                        V : constant Engine_Value :=
+                              Symbols.Get_Value (Value);
                      begin
-                        return Singleton (Ref.Read);
+                        if not (V.Class in Indexed_Handler) then
+                           raise Run_Time_Error;
+
+                        else
+                           return Singleton (Get_Indexed (V, Parameters).Read);
+                        end if;
                      end;
 
-                  when Function_Handler =>
+                  when Function_Class =>
                      declare
+                        Funct : constant Handlers.Function_Interface'Class :=
+                                  Symbols.Get_Function (Value);
+
                         Result : constant Engine_Value_Array :=
-                                   Call_Function (Value, Parameters);
+                                   Funct.Process (Parameters);
                      begin
                         if Result.Is_Empty then
                            raise Run_Time_Error
@@ -371,9 +377,10 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
                            return Result;
                         end if;
                      end;
-                  when others =>
+
+                  when Procedure_Class =>
                      raise Run_Time_Error
-                       with "Array access to wrong value type " & Value.Class'Image;
+                       with "Procedure call in a function context ";
                end case;
             end;
       end case;

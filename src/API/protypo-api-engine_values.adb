@@ -80,26 +80,14 @@ package body Protypo.Api.Engine_Values is
    end Apply_Default_And_Varargin;
 
 
-   -------------------
-   -- Call_Function --
-   -------------------
-
-   function Call_Function (Funct      : Handlers.Function_Interface'Class;
-                           Parameters : Engine_Value_Array)
-                           return Engine_Value_Array
-   is
-   begin
-      return Funct.Process
-        (Apply_Default_And_Varargin (Funct.Signature, Parameters));
-   end Call_Function;
-
-   function Call_Function (Item       : Function_Value;
-                           Parameters : Engine_Value_Array)
-                           return Engine_Value_Array
-   is
-   begin
-      return Call_Function (Item.Function_Object.all, Parameters);
-   end Call_Function;
+   --
+   --  function Call_Function (Item       : Function_Value;
+   --                          Parameters : Engine_Value_Array)
+   --                          return Engine_Value_Array
+   --  is
+   --  begin
+   --     return Call_Function (Item.Function_Object.all, Parameters);
+   --  end Call_Function;
 
    procedure Call (Item       : Procedure_Value;
                    Parameters : Engine_Value_Array)

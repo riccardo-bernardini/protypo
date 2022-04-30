@@ -2,6 +2,90 @@ pragma Ada_2012;
 with Protypo.Api.Engine_Values.Constant_Wrappers;
 
 package body Protypo.Api.Engine_Values.Handlers is
+   function Apply_Default_And_Varargin
+     (Specs      : Parameter_Lists.Parameter_Signature;
+      Parameters : Engine_Value_Array)
+      return Engine_Value_Array
+     with Pre =>
+       Parameter_Lists.Is_Valid_Parameter_Signature (Specs);
+
+   function Apply_Default_And_Varargin
+     (Specs      : Parameter_Lists.Parameter_Signature;
+      Parameters : Engine_Value_Array)
+      return Engine_Value_Array
+   is
+      use type Parameter_Lists.Parameter_Spec;
+
+      function Apply_Default (Specs      : Parameter_Lists.Parameter_Signature;
+                              Parameters : Engine_Value_Array)
+                              return Engine_Value_Array
+        with Pre =>
+          Parameter_Lists.Is_Valid_Parameter_Signature (Specs)
+          and (Specs'Length = 0
+               or else Specs (Specs'Last) /= Parameter_Lists.Varargin);
+
+      function Apply_Default (Specs      : Parameter_Lists.Parameter_Signature;
+                              Parameters : Engine_Value_Array)
+                              return Engine_Value_Array
+      is
+         Result : Engine_Value_Array;
+      begin
+         if not Parameter_Lists.Is_Valid_Parameter_Signature (Specs) then
+            raise Program_Error with "Bad parameter signature";
+         end if;
+
+         if Natural (Parameters.Length) > Specs'Length then
+            raise Constraint_Error;
+         end if;
+
+         declare
+            Pos : Cursor := Parameters.First;
+         begin
+            for Spec of Specs loop
+               if Has_Element (Pos) then
+                  Result.Append (Element (Pos));
+
+               elsif Parameter_Lists.Is_Optional (Spec) then
+                  Result.Append (Parameter_Lists.Default_Value (Spec));
+
+               else
+                  raise Constraint_Error;
+               end if;
+
+               Pos := Next (Pos);
+            end loop;
+         end;
+
+         return Result;
+      end Apply_Default;
+
+   begin
+      if not Parameter_Lists.Is_Valid_Parameter_Signature (Specs) then
+         raise Program_Error with "Bad parameter signature";
+      end if;
+
+      if Specs'Length = 0 or else Specs (Specs'Last) /= Parameter_Lists.Varargin then
+         return Apply_Default (Specs, Parameters);
+
+      else
+         pragma Compile_Time_Warning (False, "Varargin not implemented");
+         raise Program_Error with "Varargin not implemented";
+      end if;
+   end Apply_Default_And_Varargin;
+
+   -------------------
+   -- Call_Function --
+   -------------------
+
+   function Call_Function (Funct      : Handlers.Function_Interface'Class;
+                           Parameters : Engine_Value_Array)
+                           return Engine_Value_Array
+   is
+   begin
+      return Funct.Process
+        (Apply_Default_And_Varargin (Funct.Signature, Parameters));
+   end Call_Function;
+
 
    function Create (Val : Array_Interface_Access) return Array_Value
    is (Engine_Value'(Class            => Array_Handler,
@@ -20,13 +104,13 @@ package body Protypo.Api.Engine_Values.Handlers is
    is (Engine_Value'(Class            => Iterator,
                      Iteration_Object => Val));
 
-   function Create (Val : Function_Interface_Access) return Engine_Value
-   is (Engine_Value'(Class            => Function_Handler,
-                     Function_Object  => Val));
+   --  function Create (Val : Function_Interface_Access) return Engine_Value
+   --  is (Engine_Value'(Class            => Function_Handler,
+   --                    Function_Object  => Val));
 
    function Create (Val          : Callback_Function_Access;
                     N_Parameters : Natural := 1)
-                    return Engine_Value
+                    return Callback_Function_Handler
    is (Create (Val            => Val,
                Min_Parameters => N_Parameters,
                Max_Parameters => N_Parameters,
@@ -35,20 +119,20 @@ package body Protypo.Api.Engine_Values.Handlers is
    function Create (Val            : Callback_Function_Access;
                     Min_Parameters : Natural;
                     Max_Parameters : Natural;
-                    With_Varargin  : Boolean := False) return Engine_Value
-   is (Create
-       (new Callback_Function_Handler'(Callback => Val,
-                                       Min_Parameters => Min_Parameters,
-                                       Max_Parameters => Max_Parameters,
-                                       With_Varargin  => With_Varargin)));
+                    With_Varargin  : Boolean := False)
+                    return Callback_Function_Handler
+   is (Callback_Function_Handler'(Callback => Val,
+                                  Min_Parameters => Min_Parameters,
+                                  Max_Parameters => Max_Parameters,
+                                  With_Varargin  => With_Varargin));
 
-   function Create (Val : Procedure_Interface_Access) return Engine_Value
-   is (Engine_Value'(Class            => Procedure_Handler,
-                     Procedure_Object  => Val));
+   --  function Create (Val : Procedure_Interface_Access) return Engine_Value
+   --  is (Engine_Value'(Class            => Procedure_Handler,
+   --                    Procedure_Object  => Val));
 
    function Create (Val          : Callback_Procedure_Access;
                     N_Parameters : Natural := 1)
-                    return Engine_Value
+                    return Callback_Procedure_Handler
    is (Create (Val            => Val,
                Min_Parameters => N_Parameters,
                Max_Parameters => N_Parameters,
@@ -57,12 +141,12 @@ package body Protypo.Api.Engine_Values.Handlers is
    function Create (Val            : Callback_Procedure_Access;
                     Min_Parameters : Natural;
                     Max_Parameters : Natural;
-                    With_Varargin  : Boolean := False) return Engine_Value
-   is (Create
-       (new Callback_Procedure_Handler'(Callback => Val,
-                                        Min_Parameters => Min_Parameters,
-                                        Max_Parameters => Max_Parameters,
-                                        With_Varargin  => With_Varargin)));
+                    With_Varargin  : Boolean := False)
+                    return Callback_Procedure_Handler
+   is (Callback_Procedure_Handler'(Callback => Val,
+                                   Min_Parameters => Min_Parameters,
+                                   Max_Parameters => Max_Parameters,
+                                   With_Varargin  => With_Varargin));
 
    function Create (Val : Constant_Interface_Access) return Engine_Value
    is (Engine_Value'(Class            => Constant_Handler,
@@ -80,8 +164,8 @@ package body Protypo.Api.Engine_Values.Handlers is
    function Get_Iterator (Val : Iterator_Value) return Iterator_Interface_Access
    is (Val.Iteration_Object);
 
-   function Get_Function (Val : Function_Value) return Function_Interface_Access
-   is (Val.Function_Object);
+   --  function Get_Function (Val : Function_Value) return Function_Interface_Access
+   --  is (Val.Function_Object);
 
    function Get_Constant (Val : Constant_Value) return Constant_Interface_Access
    is (Val.Constant_Object);

@@ -102,10 +102,16 @@ package Protypo.Api.Engine_Values.Handlers is
                        return Parameter_Signature is abstract
      with Post'Class => Parameter_Lists.Is_Valid_Parameter_Signature (Signature'Result);
 
+   function Call_Function (Funct      : Handlers.Function_Interface'Class;
+                           Parameters : Engine_Value_Array)
+                           return Engine_Value_Array;
+
    --
    --  function Create (Val : Function_Interface_Access) return Engine_Value
    --    with Post => Create'Result.Class = Function_Handler;
-
+   type Callback_Function_Handler is
+     new Function_Interface
+   with private;
 
    type Callback_Function_Access is
    not null access function (Parameters : Engine_Value_Array)
@@ -115,11 +121,12 @@ package Protypo.Api.Engine_Values.Handlers is
                     Min_Parameters : Natural;
                     Max_Parameters : Natural;
                     With_Varargin  : Boolean := False)
-                    return Function_Interface'Class;
+                    return Callback_Function_Handler;
 
    function Create (Val          : Callback_Function_Access;
                     N_Parameters : Natural := 1)
-                    return Function_Interface'Class;
+                    return Callback_Function_Handler;
+
 
    type Procedure_Interface is interface;
    type Procedure_Interface_Access is access all Procedure_Interface'Class;
@@ -132,6 +139,9 @@ package Protypo.Api.Engine_Values.Handlers is
      with Post'Class =>
        Parameter_Lists.Is_Valid_Parameter_Signature (Signature'Result);
 
+   type Callback_Procedure_Handler is
+     new Procedure_Interface
+   with private;
 
    type Callback_Procedure_Access is
    not null access procedure (Parameters : Engine_Value_Array);
@@ -140,11 +150,11 @@ package Protypo.Api.Engine_Values.Handlers is
                     Min_Parameters : Natural;
                     Max_Parameters : Natural;
                     With_Varargin  : Boolean := False)
-                    return Procedure_Interface'Class;
+                    return Callback_Procedure_Handler;
 
    function Create (Val          : Callback_Procedure_Access;
                     N_Parameters : Natural := 1)
-                    return Procedure_Interface'Class;
+                    return Callback_Procedure_Handler;
 
 
 
