@@ -6,19 +6,65 @@ with Protypo.Parsing;
 with Ada.Directories;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_Io; use Ada.Text_Io;
 with Protypo.Api.Consumers.File_Writer;
 
 
-package body Protypo.API.Interpreters is
+package body Protypo.Api.Interpreters is
+   ------------
+   -- Define --
+   ------------
+
    procedure Define (Interpreter : in out Interpreter_Type;
-                     Name        : ID;
-                     Value       : Engine_Values.Engine_Value)
+                     Name        : Id;
+                     Value       : Symbols.Symbol_Value)
    is
    begin
       Interpreter.Symbol_Table.Create (Name          => Name,
                                        Initial_Value => Value);
    end Define;
+
+   ------------
+   -- Define --
+   ------------
+
+   procedure Define (Interpreter : in out Interpreter_Type;
+                     Name        : Id;
+                     Value       : Engine_Values.Engine_Value)
+   is
+   begin
+      Interpreter.Define (Name  => Name,
+                          Value => Symbols.To_Symbol_Value (Value));
+   end Define;
+
+   ------------
+   -- Define --
+   ------------
+
+   procedure Define (Interpreter : in out Interpreter_Type;
+                     Name        : Id;
+                     Funct       : Engine_Values.Handlers.Function_Interface'Class)
+   is
+   begin
+      Interpreter.Define (Name  => Name,
+                          Value => Symbols.To_Symbol_Value (Funct));
+   end Define;
+
+   ------------
+   -- Define --
+   ------------
+
+   procedure Define (Interpreter : in out Interpreter_Type;
+                     Name        : Id;
+                     Proc        : Engine_Values.Handlers.Procedure_Interface'Class)
+   is
+   begin
+      Interpreter.Define (Name  => Name,
+                          Value => Symbols.To_Symbol_Value (Proc));
+   end Define;
+
+
+
 
 
    ---------
@@ -59,19 +105,18 @@ package body Protypo.API.Interpreters is
    is
       use Consumers.File_Writer;
 
-      Cons     : Consumers.Consumer_Access;
+      Consumer : constant Consumers.Consumer_Access :=
+                   Open (if Target_Filenane = "-"
+                         then
+                            Standard_Output_Special_Name
+                         else
+                            Target_Filenane);
 
       Template : constant Template_Type := Slurp (Input_Filename);
    begin
-      Cons :=   Open (if Target_Filenane = "-"
-                      then
-                         Consumers.File_Writer.Standard_Output_Special_Name
-                      else
-                         Target_Filenane);
-
       Run (Interpreter => Interpreter,
            Program     => Template,
-           Consumer    => Cons);
+           Consumer    => Consumer);
    end Expand_Template;
 
    ----------
@@ -145,4 +190,4 @@ package body Protypo.API.Interpreters is
 
 
 
-end Protypo.API.Interpreters;
+end Protypo.Api.Interpreters;

@@ -2,7 +2,8 @@ with Protypo.API.Consumers;
 with Protypo.Api.Engine_Values;
 with Protypo.Api.Engine_Values.Handlers;
 
-private with Protypo.Api.Symbols;
+private with Protypo.Symbol_Tables;
+private with Protypo.Symbols;
 private with Protypo.Code_Trees;
 
 with Utilities;
@@ -64,6 +65,10 @@ package Protypo.API.Interpreters is
 
 
 private
+   procedure Define (Interpreter : in out Interpreter_Type;
+                     Name        : Id;
+                     Value       : Symbols.Symbol_Value);
+
    type Compiled_Code is limited
       record
          Code : Protypo.Code_Trees.Parsed_Code;
@@ -72,7 +77,7 @@ private
 
    type Interpreter_Type is tagged limited
       record
-         Symbol_Table : Symbols.Table;
+         Symbol_Table : Symbol_Tables.Table;
       end record;
 
    function Slurp (Filename : String) return Template_Type
