@@ -139,6 +139,9 @@ package Protypo.Api.Engine_Values.Handlers is
      with Post'Class =>
        Parameter_Lists.Is_Valid_Parameter_Signature (Signature'Result);
 
+   procedure Call (Proc       : Procedure_Interface'Class;
+                   Parameters : Engine_Value_Array);
+
    type Callback_Procedure_Handler is
      new Procedure_Interface
    with private;

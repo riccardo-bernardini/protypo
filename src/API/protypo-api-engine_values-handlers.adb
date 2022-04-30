@@ -77,7 +77,7 @@ package body Protypo.Api.Engine_Values.Handlers is
    -- Call_Function --
    -------------------
 
-   function Call_Function (Funct      : Handlers.Function_Interface'Class;
+   function Call_Function (Funct      : Function_Interface'Class;
                            Parameters : Engine_Value_Array)
                            return Engine_Value_Array
    is
@@ -85,6 +85,19 @@ package body Protypo.Api.Engine_Values.Handlers is
       return Funct.Process
         (Apply_Default_And_Varargin (Funct.Signature, Parameters));
    end Call_Function;
+
+   ----------
+   -- Call --
+   ----------
+
+   procedure Call (Proc       : Procedure_Interface'Class;
+                   Parameters : Engine_Value_Array)
+   is
+   begin
+      Proc.Process
+        (Apply_Default_And_Varargin (Proc.Signature, Parameters));
+   end Call;
+
 
 
    function Create (Val : Array_Interface_Access) return Array_Value

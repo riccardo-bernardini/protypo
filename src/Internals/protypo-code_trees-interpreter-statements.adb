@@ -12,6 +12,7 @@ with Ada.Exceptions;
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_Io; use Ada.Text_Io;
 with Protypo.Code_Trees.Interpreter.Compiled_Procedures;
+with Protypo.Symbols;
 
 package body Protypo.Code_Trees.Interpreter.Statements is
    use Protypo.Api.Engine_Values;
@@ -52,8 +53,8 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                                 Name   : Unbounded_Id;
                                 Params : Node_Vectors.Vector)
    is
-      use Api.Symbols.Protypo_Tables;
-      use Api.Symbols;
+      use Symbol_Tables.Protypo_Tables;
+      use Symbol_Tables;
 
       Position : constant Protypo_Tables.Cursor :=
                    Status.Symbol_Table.Find (Id (To_String (Name)));
@@ -66,9 +67,11 @@ package body Protypo.Code_Trees.Interpreter.Statements is
       end if;
 
       declare
-         Proc_Handler : constant Engine_Value :=  Value (Position);
+         use type Symbols.Symbol_Value_Class;
+
+         Proc_Handler : constant Symbols.Symbol_Value :=  Value (Position);
       begin
-         if Proc_Handler.Class /= Procedure_Handler then
+         if Proc_Handler.Class /= Symbols.Procedure_Class then
             raise Run_Time_Error
               with
                 "Trying to call as a procedure a " & Proc_Handler.Class'Image;
@@ -78,7 +81,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
             Parameters : constant Engine_Value_Array :=
                            Expressions.Eval_Vector (Status, Params);
          begin
-            Call (Proc_Handler, Parameters);
+            Handlers.Call (Symbols.Get_Procedure (Proc_Handler), Parameters);
          end;
       end;
    end Do_Procedure_Call;
@@ -144,9 +147,9 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                   Name : constant Id :=
                            Id (To_String (Program.Definition_Name));
 
-                  Fun  : constant Engine_Value :=
-                           Handlers.Create
-                             (new Compiled_Function
+                  Fun  : constant Symbols.Function_Type :=
+                           Symbols.To_Symbol_Value
+                             (Compiled_Function
                                 '(Function_Body => Program.Function_Body,
                                   Parameters    => Program.Parameters,
                                   Status        => Status));
@@ -159,12 +162,12 @@ package body Protypo.Code_Trees.Interpreter.Statements is
                   Name : constant Id :=
                            Id (To_String (Program.Definition_Name));
 
-                  Proc : constant Engine_Value :=
-                           Handlers.Create
-                             (new Compiled_Procedures.Compiled_Procedure
+                  Proc : constant symbols.Procedure_Type :=
+                           symbols.To_Symbol_Value
+                             (Compiled_Procedures.Compiled_Procedure
                                 '(Procedure_Body => Program.Function_Body,
-                                  Parameters    => Program.Parameters,
-                                  Status        => Status));
+                                  Parameters     => Program.Parameters,
+                                  Status         => Status));
                begin
                   Status.Symbol_Table.Create (Name, Proc);
                end;
@@ -272,7 +275,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
 
          when For_Block   =>
             declare
-               use Api.Symbols;
+               use Symbol_Tables;
 
                Iterator_Ref : constant Handlers.Iterator_Interface_Access :=
                                 Expressions.Eval_Iterator (Status, Program.Iterator);
@@ -287,14 +290,15 @@ package body Protypo.Code_Trees.Interpreter.Statements is
 
                Status.Symbol_Table.Create
                  (Name          => Variable,
-                  Initial_Value => Void_Value,
+                  Initial_Value => Symbols.To_Symbol_Value (Void_Value),
                   Position      => Position);
 
                loop
                   exit when Iterator_Ref.End_Of_Iteration;
 
-                  Protypo_Tables.Update (Pos       => Position,
-                                         New_Value => Iterator_Ref.Element);
+                  Protypo_Tables.Update
+                    (Pos       => Position,
+                     New_Value => Symbols.To_Symbol_Value (Iterator_Ref.Element));
 
                   exit when Run_Loop_Body (Status, Program) = Stop;
 

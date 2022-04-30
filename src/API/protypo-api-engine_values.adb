@@ -89,15 +89,6 @@ package body Protypo.Api.Engine_Values is
    --     return Call_Function (Item.Function_Object.all, Parameters);
    --  end Call_Function;
 
-   procedure Call (Item       : Procedure_Value;
-                   Parameters : Engine_Value_Array)
-   is
-      Proc : constant Handlers.Procedure_Interface'Class :=
-               Item.Procedure_Object.all;
-   begin
-      Proc.Process
-        (Apply_Default_And_Varargin (Proc.Signature, Parameters));
-   end Call;
 
 
 
