@@ -13,7 +13,7 @@ private package Protypo.Code_Trees.Interpreter.String_Interpolation_Handlers is
      private;
 
    function Create (Interp : Interpreter_Access)
-                    return Handlers.Function_Interface_Access
+                    return Handlers.Function_Interface'Class
      with
        Post => Create'Result'Tag = String_Interpolator'Tag;
 

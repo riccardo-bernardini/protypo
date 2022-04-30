@@ -18,11 +18,11 @@ private package Protypo.Code_Trees.Interpreter.Consumer_Handlers is
    overriding function Signature (Fun : Consumer_Callback)
                                   return Parameter_Lists.Parameter_Signature;
 
-   function Create (Consumer    : Api.Consumers.Consumer_Access;
-                    With_Escape : Boolean;
-                    end_of_line : Unbounded_String;
-                    Status      : Interpreter_Access)
-                    return Api.Engine_Values.Handlers.Function_Interface_Access;
+   function New_Consumer (Consumer    : Api.Consumers.Consumer_Access;
+                          With_Escape : Boolean;
+                          End_Of_Line : Unbounded_String;
+                          Status      : Interpreter_Access)
+                          return Api.Engine_Values.Handlers.Procedure_Interface'Class;
 
    function User_Consumer (Item : Consumer_Callback)
                            return Api.Consumers.Consumer_Access;

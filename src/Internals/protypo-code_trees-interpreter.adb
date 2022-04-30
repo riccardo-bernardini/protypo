@@ -17,6 +17,7 @@ with Protypo.Code_Trees.Interpreter.Consumer_Handlers;
 
 with Protypo.Scanning;
 with Protypo.Parsing;
+with Protypo.Symbols;
 
 with Readable_Sequences.String_Sequences; use Readable_Sequences;
 
@@ -127,8 +128,23 @@ package body Protypo.Code_Trees.Interpreter is
           when Text   => Get_String (X),
           when others => X.Class'Image);
 
-   function To_Stderr (Parameters : Engine_Value_Array)
-                       return Engine_Value_Array
+   function To_String (X : Symbols.Symbol_Value) return String
+   is
+      use type Symbols.Symbol_Value_class;
+   begin
+      case X.Class is
+         when Symbols.Engine_Value_Class =>
+            return To_String (Symbols.Get_Value (X));
+
+         when Symbols.Function_Class     =>
+            return "FUNCTION";
+
+         when Symbols.Procedure_Class    =>
+            return "PROCEDURE";
+      end case;
+   end To_String;
+
+   procedure To_Stderr (Parameters : Engine_Value_Array)
    is
       use type Ada.Containers.Count_Type;
    begin
@@ -138,8 +154,6 @@ package body Protypo.Code_Trees.Interpreter is
 
       Put_Line (File => Standard_Error,
                 Item => "DEBUG>> " & To_String (Parameters (Parameters.First)));
-
-      return Empty_Array;
    end To_Stderr;
 
    function Stringify (Parameters : Engine_Value_Array)
@@ -307,7 +321,7 @@ package body Protypo.Code_Trees.Interpreter is
          Item    : constant String := Get_Parameter (Parameters, 1);
          Regexp  : constant String := Get_Parameter (Parameters, 2);
          Matcher : constant Pattern_Matcher := Compile (Regexp);
-         Matched : Match_Array (0 .. Paren_Count (matcher));
+         Matched : Match_Array (0 .. Paren_Count (Matcher));
       begin
          Match (Matcher, Item, Matched);
 
@@ -348,23 +362,25 @@ package body Protypo.Code_Trees.Interpreter is
                               Consumer : Api.Consumers.Consumer_Access)
    is
       use Consumer_Handlers;
-      use Api.Symbols.Protypo_Tables;
+      use Symbol_Tables.Protypo_Tables;
       use Ada.Characters.Latin_1;
    begin
       Update
         (Pos          => Inter.Consumer_Without_Escape_Cursor,
          New_Value    =>
-           Handlers.Create (Create (Consumer    => Consumer,
-                                    With_Escape => False,
-                                    End_Of_Line => Null_Unbounded_String,
-                                    Status      => Inter)));
+           Symbols.To_Symbol_Value
+             (New_Consumer (Consumer    => Consumer,
+                            With_Escape => False,
+                            End_Of_Line => Null_Unbounded_String,
+                            Status      => Inter)));
       Update
         (Pos          => Inter.Consumer_With_Escape_Cursor,
          New_Value    =>
-           Handlers.Create (Create (Consumer    => Consumer,
-                                    With_Escape => True,
-                                    End_Of_Line => To_Unbounded_String ("" & Lf),
-                                    Status      => Inter)));
+           Symbols.To_Symbol_Value
+             (New_Consumer (Consumer    => Consumer,
+                            With_Escape => True,
+                            End_Of_Line => To_Unbounded_String ("" & Lf),
+                            Status      => Inter)));
 
    end Update_Consumer;
 
@@ -374,81 +390,79 @@ package body Protypo.Code_Trees.Interpreter is
 
    procedure Run
      (Program      : Parsed_Code;
-      Symbol_Table : Api.Symbols.Table;
+      Symbol_Table : Symbol_Tables.Symbol_Table_Type;
       Consumer     : Api.Consumers.Consumer_Access)
    is
-      use Api.Symbols;
+      use Symbol_Tables;
 
-      procedure Add_Builtin_Values (Table    : in out Api.Symbols.Table;
+      procedure Add_Builtin_Values (Table    : in out Symbol_Table_Type;
                                     Inter    : Interpreter_Access)
       is
          use Consumer_Handlers;
-         use Api.Symbols.Protypo_Tables;
          use Ada.Characters.Latin_1;
       begin
-         Table.Create
+         Table.Define_Procedure
            (Name            => Scanning.Consume_Procedure_Name,
-            Initial_Value   =>
-              Handlers.Create (Create (Consumer    => Consumer,
-                                       With_Escape => False,
-                                       End_Of_Line => Null_Unbounded_String,
-                                       Status      => Inter)),
+            Proc            =>
+              New_Consumer (Consumer    => Consumer,
+                            With_Escape => False,
+                            End_Of_Line => Null_Unbounded_String,
+                            Status      => Inter),
             Position        => Inter.Consumer_Without_Escape_Cursor);
 
 
-         Table.Create
-           (Name            => Scanning.Consume_With_Escape_Procedure_Name,
-            Initial_Value   =>
-              Handlers.Create (Create (Consumer    => Consumer,
-                                       With_Escape => True,
-                                       End_Of_Line => To_Unbounded_String ("" & Lf),
-                                       Status      => Inter)),
-            Position        => Inter.Consumer_With_Escape_Cursor);
+         Table.Define_Procedure
+           (Name     => Scanning.Consume_With_Escape_Procedure_Name,
+            Proc     =>
+              New_Consumer (Consumer    => Consumer,
+                            With_Escape => True,
+                            End_Of_Line => To_Unbounded_String ("" & Lf),
+                            Status      => Inter),
+            Position => Inter.Consumer_With_Escape_Cursor);
 
-         Table.Create
+         Table.Define_Variable
            (Name          => "true",
-            Initial_Value => Create (True));
+            Value => Create (True));
 
-         Table.Create
+         Table.Define_Variable
            (Name          => "false",
-            Initial_Value => Create (False));
+            Value => Create (False));
 
-         Table.Create
+         Table.Define_Function
            (Name          => "range",
-            Initial_Value => Handlers.Create (Range_Callback'Access, 2));
+            Funct         => Handlers.Create (Range_Callback'Access, 2));
 
-         Table.Create
+         Table.Define_Function
            (Name          => "glob",
-            Initial_Value => Handlers.Create (Glob_Callback'Access, 2));
+            funct => Handlers.Create (Glob_Callback'Access, 2));
 
-         Table.Create
+         Table.Define_Function
            (Name          => "match",
-            Initial_Value => Handlers.Create (Regexp_Callback'Access, 2));
+            funct => Handlers.Create (Regexp_Callback'Access, 2));
 
-         Table.Create
+         Table.Define_Function
            (Name          => "split",
-            Initial_Value => Handlers.Create (Split_Callback'Access, 2));
+            funct => Handlers.Create (Split_Callback'Access, 2));
 
-         Table.Create
+         Table.Define_Function
            (Name          => "substr",
-            Initial_Value => Handlers.Create (Substring_Callback'Access, 3));
+            funct => Handlers.Create (Substring_Callback'Access, 3));
 
-         Table.Create
+         Table.Define_Function
            (Name          => "now",
-            Initial_Value => Handlers.Create (Date_Callback'Access, 0));
+            funct => Handlers.Create (Date_Callback'Access, 0));
 
-         Table.Create
+         Table.Define_Function
            (Name          => "image",
-            Initial_Value => Handlers.Create (Stringify'Access, 1));
+            funct => Handlers.Create (Stringify'Access, 1));
 
-         Table.Create
+         Table.Define_Procedure
            (Name          => "debug",
-            Initial_Value => Handlers.Create (To_Stderr'Access, 1));
+            Proc  => Handlers.Create (To_Stderr'Access, 1));
 
-         Table.Create
-           (Name          => "expand",
-            Initial_Value =>
-              Handlers.Create (String_Interpolation_Handlers.Create (Inter)));
+         Table.Define_Function
+           (Name   => "expand",
+            Funct  => String_Interpolation_Handlers.Create (Inter));
       end Add_Builtin_Values;
 
       Interpreter : constant Interpreter_Access :=
@@ -456,11 +470,11 @@ package body Protypo.Code_Trees.Interpreter is
                         (Break                          => No_Break,
                          Symbol_Table                   => Copy_Globals (Symbol_Table),
                          Saved_Consumers                => Consumer_Stacks.Empty_List,
-                         Consumer_Without_Escape_Cursor => Api.Symbols.Protypo_Tables.No_Element,
-                         Consumer_With_Escape_Cursor    => Api.Symbols.Protypo_Tables.No_Element);
+                         Consumer_Without_Escape_Cursor => Symbol_Tables.Protypo_Tables.No_Element,
+                         Consumer_With_Escape_Cursor    => Symbol_Tables.Protypo_Tables.No_Element);
    begin
       --        Code_Trees.Dump (Program);
-      Api.Symbols.Protypo_Tables.Set_Printer (To_String'Access);
+      Symbol_Tables.Protypo_Tables.Set_Printer (To_String'Access);
 
       Add_Builtin_Values (Interpreter.Symbol_Table, Interpreter);
 
@@ -475,7 +489,7 @@ package body Protypo.Code_Trees.Interpreter is
    procedure Push_Consumer (Interpreter : Interpreter_Access;
                             Consumer    : Api.Consumers.Consumer_Access)
    is
-      use Api.Symbols;
+      use Symbol_Tables;
       use Consumer_Handlers;
 
       use type Protypo_Tables.Cursor;

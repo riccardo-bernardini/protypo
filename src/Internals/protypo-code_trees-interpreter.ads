@@ -6,14 +6,14 @@ with Ada.Containers.Doubly_Linked_Lists;
 
 package Protypo.Code_Trees.Interpreter is
    procedure Run (Program      : Parsed_Code;
-                  Symbol_Table : Symbol_Tables.Table;
+                  Symbol_Table : Symbol_Tables.Symbol_Table_type;
                   Consumer     : Api.Consumers.Consumer_Access);
 
    Bad_Iterator : exception;
    Bad_Field    : exception;
 
 private
-   type Symbol_Table_Access is not null access Symbol_Tables.Table;
+   type Symbol_Table_Access is not null access Symbol_Tables.Symbol_Table_type;
 
 
    type Break_Type is (Exit_Statement, Return_Statement, None);
@@ -44,7 +44,7 @@ private
    type Interpreter_Type is tagged limited
       record
          Break                          : Break_Status;
-         Symbol_Table                   : Symbol_Tables.Table;
+         Symbol_Table                   : Symbol_Tables.Symbol_Table_type;
          Saved_Consumers                : Consumer_Stack;
          Consumer_Without_Escape_Cursor : Symbol_Tables.Protypo_Tables.Cursor;
          Consumer_With_Escape_Cursor    : Symbol_Tables.Protypo_Tables.Cursor;

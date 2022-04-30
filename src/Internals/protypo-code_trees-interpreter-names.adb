@@ -3,6 +3,7 @@ with Protypo.Api.Engine_Values.Handlers;
 
 with Protypo.Code_Trees.Interpreter.Expressions;
 with Protypo.Code_Trees.Interpreter.Symbol_Table_References;
+with Protypo.Symbols;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_Io; use Ada.Text_Io;
@@ -88,7 +89,7 @@ package body Protypo.Code_Trees.Interpreter.Names is
          when Identifier  =>
 
             declare
-               use Api.Symbols;
+               use Symbol_Tables;
                use Protypo.Code_Trees.Interpreter.Symbol_Table_References;
 
                use type Protypo_Tables.Cursor;
@@ -106,9 +107,10 @@ package body Protypo.Code_Trees.Interpreter.Names is
                   -- but leave it not initialized, it can be used only
                   -- as a LHS.
                   --
-                  Status.Symbol_Table.Create (Name          => Ident,
-                                              Position      => Position,
-                                              Initial_Value => Void_Value);
+                  Status.Symbol_Table.Create
+                    (Name          => Ident,
+                     Position      => Position,
+                     Initial_Value => symbols.To_Symbol_Value (Void_Value));
 
                   --                    Put_Line ("@@@ inserted '" & ID & "' @" & Image (Position));
                   if Position = Protypo_Tables.No_Element then

@@ -27,9 +27,9 @@ package body Protypo.Code_Trees.Interpreter.Compiled_procedures is
                            Parameter.First_Index - Fun.Parameters.Names.First_Index;
       begin
          for Name_Index in Fun.Parameters.Names.First_Index .. Fun.Parameters.Names.Last_Index loop
-            Fun.Status.Symbol_Table.Create
-              (Name          => Fun.Parameters.Names (Name_Index),
-               Initial_Value => Parameter (Name_Index + Name_To_Param));
+            Fun.Status.Symbol_Table.Define_Variable
+              (Name  => Fun.Parameters.Names (Name_Index),
+               Value => Parameter (Name_Index + Name_To_Param));
          end loop;
       end;
 

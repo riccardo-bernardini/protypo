@@ -115,11 +115,11 @@ package Protypo.Api.Engine_Values.Handlers is
                     Min_Parameters : Natural;
                     Max_Parameters : Natural;
                     With_Varargin  : Boolean := False)
-                    return Function_Interface_Access;
+                    return Function_Interface'Class;
 
    function Create (Val          : Callback_Function_Access;
                     N_Parameters : Natural := 1)
-                    return Function_Interface_Access;
+                    return Function_Interface'Class;
 
    type Procedure_Interface is interface;
    type Procedure_Interface_Access is access all Procedure_Interface'Class;
@@ -140,11 +140,11 @@ package Protypo.Api.Engine_Values.Handlers is
                     Min_Parameters : Natural;
                     Max_Parameters : Natural;
                     With_Varargin  : Boolean := False)
-                    return Procedure_Interface_Access;
+                    return Procedure_Interface'Class;
 
    function Create (Val          : Callback_Procedure_Access;
                     N_Parameters : Natural := 1)
-                    return Procedure_Interface_Access;
+                    return Procedure_Interface'Class;
 
 
 

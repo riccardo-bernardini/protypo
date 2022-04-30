@@ -77,7 +77,7 @@ private
 
    type Interpreter_Type is tagged limited
       record
-         Symbol_Table : Symbol_Tables.Table;
+         Symbol_Table : Symbol_Tables.Symbol_Table_type;
       end record;
 
    function Slurp (Filename : String) return Template_Type
