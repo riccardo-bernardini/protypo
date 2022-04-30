@@ -6,10 +6,10 @@ package body Protypo.Code_Trees.Interpreter.String_Interpolation_Handlers is
    ------------
 
    function Create (Interp : Interpreter_Access)
-                    return Handlers.Function_Interface_Access
+                    return Handlers.Function_Interface'Class
    is
    begin
-      return new String_Interpolator'(Status => Interp);
+      return String_Interpolator'(Status => Interp);
    end Create;
 
    -------------

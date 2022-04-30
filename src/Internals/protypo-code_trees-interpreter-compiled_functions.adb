@@ -4,6 +4,7 @@ with Protypo.Code_Trees.Interpreter.Expressions;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_IO; use Ada.Text_IO;
+with Protypo.Symbols;
 
 package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
 
@@ -30,7 +31,7 @@ package body Protypo.Code_Trees.Interpreter.Compiled_Functions is
          for Name_Index in Fun.Parameters.Names.First_Index .. Fun.Parameters.Names.Last_Index loop
             Fun.Status.Symbol_Table.Create
               (Name          => Fun.Parameters.Names (Name_Index),
-               Initial_Value => Parameter (Name_Index + Name_To_Param));
+               Initial_Value => Protypo.Symbols.To_Symbol_Value (Parameter (Name_Index + Name_To_Param)));
          end loop;
       end;
 

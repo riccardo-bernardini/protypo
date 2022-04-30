@@ -7,7 +7,7 @@ pragma Ada_2012;
 --  with Protypo.Code_Trees.Interpreter.Expressions;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_Io; use Ada.Text_Io;
 --  with Protypo.Api.Interpreters;
 
 package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is
@@ -19,9 +19,8 @@ package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is
           when Text   => Get_String (X),
           when others => raise Constraint_Error);
 
-   overriding function Process (Fun       : Consumer_Callback;
-                                Parameter : Engine_Value_Array)
-                                return Engine_Value_Array
+   overriding procedure Process (Fun       : Consumer_Callback;
+                                 Parameter : Engine_Value_Array)
    is
 
    begin
@@ -37,12 +36,10 @@ package body Protypo.Code_Trees.Interpreter.Consumer_Handlers is
             Fun.Consumer.Process (To_Be_Consumed & To_String (Fun.End_Of_Line));
          end;
       end loop;
-
-      return Empty_Array;
    end Process;
 
    function Signature (Fun : Consumer_Callback)
-                                return Api.Engine_Values.Parameter_Lists.Parameter_Signature
+                       return Api.Engine_Values.Parameter_Lists.Parameter_Signature
    is (1 => Parameter_Lists.Mandatory);
 
 
