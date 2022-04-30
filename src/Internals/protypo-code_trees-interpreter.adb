@@ -2,10 +2,10 @@ pragma Ada_2012;
 with Ada.Calendar.Formatting;
 with Ada.Exceptions;
 with Ada.Strings.Fixed;
+with Ada.Tags;
 with Gnat.Regpat;
 
 with Protypo.Api.Engine_Values.Range_Iterators;
-with Protypo.Api.Engine_Values.Handlers;
 with Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;
 with Protypo.Api.Interpreters;
 with Protypo.Api.Callback_Utilities;  use Protypo.Api.Callback_Utilities;
@@ -490,9 +490,9 @@ package body Protypo.Code_Trees.Interpreter is
                             Consumer    : Api.Consumers.Consumer_Access)
    is
       use Symbol_Tables;
-      use Consumer_Handlers;
 
       use type Protypo_Tables.Cursor;
+      use type Symbols.Symbol_Value_Class;
 
       Pos : constant Protypo_Tables.Cursor :=
               Interpreter.Symbol_Table.Find (Scanning.Consume_Procedure_Name);
@@ -501,13 +501,17 @@ package body Protypo.Code_Trees.Interpreter is
          raise Program_Error with "Consumer not found?!?";
       end if;
 
-      declare
-         Fun      : constant Handlers.Function_Interface_Access :=
-                      Handlers.Get_Function (Protypo_Tables.Value (Pos));
+      if Protypo_Tables.Value (Pos).Class /= Symbols.Procedure_Class then
+         raise Program_Error with "Consumer is not a procedure";
+      end if;
 
-         Callback : constant Consumer_Callback := Consumer_Callback (Fun.all);
+      declare
+         Fun      : constant Symbols.Procedure_Type := Protypo_Tables.Value (Pos);
+
+         Current_Consumer : constant Handlers.Procedure_Interface'Class :=
+                              Symbols.Get_Procedure (Fun);
       begin
-         Interpreter.Saved_Consumers.Prepend (User_Consumer (Callback));
+         Interpreter.Saved_Consumers.Prepend (Current_Consumer);
       end;
 
       Update_Consumer (Interpreter, Consumer);
@@ -515,12 +519,21 @@ package body Protypo.Code_Trees.Interpreter is
 
    procedure Pop_Consumer (Interpreter : Interpreter_Access)
    is
-      Old_Consumer : constant Api.Consumers.Consumer_Access :=
+      use Consumer_Handlers;
+      use Ada.Tags;
+
+      Old_Consumer : constant Handlers.Procedure_Interface'Class :=
                        Interpreter.Saved_Consumers.First_Element;
    begin
+      if not Is_Descendant_At_Same_Level (Descendant => Old_Consumer'tag,
+                                          Ancestor   => Consumer_Callback'Tag)
+      then
+         raise Program_Error;
+      end if;
+
       Interpreter.Saved_Consumers.Delete_First;
 
-      Update_Consumer (Interpreter, Old_Consumer);
+      Update_Consumer (Interpreter, User_Consumer (Consumer_Callback (Old_Consumer)));
    end Pop_Consumer;
 
 

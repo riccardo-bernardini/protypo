@@ -1,19 +1,19 @@
-with Protypo.Api.Engine_Values;
+with Protypo.Api.Engine_Values.Handlers;
 with Protypo.Symbol_Tables;
 with Protypo.Api.Consumers;
 
-with Ada.Containers.Doubly_Linked_Lists;
+with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 
 package Protypo.Code_Trees.Interpreter is
    procedure Run (Program      : Parsed_Code;
-                  Symbol_Table : Symbol_Tables.Symbol_Table_type;
+                  Symbol_Table : Symbol_Tables.Symbol_Table_Type;
                   Consumer     : Api.Consumers.Consumer_Access);
 
    Bad_Iterator : exception;
    Bad_Field    : exception;
 
 private
-   type Symbol_Table_Access is not null access Symbol_Tables.Symbol_Table_type;
+   type Symbol_Table_Access is not null access Symbol_Tables.Symbol_Table_Type;
 
 
    type Break_Type is (Exit_Statement, Return_Statement, None);
@@ -34,17 +34,18 @@ private
 
    No_Break : constant Break_Status := (Breaking_Reason => None);
 
-   use type Api.Consumers.Consumer_Access;
+   use type Api.Engine_Values.Handlers.Procedure_Interface;
 
    package Consumer_Stacks is
-     new Ada.Containers.Doubly_Linked_Lists (Api.Consumers.Consumer_Access);
+     new Ada.Containers.Indefinite_Doubly_Linked_Lists
+       (Api.Engine_Values.Handlers.Procedure_Interface'Class);
 
    subtype Consumer_Stack is Consumer_Stacks.List;
 
    type Interpreter_Type is tagged limited
       record
          Break                          : Break_Status;
-         Symbol_Table                   : Symbol_Tables.Symbol_Table_type;
+         Symbol_Table                   : Symbol_Tables.Symbol_Table_Type;
          Saved_Consumers                : Consumer_Stack;
          Consumer_Without_Escape_Cursor : Symbol_Tables.Protypo_Tables.Cursor;
          Consumer_With_Escape_Cursor    : Symbol_Tables.Protypo_Tables.Cursor;
