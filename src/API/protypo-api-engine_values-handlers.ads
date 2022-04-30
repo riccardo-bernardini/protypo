@@ -102,9 +102,9 @@ package Protypo.Api.Engine_Values.Handlers is
                        return Parameter_Signature is abstract
      with Post'Class => Parameter_Lists.Is_Valid_Parameter_Signature (Signature'Result);
 
-
-   function Create (Val : Function_Interface_Access) return Engine_Value
-     with Post => Create'Result.Class = Function_Handler;
+   --
+   --  function Create (Val : Function_Interface_Access) return Engine_Value
+   --    with Post => Create'Result.Class = Function_Handler;
 
 
    type Callback_Function_Access is
@@ -114,14 +114,12 @@ package Protypo.Api.Engine_Values.Handlers is
    function Create (Val            : Callback_Function_Access;
                     Min_Parameters : Natural;
                     Max_Parameters : Natural;
-                    With_Varargin  : Boolean := False) return Engine_Value
-     with
-       Pre => Max_Parameters >= Min_Parameters,
-       Post => Create'Result.Class = Function_Handler;
+                    With_Varargin  : Boolean := False)
+                    return Function_Interface_Access;
 
    function Create (Val          : Callback_Function_Access;
-                    N_Parameters : Natural := 1) return Engine_Value
-     with Post => Create'Result.Class = Function_Handler;
+                    N_Parameters : Natural := 1)
+                    return Function_Interface_Access;
 
    type Procedure_Interface is interface;
    type Procedure_Interface_Access is access all Procedure_Interface'Class;
@@ -141,25 +139,20 @@ package Protypo.Api.Engine_Values.Handlers is
    function Create (Val            : Callback_Procedure_Access;
                     Min_Parameters : Natural;
                     Max_Parameters : Natural;
-                    With_Varargin  : Boolean := False) return Engine_Value
-     with
-       Pre => Max_Parameters >= Min_Parameters,
-       Post => Create'Result.Class = Procedure_Handler;
+                    With_Varargin  : Boolean := False)
+                    return Procedure_Interface_Access;
 
    function Create (Val          : Callback_Procedure_Access;
-                    N_Parameters : Natural := 1) return Engine_Value
-     with Post => Create'Result.Class = Procedure_Handler;
+                    N_Parameters : Natural := 1)
+                    return Procedure_Interface_Access;
 
-
-   function Create (Val : Procedure_Interface_Access) return Engine_Value
-     with Post => Create'Result.Class = Procedure_Handler;
 
 
    function Get_Array (Val : Array_Value) return Array_Interface_Access;
    function Get_Record (Val : Record_Value) return Record_Interface_Access;
    function Get_Ambivalent (Val : Ambivalent_Value) return Ambivalent_Interface_Access;
    function Get_Iterator (Val : Iterator_Value) return Iterator_Interface_Access;
-   function Get_Function (Val : Function_Value) return Function_Interface_Access;
+   --  function Get_Function (Val : Function_Value) return Function_Interface_Access;
    --  function Get_Reference (Val : Reference_Value) return Reference_Interface_Access;
    function Get_Constant (Val : Constant_Value) return Constant_Interface_Access;
 

@@ -15,8 +15,8 @@ package Protypo.Api.Engine_Values is
       Array_Handler,
       Ambivalent_Handler,
       Record_Handler,
-      Function_Handler,
-      Procedure_Handler,
+      --  Function_Handler,
+      --  Procedure_Handler,
       Constant_Handler,
       Iterator
      );
@@ -45,8 +45,8 @@ package Protypo.Api.Engine_Values is
    subtype Record_Value     is Engine_Value (Record_Handler);
    subtype Ambivalent_Value is Engine_Value (Ambivalent_Handler);
    subtype Iterator_Value   is Engine_Value (Iterator);
-   subtype Function_Value   is Engine_Value (Function_Handler);
-   subtype Procedure_Value  is Engine_Value (Procedure_Handler);
+   --  subtype Function_Value   is Engine_Value (Function_Handler);
+   --  subtype Procedure_Value  is Engine_Value (Procedure_Handler);
    subtype Constant_Value   is Engine_Value (Constant_Handler);
 
    subtype Handler_Value is Engine_Value
@@ -233,7 +233,7 @@ package Protypo.Api.Engine_Values is
    --
    --  Array, records and ambivalent interfaces always return
    --  references.  This allows to update (if the reference is
-   --  writable) the content of the array, ...
+   --  writable) the content of the array, etc.
    --
    type Engine_Reference  is interface;
 
@@ -284,36 +284,33 @@ package Protypo.Api.Engine_Values is
                       Field : Id)
                       return Boolean
      with
-       Pre =>
-         Val.Class in Record_Like_Handler;
+       Pre => Val.Class in Record_Like_Handler;
 
 
    function Get_Field (Val   : Engine_Value;
                        Field : Id)
                        return Engine_Reference'Class
      with
-       Pre =>
-         Val.Class in Record_Like_Handler;
+       Pre => Val.Class in Record_Like_Handler;
 
    function Get_Indexed (Val   : Engine_Value;
                          Index : Engine_Value_Array)
                          return Engine_Reference'Class
      with
-       Pre =>
-         Val.Class in Indexed_Handler;
+       Pre => Val.Class in Indexed_Handler;
 
 
-   function Call_Function (Item       : Function_Value;
-                           Parameters : Engine_Value_Array)
-                           return Engine_Value_Array;
+   --  function Call_Function (Item       : Function_Value;
+   --                          Parameters : Engine_Value_Array)
+   --                          return Engine_Value_Array;
+   --
+   --  procedure Call (Item       : Procedure_Value;
+   --                  Parameters : Engine_Value_Array);
 
-   procedure Call (Item       : Procedure_Value;
-                   Parameters : Engine_Value_Array);
-
-   function Handler_Reference (Item : Engine_Value)
-                          return Engine_Reference'Class
-     with
-       Pre => Item.Class in Handler_Classes;
+   --  function Handler_Reference (Item : Engine_Value)
+   --                         return Engine_Reference'Class
+   --    with
+   --      Pre => Item.Class in Handler_Classes;
 
 
 
@@ -345,11 +342,11 @@ private
             when Iterator =>
                Iteration_Object : access Handlers.Iterator_Interface'Class;
 
-            when Function_Handler =>
-               Function_Object : access Handlers.Function_Interface'Class;
-
-            when Procedure_Handler =>
-               Procedure_Object : access Handlers.Procedure_Interface'Class;
+            --  when Function_Handler =>
+            --     Function_Object : access Handlers.Function_Interface'Class;
+            --
+            --  when Procedure_Handler =>
+            --     Procedure_Object : access Handlers.Procedure_Interface'Class;
 
             when Constant_Handler =>
                Constant_Object  : access Handlers.Constant_Interface;

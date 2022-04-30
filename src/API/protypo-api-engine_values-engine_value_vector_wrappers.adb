@@ -1,6 +1,5 @@
 pragma Ada_2012;
 with Ada.Containers;
---  with Protypo.Api.Engine_Values.Constant_Wrappers;
 with Protypo.Api.Engine_Values.Range_Iterators;
 with Protypo.Api.Constant_References;
 
@@ -36,6 +35,46 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
          First  : Engine_Values.Cursor;
       end record;
 
+   type Array_Element_Reference is
+     new Engine_Reference
+   with
+      record
+         Read_Only : Boolean;
+         Pos       : Engine_Value_Array_Reference;
+      end record;
+
+
+   overriding
+   function Read (Ref : Array_Element_Reference) return Engine_Value;
+
+   overriding
+   procedure Write (Ref       : Array_Element_Reference;
+                    New_Value : Engine_Value);
+
+   overriding
+   function Is_Writable (Ref : Array_Element_Reference) return Boolean;
+
+
+   overriding
+   function Read (Ref : Array_Element_Reference) return Engine_Value
+   is (Engine_Values.Element (Ref.Pos));
+
+
+   overriding
+   procedure Write (Ref       : Array_Element_Reference;
+                    New_Value : Engine_Value)
+   is
+   begin
+      if Ref.Read_Only then
+         raise Constraint_Error with "Trying to write read-only entry";
+      else
+         Update_Element (Ref.Pos, New_Value);
+      end if;
+   end Write;
+
+   overriding
+   function Is_Writable (Ref : Array_Element_Reference) return Boolean;
+
 
    overriding procedure Reset (Iter : in out Array_Iterator);
    overriding procedure Next (Iter : in out Array_Iterator);
@@ -43,25 +82,6 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    overriding function Element (Iter : Array_Iterator) return Handler_Value;
 
 
-   --  function Force_Handler (Item : Engine_Value) return Handler_Value
-   --  is (case Item.Class is
-   --         when Handler_Classes   =>
-   --            Item,
-   --
-   --         when Int               =>
-   --            Constant_Wrappers.To_Handler_Value (Get_Integer (Item)),
-   --
-   --         when Real              =>
-   --            Constant_Wrappers.To_Handler_Value (Get_Float (Item)),
-   --
-   --         when Text              =>
-   --            Constant_Wrappers.To_Handler_Value (Get_String (Item)),
-   --
-   --         when logical              =>
-   --            Constant_Wrappers.To_Handler_Value (Get_Logical (Item)),
-   --
-   --         when Void | Iterator   =>
-   --            raise Constraint_Error);
 
    overriding procedure Reset (Iter : in out Array_Iterator)
    is
@@ -88,7 +108,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
 
    function Get
      (X : Vector_Handler; Index : Engine_Value_Array)
-      return Engine_Reference'Class
+            return Engine_Reference'Class
    is
       use type Ada.Containers.Count_Type;
    begin
@@ -107,7 +127,8 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
             raise Handlers.Out_Of_Range with "Out of bounds index";
          end if;
 
-         return Constant_References.To_Reference (X.Vect.all (Idx));
+         return Array_Element_Reference'(Read_Only => X.Read_Only,
+                                         Pos       => X.Vect.Reference (Idx));
       end;
    end Get;
 
@@ -116,7 +137,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    ---------
 
    function Get (X : Vector_Handler; Field : Id)
-                 return Engine_Reference'Class
+                       return Engine_Reference'Class
    is
       use Constant_References;
    begin

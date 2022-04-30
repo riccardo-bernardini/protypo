@@ -1,7 +1,8 @@
 with Protypo.API.Consumers;
-with Protypo.API.Symbols;
 with Protypo.Api.Engine_Values;
+with Protypo.Api.Engine_Values.Handlers;
 
+private with Protypo.Api.Symbols;
 private with Protypo.Code_Trees;
 
 with Utilities;
@@ -28,6 +29,14 @@ package Protypo.API.Interpreters is
                      Name        : ID;
                      Value       : Engine_Values.Engine_Value);
    -- Define a new symbol in the global namespace of the interpreter
+
+   procedure Define (Interpreter : in out Interpreter_Type;
+                     Name        : Id;
+                     Funct       : Engine_Values.Handlers.Function_Interface'Class);
+
+   procedure Define (Interpreter : in out Interpreter_Type;
+                     Name        : Id;
+                     Proc        : Engine_Values.Handlers.Procedure_Interface'Class);
 
    procedure Run (Interpreter  : in out Interpreter_Type;
                   Program      : Template_Type;
@@ -69,7 +78,7 @@ private
    function Slurp (Filename : String) return Template_Type
    is (Template_Type (Utilities.Slurp (Filename)));
 
-      procedure Bye (X : in out Compiled_Code);
+   procedure Bye (X : in out Compiled_Code);
 
 
 end Protypo.API.Interpreters;
