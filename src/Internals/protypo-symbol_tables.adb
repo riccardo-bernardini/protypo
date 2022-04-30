@@ -55,4 +55,20 @@ package body Protypo.Symbol_Tables is
       Where.Create (Name, Symbols.To_Symbol_Value (Proc));
    end Define_Procedure;
 
+   ----------------------
+   -- Define_Procedure --
+   ----------------------
+
+   procedure Define_Procedure
+     (Where    : in out Symbol_Table_Type;
+      Name     : Id;
+      Proc     : Engine_Values.Handlers.Procedure_Interface'Class;
+      Position : out Protypo_Tables.Cursor)
+   is
+   begin
+      Where.Create (Name, Symbols.To_Symbol_Value (Proc), Position);
+   end Define_Procedure;
+
+
+
 end Protypo.Symbol_Tables;

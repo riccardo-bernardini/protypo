@@ -10,6 +10,7 @@ with Protypo.Code_Trees.Interpreter.Statements;
 with Protypo.Api.Consumers.Buffers;
 
 with Protypo.Code_Trees.Interpreter.Names;
+with Protypo.Symbols;
 
 package body Protypo.Code_Trees.Interpreter.Expressions is
    Unvaluable_Expression : exception;
@@ -317,8 +318,17 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
             pragma Assert (Expr.Indexed_Var.Class = Identifier);
 
             declare
-               use Protypo.Api.Symbols;
+               use Symbol_Tables;
                use type Protypo_Tables.Cursor;
+               use type Symbols.Symbol_Value_Class;
+
+               function Extract_Value (Item : Protypo.Symbols.Symbol_Value)
+                                       return Engine_Value
+               is (if Item.Class = Symbols.Engine_Value_Class
+                   then
+                      Symbols.Get_Value (Item)
+                   else
+                      raise Constraint_Error);
 
                Var_Name : constant Id := To_Id (Expr.Indexed_Var.Id_Value);
 
@@ -330,7 +340,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
                           then
                              Void_Value
                           else
-                             Protypo_Tables.Value (Pos));
+                             Extract_Value (Protypo_Tables.Value (Pos)));
 
                Parameters : constant Engine_Value_Array :=
                               Eval_Vector (Status, Expr.Indexes);
