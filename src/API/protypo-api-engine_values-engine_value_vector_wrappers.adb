@@ -35,6 +35,13 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
          First  : Engine_Values.Cursor;
       end record;
 
+
+   overriding procedure Reset (Iter : in out Array_Iterator);
+   overriding procedure Next (Iter : in out Array_Iterator);
+   overriding function End_Of_Iteration (Iter : Array_Iterator) return Boolean;
+   overriding function Element (Iter : Array_Iterator) return Handler_Value;
+
+
    type Array_Element_Reference is
      new Engine_Reference
    with
@@ -72,14 +79,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
       end if;
    end Write;
 
-   overriding
-   function Is_Writable (Ref : Array_Element_Reference) return Boolean;
 
-
-   overriding procedure Reset (Iter : in out Array_Iterator);
-   overriding procedure Next (Iter : in out Array_Iterator);
-   overriding function End_Of_Iteration (Iter : Array_Iterator) return Boolean;
-   overriding function Element (Iter : Array_Iterator) return Handler_Value;
 
 
 
