@@ -33,7 +33,11 @@ generic
 package Protypo.Api.Engine_Values.Array_Wrappers is
    subtype Index_Type is Engine_Value_Array_Wrappers.Array_Wrapper_Index;
 
-   type Array_Wrapper is new Handlers.Ambivalent_Interface with private;
+   type Array_Wrapper is
+     new Engine_Value_Array_Wrappers.Array_Wrapper
+   with
+     private;
+
    type Array_Wrapper_Access is access Array_Wrapper;
 
    function Make_Wrapper (Init : Array_Type)
@@ -50,35 +54,33 @@ package Protypo.Api.Engine_Values.Array_Wrappers is
                      Value     : Element_Type);
 
 
-   overriding function Get (X     : Array_Wrapper;
-                            Index : Engine_Value_Array)
-                            return Engine_Reference'Class;
-
-   overriding function Get (X     : Array_Wrapper;
-                            Field : Id)
-                            return Engine_Reference'Class;
-
-   function Is_Field (X : Array_Wrapper; Field : Id) return Boolean;
+   --  overriding function Get (X     : Array_Wrapper;
+   --                           Index : Engine_Value_Array)
+   --                           return Engine_Reference'Class;
+   --
+   --  overriding function Get (X     : Array_Wrapper;
+   --                           Field : Id)
+   --                           return Engine_Reference'Class;
+   --
+   --  function Is_Field (X : Array_Wrapper; Field : Id) return Boolean;
 private
    type Array_Wrapper is
-     new Handlers.Ambivalent_Interface
-   with
-      record
-         A : Engine_Value_Array_Wrappers.Array_Wrapper_Access;
-      end record;
+     new Engine_Value_Array_Wrappers.Array_Wrapper
+       with
+     null record;
 
-   function Get (X     : Array_Wrapper;
-                 Index : Engine_Value_Array)
-                 return Engine_Reference'Class
-   is (X.A.Get (Index));
+   --  function Get (X     : Array_Wrapper;
+   --                Index : Engine_Value_Array)
+   --                return Engine_Reference'Class
+   --  is (X.A.Get (Index));
+   --
+   --  function Get (X     : Array_Wrapper;
+   --                Field : Id)
+   --                return Engine_Reference'Class
+   --  is (X.A.Get (Field));
 
-   function Get (X     : Array_Wrapper;
-                 Field : Id)
-                 return Engine_Reference'Class
-   is (X.A.Get (Field));
-
-   function Is_Field (X : Array_Wrapper; Field : Id) return Boolean
-   is (X.A.Is_Field (Field));
+   --  function Is_Field (X : Array_Wrapper; Field : Id) return Boolean
+   --  is (X.A.Is_Field (Field));
 
    function Create (Value : Array_Type) return Ambivalent_Value
    is (Handlers.Create (Make_Wrapper (Value)));

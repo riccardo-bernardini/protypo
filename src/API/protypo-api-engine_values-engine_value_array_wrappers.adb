@@ -99,11 +99,11 @@ package body Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
       --        new Engine_Value_Vectors.Vector'(Engine_Value_Vectors.Empty_Vector);
 
       Result : constant Array_Wrapper_Access :=
-                 new Array_Wrapper'(Vector => Empty_Array);
+                 new Array_Wrapper'(Vector => Init);
    begin
-      for El of Init loop
-         Result.Vector.Append (El);
-      end loop;
+      --  for El of Init loop
+      --     Result.Vector.Append (El);
+      --  end loop;
 
       return  Result;
    end Make_Wrapper;

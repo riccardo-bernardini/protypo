@@ -1,6 +1,5 @@
 pragma Ada_2012;
 package body Protypo.Api.Engine_Values.Array_Wrappers is
-   type Wrapper_Access is access Array_Wrapper;
 
    ------------------
    -- Make_Wrapper --
@@ -9,15 +8,13 @@ package body Protypo.Api.Engine_Values.Array_Wrappers is
    function Make_Wrapper (Init : Array_Type)
                           return Handlers.Ambivalent_Interface_Access
    is
-      Result : constant Wrapper_Access :=
-                 new Array_Wrapper'(A => Engine_Value_Array_Wrappers.Make_Wrapper);
+      Tmp    : Engine_Value_Array;
    begin
-      for Idx in Init'Range loop
-         Result.Set (Index => Idx,
-                     Value => Init (Idx));
+      for el of Init loop
+         Tmp.Append (Create (El));
       end loop;
 
-      return Handlers.Ambivalent_Interface_Access (Result);
+      return Engine_Value_Array_Wrappers.Make_Wrapper (Tmp);
    end Make_Wrapper;
 
    ------------
@@ -28,7 +25,7 @@ package body Protypo.Api.Engine_Values.Array_Wrappers is
                      Value     : Element_Type)
    is
    begin
-      Container.A.Append (Create (Value));
+      Container.Append (Create (Value));
    end Append;
 
    ---------
@@ -40,8 +37,8 @@ package body Protypo.Api.Engine_Values.Array_Wrappers is
       Value     :        Element_Type)
    is
    begin
-      Container.A.Set (Index => Index,
-                       Value => Create (Value));
+      Container.Set (Index => Index,
+                     Value => Create (Value));
    end Set;
 
 

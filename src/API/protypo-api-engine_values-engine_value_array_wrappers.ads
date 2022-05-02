@@ -48,10 +48,6 @@ package Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
 
    function Is_Field (X : Array_Wrapper; Field : Id) return Boolean;
 private
-   --  type Vector_Access is access Engine_Value_Vectors.Vector;
-   --  Why do we use an access to the vector, rather then the vector itself?
-   --  Because we need it for the iterators
-
    type Array_Wrapper is
      new Handlers.Ambivalent_Interface
    with
