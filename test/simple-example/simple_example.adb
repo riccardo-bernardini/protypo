@@ -25,7 +25,7 @@ begin
                   Value => Engine_Values.Create (42));
 
    Engine.Define (Name  => "sin",
-                  Value => Engine_Values.Handlers.Create (Callbacks.Sin'Access));
+                  Funct => Engine_Values.Handlers.Create (Callbacks.Sin'Access));
 
    Engine.Run (Program, Consumer);
 end Simple_Example;

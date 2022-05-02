@@ -7,8 +7,8 @@ package body User_Records is
    ---------------
 
    function Split_Bit
-     (Params : Protypo.Api.Engine_Values.Engine_Value_Vectors.Vector)
-      return Protypo.Api.Engine_Values.Engine_Value_Vectors.Vector
+     (Params : Protypo.Api.Engine_Values.Engine_Value_Array)
+      return Protypo.Api.Engine_Values.Engine_Value_Array
    is
       use Protypo.Api.Engine_Values;
 
@@ -17,7 +17,7 @@ package body User_Records is
       X : constant Integer := Get_Integer (Shift (Parameters));
       Y : constant Integer := Get_Integer (Shift (Parameters), 2);
 
-      Result : Engine_Value_Vectors.Vector;
+      Result : Engine_Value_Array;
 
    begin
       Result (1) := Create (X / Y);
