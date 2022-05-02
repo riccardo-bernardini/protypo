@@ -42,12 +42,11 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    overriding function Element (Iter : Array_Iterator) return Handler_Value;
 
 
-   type Array_Element_Reference is
+   type Array_Element_Reference (El : not null access Engine_Value) is
      new Engine_Reference
    with
       record
          Read_Only : Boolean;
-         Pos       : Engine_Values.Cursor;
       end record;
 
 
@@ -64,7 +63,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
 
    overriding
    function Read (Ref : Array_Element_Reference) return Engine_Value
-   is (Engine_Values.Element (Ref.Pos));
+   is (Ref.El.all);
 
 
    overriding
@@ -75,7 +74,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
       if Ref.Read_Only then
          raise Constraint_Error with "Trying to write read-only entry";
       else
-         Replace_Element (Ref.Pos, New_Value);
+         Ref.El.all := New_Value;
       end if;
    end Write;
 
@@ -109,7 +108,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
 
    function Get
      (X : Vector_Handler; Index : Engine_Value_Array)
-            return Engine_Reference'Class
+      return Engine_Reference'Class
    is
       use type Ada.Containers.Count_Type;
    begin
@@ -129,7 +128,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
          end if;
 
          return Array_Element_Reference'(Read_Only => X.Read_Only,
-                                         Pos       => X.Vect.Reference (Idx));
+                                         El        => X.Vect.To_Reference (Idx).El);
       end;
    end Get;
 
@@ -138,7 +137,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    ---------
 
    function Get (X : Vector_Handler; Field : Id)
-                       return Engine_Reference'Class
+                 return Engine_Reference'Class
    is
       use Constant_References;
    begin
