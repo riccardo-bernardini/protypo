@@ -14,6 +14,7 @@ package body Protypo.Api.Engine_Values is
       return Engine_Value_Array
      with Pre =>
        Parameter_Lists.Is_Valid_Parameter_Signature (Specs);
+   pragma Unreferenced (Apply_Default_And_Varargin);
 
    function Apply_Default_And_Varargin
      (Specs      : Parameter_Lists.Parameter_Signature;
@@ -405,6 +406,24 @@ package body Protypo.Api.Engine_Values is
 
    function Is_Empty (Container : Engine_Value_Array) return Boolean
    is (Container.V.Is_Empty);
+
+   procedure Replace_Element (Position : Engine_Array_Reference;
+                              Item     : Engine_Value)
+   is
+   begin
+      Position.El.all := Item;
+   end Replace_Element;
+
+   function To_Cursor (V     : in out Engine_Value_Array;
+                       Index : Engine_Index)
+                       return Cursor
+   is (Pos => V.V.To_Cursor (Index));
+
+   function To_Reference (V     : in out Engine_Value_Array;
+                          Index : Engine_Index)
+                          return Engine_Array_Reference
+   is (El => V.V.Reference (Index).Element);
+
 
 
 end Protypo.Api.Engine_Values;

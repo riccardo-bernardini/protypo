@@ -47,7 +47,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    with
       record
          Read_Only : Boolean;
-         Pos       : Engine_Value_Array_Reference;
+         Pos       : Engine_Values.Cursor;
       end record;
 
 
@@ -75,11 +75,12 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
       if Ref.Read_Only then
          raise Constraint_Error with "Trying to write read-only entry";
       else
-         Update_Element (Ref.Pos, New_Value);
+         Replace_Element (Ref.Pos, New_Value);
       end if;
    end Write;
 
-
+   function Is_Writable (Ref : Array_Element_Reference) return Boolean
+   is (not Ref.Read_Only);
 
 
 

@@ -32,7 +32,7 @@ package Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
 
    overriding function Get (X     : Vector_Handler;
                             Index : Engine_Value_Array)
-                               return Engine_Reference'Class;
+                            return Engine_Reference'Class;
 
    overriding function Get (X     : Vector_Handler;
                             Field : Id)
@@ -58,7 +58,8 @@ private
          --  Engine_Value_Array?  Because we need an address in
          --  order to return the reference
          --
-         Vect : Vector_Access;
+         Vect      : Vector_Access;
+         Read_Only : Boolean;
       end record;
 
    overriding procedure Initialize (Object : in out Vector_Handler);

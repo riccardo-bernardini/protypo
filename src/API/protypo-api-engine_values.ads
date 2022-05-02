@@ -153,6 +153,8 @@ package Protypo.Api.Engine_Values is
        Constant_Indexing => Element_At,
        Iterator_Element => Engine_Value;
 
+   type Engine_Array_Reference (El : not null access Engine_Value) is private;
+
    Empty_Array : constant Engine_Value_Array;
 
    subtype Engine_Index is Positive;
@@ -214,6 +216,18 @@ package Protypo.Api.Engine_Values is
    procedure Replace_Element (V      : in out Engine_Value_Array;
                               Index  : Engine_Index;
                               Item   : Engine_Value);
+
+   procedure Replace_Element (Position : Engine_Array_Reference;
+                              Item     : Engine_Value);
+
+   function To_Reference (V     : in out Engine_Value_Array;
+                          Index : Engine_Index)
+                          return Engine_Array_Reference;
+
+   function To_Cursor (V     : in out Engine_Value_Array;
+                       Index : Engine_Index)
+                       return Cursor;
+
 
    function Singleton (Item : Engine_Value)
                        return Engine_Value_Array
@@ -364,6 +378,8 @@ private
       record
          V : Engine_Value_Arrays.Vector;
       end record;
+
+   type Engine_Array_Reference (El : not null access Engine_Value) is null record;
 
 
    type Cursor is
