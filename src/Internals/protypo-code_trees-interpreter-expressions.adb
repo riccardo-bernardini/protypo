@@ -86,13 +86,13 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
                              return Engine_Value_Array
    is
 
-      function Embed (X : Engine_Value) return Engine_Value_Array
-      is
-         Result : Engine_Value_Array;
-      begin
-         Result.Append (X);
-         return Result;
-      end Embed;
+      --  function Singleton (X : Engine_Value) return Engine_Value_Array
+      --  is
+      --     Result : Engine_Value_Array;
+      --  begin
+      --     Result.Append (X);
+      --     return Result;
+      --  end Singleton;
 
       -----------
       -- Apply --
@@ -106,13 +106,13 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
       begin
          case Op is
             when Plus        =>
-               return Embed (X);
+               return Singleton (X);
 
             when Minus       =>
-               return Embed (-X);
+               return Singleton (-X);
 
             when Kw_Not      =>
-               return Embed (not X);
+               return Singleton (not X);
          end case;
       end Apply;
 
@@ -134,46 +134,46 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
                   raise Run_Time_Error with """mod"" defined only for integer values";
                end if;
 
-               return Embed (Left mod Right);
+               return Singleton (Left mod Right);
 
             when Plus        =>
-               return Embed (Left + Right);
+               return Singleton (Left + Right);
 
             when Minus       =>
-               return Embed (Left - Right);
+               return Singleton (Left - Right);
 
             when Mult        =>
-               return Embed (Left * Right);
+               return Singleton (Left * Right);
 
             when Div         =>
-               return Embed (Left / Right);
+               return Singleton (Left / Right);
 
             when Equal       =>
-               return Embed (Left = Right);
+               return Singleton (Left = Right);
 
             when Different   =>
-               return Embed (Left /= Right);
+               return Singleton (Left /= Right);
 
             when Less_Than   =>
-               return Embed (Left < Right);
+               return Singleton (Left < Right);
 
             when Greater_Than =>
-               return Embed (Left > Right);
+               return Singleton (Left > Right);
 
             when Less_Or_Equal =>
-               return Embed (Left <= Right);
+               return Singleton (Left <= Right);
 
             when Greater_Or_Equal =>
-               return Embed (Left >= Right);
+               return Singleton (Left >= Right);
 
             when Kw_And      =>
-               return Embed (Left and Right);
+               return Singleton (Left and Right);
 
             when Kw_Or       =>
-               return Embed (Left or Right);
+               return Singleton (Left or Right);
 
             when Kw_Xor      =>
-               return Embed (Left xor Right);
+               return Singleton (Left xor Right);
          end case;
       end Apply;
 
@@ -193,9 +193,10 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
          Pop_Consumer (Status);
 
          return Result : constant Engine_Value_Array :=
-           Embed (Api.Engine_Values.Create (Buffer.Get_Data))
+           Singleton (Api.Engine_Values.Create (Buffer.Get_Data))
          do
             Api.Consumers.Buffers.Destroy (Buffer);
+            Put_Line (">>>" & Result.first_element.Class'Image);
          end return;
 
       end Do_Capture;
@@ -225,13 +226,13 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
             end;
 
          when Int_Constant =>
-            return Embed (Create (Expr.N));
+            return Singleton (Create (Expr.N));
 
          when Real_Constant =>
-            return Embed (Create (Expr.X));
+            return Singleton (Create (Expr.X));
 
          when Text_Constant =>
-            return Embed (Create (To_String (Expr.S)));
+            return Singleton (Create (To_String (Expr.S)));
 
 
          when Capture_Call =>
@@ -430,6 +431,7 @@ package body Protypo.Code_Trees.Interpreter.Expressions is
       Result : constant Engine_Value := Eval_Single_Expression (Status, Expr);
    begin
       if not (Result.Class in Scalar_Classes) then
+
          raise Run_Time_Error
            with
          Result.Class'Image & " at " & Tokens.Image (Expr.Source_Position);

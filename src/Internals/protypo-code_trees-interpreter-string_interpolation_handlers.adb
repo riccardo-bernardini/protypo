@@ -18,10 +18,10 @@ package body Protypo.Code_Trees.Interpreter.String_Interpolation_Handlers is
 
    function Process
      (Fun       : String_Interpolator;
-                     Parameter : Engine_Value_Array)
+      Parameter : Engine_Value_Array)
       return Engine_Value_Array
    is
-      use type ada.Containers.Count_Type;
+      use type Ada.Containers.Count_Type;
    begin
       if Parameter.Length /= 1 then
          -- This should never happen

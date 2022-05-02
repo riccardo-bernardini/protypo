@@ -69,8 +69,9 @@ package body Protypo.Code_Trees.Interpreter is
          Code : constant Code_Trees.Parsed_Code :=
                   Parsing.Parse_Expression (Tk);
       begin
-         --  Scanning.Dump (Tk);
-         --  Code_Trees.Dump (Code);
+         Put_Line ("@@@" & Input);
+         Scanning.Dump (Tk);
+         Code_Trees.Dump (Code);
 
 
          return Expressions.Eval_Scalar (Status, Code.Pt);
