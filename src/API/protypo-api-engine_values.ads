@@ -17,13 +17,13 @@ package Protypo.Api.Engine_Values is
       Record_Handler,
       --  Function_Handler,
       --  Procedure_Handler,
-      Constant_Handler,
+      --  Constant_Handler,
       Iterator
      );
 
    subtype Scalar_Classes  is Engine_Value_Class range Int .. Text;
    subtype Numeric_Classes is Scalar_Classes     range Int .. Real;
-   subtype Handler_Classes is Engine_Value_Class range Array_Handler .. Constant_Handler;
+   subtype Handler_Classes is Engine_Value_Class range Array_Handler .. Record_Handler;
 
    subtype Indexed_Handler is Engine_Value_Class
      with
@@ -47,11 +47,11 @@ package Protypo.Api.Engine_Values is
    subtype Iterator_Value   is Engine_Value (Iterator);
    --  subtype Function_Value   is Engine_Value (Function_Handler);
    --  subtype Procedure_Value  is Engine_Value (Procedure_Handler);
-   subtype Constant_Value   is Engine_Value (Constant_Handler);
+   --  subtype Constant_Value   is Engine_Value (Constant_Handler);
 
    subtype Handler_Value is Engine_Value
      with Dynamic_Predicate =>
-       (Handler_Value.Class in Array_Handler .. Constant_Handler);
+       (Handler_Value.Class in Array_Handler .. Record_Handler);
 
 
    -- =========================== --
@@ -362,8 +362,8 @@ private
             --  when Procedure_Handler =>
             --     Procedure_Object : access Handlers.Procedure_Interface'Class;
 
-            when Constant_Handler =>
-               Constant_Object  : access Handlers.Constant_Interface;
+            --  when Constant_Handler =>
+            --     Constant_Object  : access Handlers.Constant_Interface;
          end case;
       end record;
 

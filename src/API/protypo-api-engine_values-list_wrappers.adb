@@ -1,6 +1,4 @@
 pragma Ada_2012;
-with Protypo.Api.Engine_Values.Constant_Wrappers;
-use Protypo.Api.Engine_Values.Constant_Wrappers;
 
 with Protypo.Api.Engine_Values.Handlers;
 
@@ -24,7 +22,7 @@ package body Protypo.Api.Engine_Values.List_Wrappers is
    overriding procedure Reset (Iter : in out Iterator_Type);
    overriding procedure Next (Iter : in out Iterator_Type);
    overriding function End_Of_Iteration (Iter : Iterator_Type) return Boolean;
-   overriding function Element (Iter : Iterator_Type) return Handler_Value;
+   overriding function Element (Iter : Iterator_Type) return Engine_Value;
 
    procedure Reset (Iter : in out Iterator_Type)
    is
@@ -41,8 +39,8 @@ package body Protypo.Api.Engine_Values.List_Wrappers is
    function End_Of_Iteration (Iter : Iterator_Type) return Boolean
    is (not Engine_Value_Lists.Has_Element (Iter.Pos));
 
-   function Element (Iter : Iterator_Type) return Handler_Value
-   is (To_Handler_Value (Engine_Value_Lists.Element (Iter.Pos)));
+   function Element (Iter : Iterator_Type) return Engine_Value
+   is (Engine_Value_Lists.Element (Iter.Pos));
 
 
 

@@ -39,7 +39,7 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    overriding procedure Reset (Iter : in out Array_Iterator);
    overriding procedure Next (Iter : in out Array_Iterator);
    overriding function End_Of_Iteration (Iter : Array_Iterator) return Boolean;
-   overriding function Element (Iter : Array_Iterator) return Handler_Value;
+   overriding function Element (Iter : Array_Iterator) return Engine_Value;
 
 
    type Array_Element_Reference (El : not null access Engine_Value) is
@@ -99,8 +99,8 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    overriding function End_Of_Iteration (Iter : Array_Iterator) return Boolean
    is (not Has_Element (Iter.Cursor));
 
-   overriding function Element (Iter : Array_Iterator) return Handler_Value
-   is (Handlers.Force_Handler (Element (Iter.Cursor)));
+   overriding function Element (Iter : Array_Iterator) return Engine_Value
+   is (Element (Iter.Cursor));
 
    ---------
    -- Get --

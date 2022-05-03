@@ -1,4 +1,3 @@
-with Protypo.Api.Engine_Values.Constant_Wrappers;
 with Protypo.Api.Engine_Values.Handlers;
 
 --
@@ -17,10 +16,8 @@ package Protypo.Api.Engine_Values.Range_Iterators is
    overriding procedure Reset (Iter : in out Range_Iterator);
    overriding procedure Next (Iter : in out Range_Iterator);
    overriding function End_Of_Iteration (Iter : Range_Iterator) return Boolean;
-   overriding function Element (Iter : Range_Iterator) return Handler_Value;
+   overriding function Element (Iter : Range_Iterator) return Engine_Value;
 private
-   use Protypo.Api.Engine_Values.Constant_Wrappers;
-
    type Range_Iterator is new Handlers.Iterator_Interface with
       record
          Start   : Integer;
@@ -37,6 +34,6 @@ private
    function End_Of_Iteration (Iter : Range_Iterator) return Boolean
    is (Iter.Current > Iter.Stop);
 
-   function Element (Iter : Range_Iterator) return Handler_Value
-   is (Handlers.Create (Handlers.Constant_Interface_Access (Make_Wrapper (Iter.Current))));
+   function Element (Iter : Range_Iterator) return Engine_Value
+   is (Create (Iter.Current));
 end Protypo.Api.Engine_Values.Range_Iterators;

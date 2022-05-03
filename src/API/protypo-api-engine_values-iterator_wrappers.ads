@@ -26,13 +26,13 @@ package Protypo.Api.Engine_Values.Iterator_Wrappers is
    function Make_Wrapper (Iter : Basic_Iterator_Access)
                           return Iterator_Wrapper_Access;
 
-   procedure Reset (Iter : in out Iterator_Wrapper);
+   overriding procedure Reset (Iter : in out Iterator_Wrapper);
 
-   procedure Next (Iter : in out Iterator_Wrapper);
+   overriding procedure Next (Iter : in out Iterator_Wrapper);
 
-   function End_Of_Iteration (Iter : Iterator_Wrapper) return Boolean;
+   overriding function End_Of_Iteration (Iter : Iterator_Wrapper) return Boolean;
 
-   function Element (Iter : Iterator_Wrapper) return Handler_Value;
+   overriding function Element (Iter : Iterator_Wrapper) return Engine_Value;
 
 private
    type Iterator_Wrapper is

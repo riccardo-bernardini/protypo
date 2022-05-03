@@ -61,14 +61,14 @@ package Protypo.Api.Engine_Values.Handlers is
      with Post => Create'Result.Class = Ambivalent_Handler;
 
 
-   type Constant_Interface is limited interface;
-   type Constant_Interface_Access  is  access all Constant_Interface'Class;
-
-   function Read (X : Constant_Interface) return Engine_Value is abstract;
-
-
-   function Create (Val : Constant_Interface_Access) return Engine_Value
-     with Post => Create'Result.Class = Constant_Handler;
+   --  type Constant_Interface is limited interface;
+   --  type Constant_Interface_Access  is  access all Constant_Interface'Class;
+   --
+   --  function Read (X : Constant_Interface) return Engine_Value is abstract;
+   --
+   --
+   --  function Create (Val : Constant_Interface_Access) return Engine_Value
+   --    with Post => Create'Result.Class = Constant_Handler;
 
 
 
@@ -84,7 +84,7 @@ package Protypo.Api.Engine_Values.Handlers is
                               return Boolean is abstract;
 
    function Element (Iter : Iterator_Interface)
-                     return Handler_Value is abstract
+                     return Engine_Value is abstract
      with Pre'Class => not Iter.End_Of_Iteration;
 
    function Create (Val : Iterator_Interface_Access) return Engine_Value
@@ -167,10 +167,10 @@ package Protypo.Api.Engine_Values.Handlers is
    function Get_Iterator (Val : Iterator_Value) return Iterator_Interface_Access;
    --  function Get_Function (Val : Function_Value) return Function_Interface_Access;
    --  function Get_Reference (Val : Reference_Value) return Reference_Interface_Access;
-   function Get_Constant (Val : Constant_Value) return Constant_Interface_Access;
+   --  function Get_Constant (Val : Constant_Value) return Constant_Interface_Access;
 
-   function Force_Handler (Item : Engine_Value) return Handler_Value
-     with Pre => Item.Class /= Void and Item.Class /= Iterator;
+   --  function Force_Handler (Item : Engine_Value) return Handler_Value
+   --    with Pre => Item.Class /= Void and Item.Class /= Iterator;
    --  Take any Engine_Value (but Void and Iterator) and embed it
    --  (if necessary) into a Constant handler value.  If Item is
    --  already a handler, just return Item.

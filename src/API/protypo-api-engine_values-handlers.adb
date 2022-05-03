@@ -1,5 +1,5 @@
 pragma Ada_2012;
-with Protypo.Api.Engine_Values.Constant_Wrappers;
+--  with Protypo.Api.Engine_Values.Constant_Wrappers;
 
 package body Protypo.Api.Engine_Values.Handlers is
    function Apply_Default_And_Varargin
@@ -161,9 +161,9 @@ package body Protypo.Api.Engine_Values.Handlers is
                                    Max_Parameters => Max_Parameters,
                                    With_Varargin  => With_Varargin));
 
-   function Create (Val : Constant_Interface_Access) return Engine_Value
-   is (Engine_Value'(Class            => Constant_Handler,
-                     Constant_Object  => Val));
+   --  function Create (Val : Constant_Interface_Access) return Engine_Value
+   --  is (Engine_Value'(Class            => Constant_Handler,
+   --                    Constant_Object  => Val));
 
    function Get_Array (Val : Array_Value) return Array_Interface_Access
    is (Val.Array_Object);
@@ -180,25 +180,25 @@ package body Protypo.Api.Engine_Values.Handlers is
    --  function Get_Function (Val : Function_Value) return Function_Interface_Access
    --  is (Val.Function_Object);
 
-   function Get_Constant (Val : Constant_Value) return Constant_Interface_Access
-   is (Val.Constant_Object);
+   --  function Get_Constant (Val : Constant_Value) return Constant_Interface_Access
+   --  is (Val.Constant_Object);
 
-   function Force_Handler (Item : Engine_Value) return Handler_Value
-   is (case Item.Class is
-          when Handler_Classes      =>
-             Item,
-
-          when Int                  =>
-             Constant_Wrappers.To_Handler_Value (Get_Integer (Item)),
-
-          when Real                 =>
-             Constant_Wrappers.To_Handler_Value (Get_Float (Item)),
-
-          when Text                 =>
-             Constant_Wrappers.To_Handler_Value (Get_String (Item)),
-
-          when Void | Iterator      =>
-             raise Constraint_Error);
+   --  function Force_Handler (Item : Engine_Value) return Handler_Value
+   --  is (case Item.Class is
+   --         when Handler_Classes      =>
+   --            Item,
+   --
+   --         when Int                  =>
+   --            Constant_Wrappers.To_Handler_Value (Get_Integer (Item)),
+   --
+   --         when Real                 =>
+   --            Constant_Wrappers.To_Handler_Value (Get_Float (Item)),
+   --
+   --         when Text                 =>
+   --            Constant_Wrappers.To_Handler_Value (Get_String (Item)),
+   --
+   --         when Void | Iterator      =>
+   --            raise Constraint_Error);
 
    ---------------
    function Signature (Min_Parameters : Natural;
