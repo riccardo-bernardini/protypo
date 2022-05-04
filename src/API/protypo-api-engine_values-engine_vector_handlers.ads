@@ -18,7 +18,7 @@ with Protypo.Api.Engine_Values.Handlers;
 --   elements
 --
 
-package Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
+package Protypo.Api.Engine_Values.Engine_Vector_Handlers is
    type Vector_Reference (Ref : access Engine_Value_Array) is limited private
      with Implicit_Dereference => Ref;
 
@@ -28,7 +28,12 @@ package Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    with
      private;
 
-   type Vector_Handler_Access is access Vector_Handler;
+   type Vector_Handler_Access is access all Vector_Handler;
+
+   function To_Vector_Handler (Init : Engine_Value_Array;
+                               Read_Only : Boolean := True)
+                               return Vector_Handler_Access;
+
 
    overriding function Get (X     : Vector_Handler;
                             Index : Engine_Value_Array)
@@ -41,8 +46,25 @@ package Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
    overriding function Is_Field (X : Vector_Handler; Field : Id)
                                  return Boolean;
 
+   overriding function Type_Name (Item : Vector_Handler) return String;
+
+   overriding function Image (Item : Vector_Handler;
+                              Format : String := "") return String;
+
    function Vector (Item : Vector_Handler) return Vector_Reference;
 
+   procedure Set (Vector : in out Vector_Handler;
+                  Index  : Integer;
+                  Value  : Engine_Value);
+
+   procedure Append (Vector : in out Vector_Handler;
+                     Value  : Engine_Value);
+
+   function First_Index (Vector : Vector_Handler) return Integer;
+   function Last_Index (Vector : Vector_Handler) return Integer;
+   function Get_Element (Vector : Vector_Handler;
+                         Idx    : Integer)
+                         return Engine_Value;
 
 private
    type Vector_Reference (Ref : access Engine_Value_Array) is limited null record;
@@ -70,4 +92,4 @@ private
    function Vector (Item : Vector_Handler) return Vector_Reference
    is (Vector_Reference'(Ref => Item.Vect));
 
-end Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers;
+end Protypo.Api.Engine_Values.Engine_Vector_Handlers;

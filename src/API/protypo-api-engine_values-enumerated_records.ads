@@ -23,6 +23,7 @@ generic
    type Field_Name is (<>);
 
    Prefix : String := "";
+   Name   : String := "enumerated_record";
 package Protypo.Api.Engine_Values.Enumerated_Records is
 
    type Aggregate_Type is array (Field_Name) of Engine_Value_Holders.Holder;
@@ -77,6 +78,13 @@ package Protypo.Api.Engine_Values.Enumerated_Records is
 
    overriding function Is_Field (Item : Enumerated_Record; Field : ID)
                                  return Boolean;
+
+   function Type_Name (Item : Enumerated_Record) return String;
+
+   function Image (Item   : Enumerated_Record;
+                   Format : String := "")
+                   return String;
+
 private
    package Record_Maps is
      new Ada.Containers.Indefinite_Ordered_Maps

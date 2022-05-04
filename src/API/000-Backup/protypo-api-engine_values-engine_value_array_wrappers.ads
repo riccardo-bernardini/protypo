@@ -47,6 +47,8 @@ package Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers is
                  return engine_Reference'Class;
 
    function Is_Field (X : Array_Wrapper; Field : Id) return Boolean;
+
+
 private
    type Array_Wrapper is
      new Handlers.Ambivalent_Interface

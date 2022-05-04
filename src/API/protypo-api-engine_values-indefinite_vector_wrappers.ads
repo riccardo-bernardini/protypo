@@ -1,6 +1,6 @@
 with Ada.Containers.Indefinite_Vectors;
 
-with Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;
+with Protypo.Api.Engine_Values.Engine_Vector_Handlers;
 with Protypo.Api.Engine_Values.Handlers;
 
 --
@@ -38,6 +38,8 @@ generic
                                                Element_Type => Element_Type);
 
    with function Create (X : Element_Type) return Engine_Value is <>;
+
+   Name : String;
 package Protypo.Api.Engine_Values.Indefinite_Vector_Wrappers is
 
    type Array_Wrapper is new Handlers.Ambivalent_Interface with private;
@@ -66,12 +68,19 @@ package Protypo.Api.Engine_Values.Indefinite_Vector_Wrappers is
                             return Engine_Reference'Class;
 
    function Is_Field (X : Array_Wrapper; Field : Id) return Boolean;
+
+   function Type_Name (Item : Array_Wrapper) return String;
+
+   function Image (Item   : Array_Wrapper;
+                   Format : String := "")
+                   return String;
+
 private
    type Array_Wrapper is
      new Handlers.Ambivalent_Interface
    with
       record
-         A : Engine_Value_Array_Wrappers.Array_Wrapper_Access;
+         A : Engine_Vector_Handlers.Vector_Handler_Access;
       end record;
 
    function Get (X     : Array_Wrapper;

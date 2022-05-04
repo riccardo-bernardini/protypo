@@ -22,7 +22,17 @@ use Protypo.Api.Engine_Values.Parameter_Lists;
 --
 
 package Protypo.Api.Engine_Values.Handlers is
-   type Array_Interface is interface;
+   type Root_Interface is interface;
+
+   function Type_Name (Item : Root_Interface) return String
+                       is abstract;
+
+   function Image (Item   : Root_Interface;
+                   Format : String := "")
+                   return String
+                   is abstract;
+
+   type Array_Interface is interface and Root_Interface;
    type Array_Interface_Access is access all Array_Interface'Class;
 
    function Get (X     : Array_Interface;
@@ -34,7 +44,7 @@ package Protypo.Api.Engine_Values.Handlers is
 
    Out_Of_Range : exception;
 
-   type Record_Interface is interface;
+   type Record_Interface is interface and Root_Interface;
    type Record_Interface_Access is access all Record_Interface'Class;
 
    function Is_Field (X : Record_Interface; Field : Id) return Boolean
@@ -208,7 +218,7 @@ private
 
 
    procedure Process (Fun       : Callback_Procedure_Handler;
-                     Parameter : Engine_Value_Array);
+                      Parameter : Engine_Value_Array);
 
    function Signature (Fun : Callback_Procedure_Handler)
                        return Parameter_Signature;

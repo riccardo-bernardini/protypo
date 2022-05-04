@@ -31,6 +31,13 @@ package Protypo.Api.Engine_Values.Record_Wrappers is
    function Create_Wrapper return Record_Wrapper_Access;
 
    function Map (Item : in out Record_Wrapper) return Record_Map_Reference;
+
+   function Type_Name (Item : Record_Wrapper) return String;
+
+   function Image (Item   : Record_Wrapper;
+                   Format : String := "")
+                   return String;
+
 private
 
    type Record_Map_Reference (Ref : access Record_Map) is limited null record;

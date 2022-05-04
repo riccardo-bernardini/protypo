@@ -6,7 +6,7 @@ with Ada.Tags;
 with Gnat.Regpat;
 
 with Protypo.Api.Engine_Values.Range_Iterators;
-with Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;
+with Protypo.Api.Engine_Values.Engine_Vector_Handlers;
 with Protypo.Api.Interpreters;
 with Protypo.Api.Callback_Utilities;  use Protypo.Api.Callback_Utilities;
 
@@ -288,7 +288,8 @@ package body Protypo.Code_Trees.Interpreter is
 
          declare
             use Tokenize;
-            use Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;
+            use Handlers;
+            use Protypo.Api.Engine_Values.Engine_Vector_Handlers;
 
             Tokens : constant Token_Array :=
                        Split (Item, Separator (Separator'First));
@@ -300,7 +301,7 @@ package body Protypo.Code_Trees.Interpreter is
             end loop;
 
             return Singleton
-              (Handlers.Create (Make_Wrapper (Result)));
+              (Create (Ambivalent_Interface_Access (To_Vector_Handler (Result))));
          end;
       end;
    end Split_Callback;

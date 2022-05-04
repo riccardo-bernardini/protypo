@@ -111,5 +111,14 @@ package body Protypo.Api.Engine_Values.Enumerated_Records is
       return Item.Map.Contains (Field);
    end Is_Field;
 
+   function Type_Name (Item : Enumerated_Record) return String
+   is (Name);
+
+   function Image (Item   : Enumerated_Record;
+                   Format : String := "")
+                   return String
+   is ("[" & Name & "]");
+
+
 
 end Protypo.Api.Engine_Values.Enumerated_Records;

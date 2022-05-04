@@ -1,4 +1,4 @@
-with Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;
+with Protypo.Api.Engine_Values.Engine_Vector_Handlers;
 with Protypo.Api.Engine_Values.Handlers;
 
 --
@@ -26,19 +26,27 @@ with Protypo.Api.Engine_Values.Handlers;
 generic
    type Element_Type is private;
 
-   type Array_Type is
-     array (Engine_Value_Array_Wrappers.Array_Wrapper_Index range <>) of Element_Type;
+   type Index_Type is (<>);
+
+   type Array_Type is array (Integer range <>) of Element_Type;
 
    with function Create (X : Element_Type) return Engine_Value is <>;
-package Protypo.Api.Engine_Values.Array_Wrappers is
-   subtype Index_Type is Engine_Value_Array_Wrappers.Array_Wrapper_Index;
 
+   with function Get_Value (X : Engine_Value) return Element_Type;
+
+   with function Image (Item : Element_Type;
+                        Format : String)
+                        return String;
+
+   Name : String;
+
+package Protypo.Api.Engine_Values.Array_Wrappers is
    type Array_Wrapper is
-     new Engine_Value_Array_Wrappers.Array_Wrapper
+     new Engine_Vector_Handlers.Vector_Handler
    with
      private;
 
-   type Array_Wrapper_Access is access Array_Wrapper;
+   type Array_Wrapper_Access is access all Array_Wrapper;
 
    function Make_Wrapper (Init : Array_Type)
                           return Handlers.Ambivalent_Interface_Access;
@@ -53,6 +61,11 @@ package Protypo.Api.Engine_Values.Array_Wrappers is
    procedure Append (Container : in out Array_Wrapper;
                      Value     : Element_Type);
 
+   overriding function Type_Name (Item : Array_Wrapper) return String;
+
+   overriding function Image (Item : Array_Wrapper;
+                              Format: String := "") return String;
+
 
    --  overriding function Get (X     : Array_Wrapper;
    --                           Index : Engine_Value_Array)
@@ -65,7 +78,7 @@ package Protypo.Api.Engine_Values.Array_Wrappers is
    --  function Is_Field (X : Array_Wrapper; Field : Id) return Boolean;
 private
    type Array_Wrapper is
-     new Engine_Value_Array_Wrappers.Array_Wrapper
+     new Engine_Vector_Handlers.Vector_Handler
        with
      null record;
 

@@ -99,4 +99,12 @@ package body Protypo.Match_Data_Wrappers is
       end;
    end Get;
 
+   function Type_Name (Item : Match_Data_Wrapper) return String
+   is ("match_data");
+
+   function Image (Item   : Match_Data_Wrapper;
+                   Format : String := "")
+                   return String
+   is ("[match_data]");
+
 end Protypo.Match_Data_Wrappers;

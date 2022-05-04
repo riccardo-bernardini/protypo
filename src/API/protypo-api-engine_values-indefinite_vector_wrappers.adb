@@ -16,7 +16,7 @@ package body Protypo.Api.Engine_Values.Indefinite_Vector_Wrappers is
          Val.Append (Create (Element));
       end loop;
 
-      return new Array_Wrapper'(A => Engine_Value_Array_Wrappers.Make_Wrapper (Val));
+      return new Array_Wrapper'(A => Engine_Vector_Handlers.To_Vector_Handler (Val));
    end Make_Wrapper;
 
 
@@ -43,6 +43,12 @@ package body Protypo.Api.Engine_Values.Indefinite_Vector_Wrappers is
    end Append;
 
 
+   function Type_Name (Item : Array_Wrapper) return String
+   is (Name);
 
+   function Image (Item   : Array_Wrapper;
+                   Format : String := "")
+                   return String
+   is ("[" & Name & "]");
 
 end Protypo.Api.Engine_Values.Indefinite_Vector_Wrappers;

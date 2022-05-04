@@ -32,6 +32,13 @@ package Protypo.Match_Data_Wrappers is
                  Index : Engine_Value_Array)
                  return Engine_Reference'Class;
 
+   function Type_Name (Item : Match_Data_Wrapper) return String;
+
+   function Image (Item   : Match_Data_Wrapper;
+                   Format : String := "")
+                   return String;
+
+
 private
    use Ada.Strings.Unbounded;
 

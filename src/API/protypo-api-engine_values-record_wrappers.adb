@@ -60,4 +60,13 @@ package body Protypo.Api.Engine_Values.Record_Wrappers is
       end if;
    end Get;
 
+
+   function Type_Name (Item : Record_Wrapper) return String
+   is ("record");
+
+   function Image (Item   : Record_Wrapper;
+                   Format : String := "")
+                   return String
+   is ("[record]");
+
 end Protypo.Api.Engine_Values.Record_Wrappers;

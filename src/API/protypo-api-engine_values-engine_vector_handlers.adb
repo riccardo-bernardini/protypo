@@ -9,7 +9,7 @@ pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
 with Ada.Text_Io; use Ada.Text_Io;
 
 
-package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
+package body Protypo.Api.Engine_Values.Engine_Vector_Handlers is
    type Field_Name is
      (
       Field_First,
@@ -183,4 +183,61 @@ package body Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers is
       Object.Vect := new Engine_Value_Array'(Empty_Array);
    end Initialize;
 
-end Protypo.Api.Engine_Values.Engine_Value_Vector_Wrappers;
+
+   overriding function Type_Name (Item : Vector_Handler) return String
+   is ("array");
+
+   overriding function Image (Item   : Vector_Handler;
+                              Format : String := "") return String
+   is ("[array (to be implemented)]");
+
+
+   function To_Vector_Handler (Init : Engine_Value_Array;
+                               Read_Only : Boolean := True)
+                               return Vector_Handler_Access
+   is
+      Result : constant Vector_Handler_Access := new Vector_Handler;
+   begin
+      Result.Vect.all := Init;
+      Result.Read_Only := Read_Only;
+
+      return result;
+   end To_Vector_Handler;
+
+
+   ---------
+   -- Set --
+   ---------
+
+   procedure Set (Vector : in out Vector_Handler;
+                  Index  : Integer;
+                  Value  : Engine_Value)
+   is
+   begin
+      Vector.Vect.Replace_Element (Index, Value);
+   end Set;
+
+   ------------
+   -- Append --
+   ------------
+
+   procedure Append (Vector : in out Vector_Handler;
+                     Value  : Engine_Value)
+   is
+   begin
+      Vector.Vect.Append (Value);
+   end Append;
+
+
+   function First_Index (Vector : Vector_Handler) return Integer
+   is (Vector.Vect.First_Index);
+
+   function Last_Index (Vector : Vector_Handler) return Integer
+   is (Vector.Vect.First_Index);
+
+   function Get_Element (Vector : Vector_Handler;
+                         Idx    : Integer)
+                         return Engine_Value
+   is (Vector.Vect (Idx));
+
+end Protypo.Api.Engine_Values.Engine_Vector_Handlers;
