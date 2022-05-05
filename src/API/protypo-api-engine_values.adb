@@ -424,6 +424,33 @@ package body Protypo.Api.Engine_Values is
                           return Engine_Array_Reference
    is (El => V.V.Reference (Index).Element);
 
+   function Image (Val : Integer; Format : String) return String
+   is
+      pragma Unreferenced (Format);
+   begin
+      return Integer'Image (Val);
+   end Image;
+
+   function Image (Val : Float; Format : String) return String
+   is
+      pragma Unreferenced (Format);
+   begin
+      return Float'Image (Val);
+   end Image;
+
+   function Image (Val : String; Format : String) return String
+   is
+      pragma Unreferenced (Format);
+   begin
+      return Val;
+   end Image;
+
+   function Image (Val : Boolean; Format : String) return String
+   is
+      pragma Unreferenced (Format);
+   begin
+      return Boolean'Image (Val);
+   end Image;
 
 
 end Protypo.Api.Engine_Values;

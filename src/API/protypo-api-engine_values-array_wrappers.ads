@@ -28,7 +28,7 @@ generic
 
    type Index_Type is (<>);
 
-   type Array_Type is array (Integer range <>) of Element_Type;
+   type Array_Type is array (Index_Type range <>) of Element_Type;
 
    with function Create (X : Element_Type) return Engine_Value is <>;
 
@@ -36,7 +36,8 @@ generic
 
    with function Image (Item : Element_Type;
                         Format : String)
-                        return String;
+                        return String
+     is <>;
 
    Name : String;
 

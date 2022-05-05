@@ -283,6 +283,15 @@ package Protypo.Api.Engine_Values is
 
    function Create (Val : Boolean) return Integer_Value;
 
+   function Image (Val : Integer; Format : String) return String;
+
+   function Image (Val : float; Format : String) return String;
+
+   function Image (Val : string; Format : String) return String;
+
+   function Image (Val : Boolean; Format : String) return String;
+
+
    function Get_Integer (Val : Integer_Value) return Integer;
    function Get_Integer (Val : Engine_Value; Default : Integer) return Integer;
 

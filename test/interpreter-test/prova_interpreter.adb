@@ -1,6 +1,6 @@
 with Protypo.Api.Interpreters;
 with Protypo.Api.Consumers.File_Writer;
-with Protypo.Api.Engine_Values.Engine_Value_Array_Wrappers;
+with Protypo.Api.Engine_Values.Engine_Vector_Handlers;
 with Protypo.Api.Engine_Values.Engine_Value_Holders;
 
 with User_Records;
@@ -65,7 +65,7 @@ procedure Prova_Interpreter is
                                                         4 => -5));
 
    User_Dir : constant Ambivalent_Interface_Access :=
-                Engine_Value_Array_Wrappers.Make_Wrapper (To_Array (Db));
+                Ambivalent_Interface_Access (Engine_Vector_Handlers.To_Vector_Handler (To_Array (Db)));
 
    Engine   : Interpreter_Type;
 
