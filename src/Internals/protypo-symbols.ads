@@ -24,8 +24,13 @@ private package Protypo.Symbols is
    subtype Procedure_Type is Symbol_Value (Procedure_Class);
 
    function To_Symbol_Value
-     (Item : Api.Engine_Values.Engine_Value)
-      return Engine_Value_Type;
+     (Item      : Api.Engine_Values.Engine_Value;
+      Read_Only : Boolean)
+      return Engine_Value_Type
+     with
+       Post => Is_Writable (To_Symbol_Value'Result) = not Read_Only;
+
+   function Is_Writable (Item : Engine_Value_Type) return Boolean;
 
    function Get_Value
      (Item : Engine_Value_Type)
@@ -72,7 +77,8 @@ private
       record
          case Class is
             when Engine_Value_Class =>
-               Val : Value_Holders.Holder;
+               Val       : Value_Holders.Holder;
+               Read_Only : Boolean;
 
             when Function_Class =>
                Fun : Function_Holders.Holder;

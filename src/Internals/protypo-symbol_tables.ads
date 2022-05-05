@@ -22,9 +22,10 @@ private package Protypo.Symbol_Tables is
    --                         renames Protypo_Tables.Copy_Globals;
 
    procedure Define_Variable
-     (Where : in out Symbol_Table_Type;
+     (Where : in out Symbol_Table_type;
       Name  : Id;
-      Value : Engine_Values.Engine_Value);
+      Value : Engine_Values.Engine_Value;
+      Read_Only : Boolean);
 
    procedure Define_Function
      (Where : in out Symbol_Table_Type;

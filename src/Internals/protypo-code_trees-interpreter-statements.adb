@@ -290,7 +290,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
 
                Status.Symbol_Table.Create
                  (Name          => Variable,
-                  Initial_Value => Symbols.To_Symbol_Value (Void_Value),
+                  Initial_Value => Symbols.To_Symbol_Value (Void_Value, True),
                   Position      => Position);
 
                loop
@@ -298,7 +298,7 @@ package body Protypo.Code_Trees.Interpreter.Statements is
 
                   Protypo_Tables.Update
                     (Pos       => Position,
-                     New_Value => Symbols.To_Symbol_Value (Iterator_Ref.Element));
+                     New_Value => Symbols.To_Symbol_Value (Iterator_Ref.Element, True));
 
                   exit when Run_Loop_Body (Status, Program) = Stop;
 

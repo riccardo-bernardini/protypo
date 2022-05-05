@@ -21,12 +21,13 @@ package body Protypo.Symbol_Tables is
    ---------------------
 
    procedure Define_Variable
-     (Where : in out Symbol_Table_type;
-      Name  : Id;
-      Value : Engine_Values.Engine_Value)
+     (Where     : in out Symbol_Table_Type;
+      Name      : Id;
+      Value     : Engine_Values.Engine_Value;
+      Read_Only : Boolean)
    is
    begin
-      Where.Create (Name, Symbols.To_Symbol_Value (Value));
+      Where.Create (Name, Symbols.To_Symbol_Value (Value, Read_Only));
    end Define_Variable;
 
    ---------------------
@@ -34,7 +35,7 @@ package body Protypo.Symbol_Tables is
    ---------------------
 
    procedure Define_Function
-     (Where : in out Symbol_Table_type;
+     (Where : in out Symbol_Table_Type;
       Name  : Id;
       Funct : Engine_Values.Handlers.Function_Interface'Class)
    is
@@ -47,7 +48,7 @@ package body Protypo.Symbol_Tables is
    ----------------------
 
    procedure Define_Procedure
-     (Where : in out Symbol_Table_type;
+     (Where : in out Symbol_Table_Type;
       Name  : Id;
       Proc  : Engine_Values.Handlers.Procedure_Interface'Class)
    is

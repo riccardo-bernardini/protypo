@@ -45,7 +45,5 @@ private
          Symbol_Reference.Position /= Symbol_Tables.Protypo_Tables.No_Element;
 
 
-   function Is_Writable (Item : Symbol_Reference) return Boolean
-   is (True);
 
 end Protypo.Code_Trees.Interpreter.Symbol_Table_References;

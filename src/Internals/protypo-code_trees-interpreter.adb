@@ -186,6 +186,31 @@ package body Protypo.Code_Trees.Interpreter is
 
    end Date_Callback;
 
+   function Type_Name_Callback (Parameters : Engine_Value_Array)
+                                return Engine_Value_Array
+   is
+      use type Ada.Containers.Count_Type;
+   begin
+      if Parameters.Length /= 1 then
+         raise Run_Time_Error with "type_of needs 1 parameters";
+      end if;
+
+      return Singleton (Create (Type_Name (Parameters.First_Element)));
+   end Type_Name_Callback;
+
+   function Is_Void_Callback (Parameters : Engine_Value_Array)
+                                return Engine_Value_Array
+   is
+      use type Ada.Containers.Count_Type;
+   begin
+      if Parameters.Length /= 1 then
+         raise Run_Time_Error with "is_void needs 1 parameters";
+      end if;
+
+      return Singleton (Create (Parameters.First_Element.Class = Void));
+   end Is_Void_Callback;
+
+
    --------------------
    -- Range_Callback --
    --------------------
@@ -424,15 +449,30 @@ package body Protypo.Code_Trees.Interpreter is
 
          Table.Define_Variable
            (Name          => "true",
-            Value => Create (True));
+            Value         => Create (True),
+            Read_Only     => True);
 
          Table.Define_Variable
            (Name          => "false",
-            Value => Create (False));
+            Value         => Create (False),
+            Read_Only     => True);
+
+         Table.Define_Variable
+           (Name          => "nil",
+            Value         => Void_Value,
+            Read_Only     => True);
 
          Table.Define_Function
            (Name          => "range",
             Funct         => Handlers.Create (Range_Callback'Access, 2));
+
+         Table.Define_Function
+           (Name          => "type_of",
+            Funct         => Handlers.Create (Type_Name_Callback'Access, 1));
+
+         Table.Define_Function
+           (Name          => "is_nil?",
+            Funct         => Handlers.Create (Is_Void_Callback'Access, 1));
 
          Table.Define_Function
            (Name          => "glob",

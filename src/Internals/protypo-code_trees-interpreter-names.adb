@@ -110,7 +110,9 @@ package body Protypo.Code_Trees.Interpreter.Names is
                   Status.Symbol_Table.Create
                     (Name          => Ident,
                      Position      => Position,
-                     Initial_Value => symbols.To_Symbol_Value (Void_Value));
+                     Initial_Value =>
+                       Symbols.To_Symbol_Value (Item      => Void_Value,
+                                                Read_Only => False));
 
                   --                    Put_Line ("@@@ inserted '" & ID & "' @" & Image (Position));
                   if Position = Protypo_Tables.No_Element then

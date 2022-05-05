@@ -453,4 +453,16 @@ package body Protypo.Api.Engine_Values is
    end Image;
 
 
+   function Type_Name (Item : Engine_Value) return String
+   is (case Item.Class is
+          when Void               => "void",
+          when Int                => "integer",
+          when Real               => "float",
+          when Text               => "string",
+          when Array_Handler      => Item.Array_Object.Type_Name,
+          when Ambivalent_Handler => Item.Ambivalent_Object.Type_Name,
+          when Record_Handler     => Item.Record_Object.Type_Name,
+          when Iterator           => "iterator");
+
+
 end Protypo.Api.Engine_Values;

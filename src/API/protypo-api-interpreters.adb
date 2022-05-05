@@ -29,12 +29,13 @@ package body Protypo.Api.Interpreters is
    ------------
 
    procedure Define (Interpreter : in out Interpreter_Type;
-                     Name        : Id;
-                     Value       : Engine_Values.Engine_Value)
+                     Name        : ID;
+                     Value       : Engine_Values.Engine_Value;
+                     Read_Only   : Boolean := True)
    is
    begin
       Interpreter.Define (Name  => Name,
-                          Value => Symbols.To_Symbol_Value (Value));
+                          Value => Symbols.To_Symbol_Value (Value, Read_Only));
    end Define;
 
    ------------

@@ -54,6 +54,8 @@ package Protypo.Api.Engine_Values is
        (Handler_Value.Class in Array_Handler .. Record_Handler);
 
 
+   function Type_Name (Item : Engine_Value) return String;
+
    -- =========================== --
    -- Operations on Engine_Values --
    -- =========================== --

@@ -6,12 +6,19 @@ package body Protypo.Symbols is
    ---------------------
 
    function To_Symbol_Value
-     (Item : Api.Engine_Values.Engine_Value) return Engine_Value_Type
+     (Item      : Api.Engine_Values.Engine_Value;
+      Read_Only : Boolean)
+      return Engine_Value_Type
    is
    begin
-      return Symbol_Value'(Class => Engine_Value_Class,
-                           Val   => Value_Holders.To_Holder (Item));
+      return Symbol_Value'(Class     => Engine_Value_Class,
+                           Read_Only => Read_Only,
+                           Val       => Value_Holders.To_Holder (Item));
    end To_Symbol_Value;
+
+
+   function Is_Writable (Item : Engine_Value_Type) return Boolean
+   is (not Item.Read_Only);
 
    function Get_Value
      (Item : Engine_Value_Type)

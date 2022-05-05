@@ -28,7 +28,8 @@ package Protypo.API.Interpreters is
 
    procedure Define (Interpreter : in out Interpreter_Type;
                      Name        : ID;
-                     Value       : Engine_Values.Engine_Value);
+                     Value       : Engine_Values.Engine_Value;
+                     Read_Only   : Boolean := True);
    -- Define a new symbol in the global namespace of the interpreter
 
    procedure Define (Interpreter : in out Interpreter_Type;

@@ -3,18 +3,18 @@ with Protypo.Code_Trees.Interpreter.Statements;
 with Protypo.Code_Trees.Interpreter.Expressions;
 
 pragma Warnings (Off, "no entities of ""Ada.Text_IO"" are referenced");
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_Io; use Ada.Text_Io;
 
-package body Protypo.Code_Trees.Interpreter.Compiled_procedures is
+package body Protypo.Code_Trees.Interpreter.Compiled_Procedures is
 
    -------------
    -- Process --
    -------------
 
-   overriding procedure Process (Fun       : Compiled_procedure;
+   overriding procedure Process (Fun       : Compiled_Procedure;
                                  Parameter : Engine_Value_Array)
    is
-      use type ada.Containers.Count_Type;
+      use type Ada.Containers.Count_Type;
    begin
       if Parameter.Length /= Fun.Parameters.Names.Length then
          raise Program_Error;
@@ -28,13 +28,14 @@ package body Protypo.Code_Trees.Interpreter.Compiled_procedures is
       begin
          for Name_Index in Fun.Parameters.Names.First_Index .. Fun.Parameters.Names.Last_Index loop
             Fun.Status.Symbol_Table.Define_Variable
-              (Name  => Fun.Parameters.Names (Name_Index),
-               Value => Parameter (Name_Index + Name_To_Param));
+              (Name      => Fun.Parameters.Names (Name_Index),
+               Value     => Parameter (Name_Index + Name_To_Param),
+               Read_Only => True);
          end loop;
       end;
 
 
-      Statements.Run (Fun.Status, Fun.procedure_Body);
+      Statements.Run (Fun.Status, Fun.Procedure_Body);
 
       Fun.Status.Symbol_Table.Close_Namespace;
 
@@ -60,7 +61,7 @@ package body Protypo.Code_Trees.Interpreter.Compiled_procedures is
       end case;
    end Process;
 
-   function Signature (Fun : Compiled_procedure)
+   function Signature (Fun : Compiled_Procedure)
                        return Api.Engine_Values.Parameter_Lists.Parameter_Signature
    is
 
@@ -78,4 +79,4 @@ package body Protypo.Code_Trees.Interpreter.Compiled_procedures is
    end Signature;
 
 
-end Protypo.Code_Trees.Interpreter.Compiled_procedures;
+end Protypo.Code_Trees.Interpreter.Compiled_Procedures;
