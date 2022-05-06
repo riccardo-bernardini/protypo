@@ -11,7 +11,7 @@ procedure Simple_Example is
    Engine   : Interpreters.Interpreter_Type;
 
    Program  : constant Interpreters.Template_Type :=
-                "#{  [sin(1.5)=#sin(1.5)#, 42=#the_answer#] }#";
+                "#{  [sin(1.5)=#sin(1.5)#, 42=#the_answer#, sin(pi/2)=#sin(pi/2)#] }#";
 
    Consumer : constant Consumer_Access :=
                 File_Writer.Open (File_Writer.Standard_Error_Special_Name);

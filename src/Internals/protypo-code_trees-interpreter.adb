@@ -1,6 +1,7 @@
 pragma Ada_2012;
 with Ada.Calendar.Formatting;
 with Ada.Exceptions;
+with Ada.Numerics;
 with Ada.Strings.Fixed;
 with Ada.Tags;
 with Gnat.Regpat;
@@ -460,6 +461,11 @@ package body Protypo.Code_Trees.Interpreter is
          Table.Define_Variable
            (Name          => "nil",
             Value         => Void_Value,
+            Read_Only     => True);
+
+         Table.Define_Variable
+           (Name          => "pi",
+            Value         => Create (Ada.Numerics.Pi),
             Read_Only     => True);
 
          Table.Define_Function
