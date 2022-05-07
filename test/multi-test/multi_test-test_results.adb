@@ -1,7 +1,10 @@
 pragma Ada_2012;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Strings.Unbounded; use Ada.Strings.Unbounded;
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Strings.Fixed;
+with Ada.Text_Io; use Ada.Text_Io;
+
+with Multi_Test.Tty_Colors;
 
 package body Multi_Test.Test_Results is
 
@@ -111,7 +114,7 @@ package body Multi_Test.Test_Results is
 
       First : constant Engine_Value := Params (Engine_Index'First);
    begin
-      case first.class is
+      case First.Class is
          when Void =>
             Register_Result (Success => False,
                              Message => "",
@@ -134,42 +137,77 @@ package body Multi_Test.Test_Results is
    ------------------
 
    procedure Print_Report is
+      use Tty_Colors;
+
+      function Format_Success (Success : Boolean) return String
+      is
+      begin
+         if Success then
+            return Color_Text ("SUCCESS", Green);
+
+         else
+            return Color_Text ("SUCCESS", Green);
+         end if;
+      end Format_Success;
+
+      function Format_Suite_Name (Name : String) return String
+      is ("Suite " & Color_Text (Name, Blue));
+
+      function Format_Test_Label (Label : String) return String
+      is (Label);
+
       procedure Print_Suite_Report (Suite : Suite_Result) is
       begin
-         Put_Line ("[" & To_String (Suite.Label) & "]");
+         Put_Line (Format_Suite_Name (To_String (Suite.Label)));
          New_Line;
 
          for Test of Suite.Results loop
-            Put_Line (To_String (Test.Label)
+            Put_Line (Format_Test_Label (To_String (Test.Label))
                       & " "
-                      & (if Test.Success then "SUCCESS" else "FAIL")
+                      & Format_Success (Test.Success)
                       & " "
                       & To_String (Test.Message));
          end loop;
 
          New_Line;
-         Put_Line (" ------ ");
-         New_Line;
       end Print_Suite_Report;
 
       Overall_Success : Boolean := True;
+      Suite_Name_Max_Length : Natural := 0;
    begin
       for Suite of Result_Journal loop
          Print_Suite_Report (Suite);
+
+         Suite_Name_Max_Length :=
+           Natural'Max (Suite_Name_Max_Length, Length (Suite.Label));
 
          Overall_Success := Overall_Success and Suite.Success;
       end loop;
 
       Put_Line ("Summary:");
       New_Line;
-      for Suite of Result_Journal loop
-         Put_Line (To_String (Suite.Label)
-                   & " "
-                   & (if Suite.Success then "success" else "FAIL"));
-      end loop;
 
-      Put_Line ("Overall : "
-                & (if Overall_Success then "SUCCESS" else "FAIL"));
+      declare
+         use Ada.Strings;
+
+         Padded_Name : String (1 .. Suite_Name_Max_Length+3);
+      begin
+         for Suite of Result_Journal loop
+            Fixed.Move (Source  => To_String (Suite.Label) & " ",
+                        Target  => Padded_Name,
+                        Justify => Left,
+                        Pad     => '.');
+
+            Put_Line (Padded_Name
+                      & " "
+                      & Format_Success (Suite.Success));
+         end loop;
+
+         New_Line;
+
+         Put_Line (Fixed."*" (Padded_Name'Length, '-'));
+         Put_Line ("Overall : " & Format_Success (Overall_Success));
+      end;
 
       New_Line;
    end Print_Report;

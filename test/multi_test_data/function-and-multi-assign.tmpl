@@ -1,0 +1,18 @@
+#{
+
+function sum(x; y) is
+begin
+  return x+y;
+end sum;
+
+function sum_and_mul(x; y) is
+begin
+  return x+y, x*y;
+end sum_and_mul;
+
+success(42 = sum(38, 4));
+
+a, b := sum_and_mul(3, 9);
+
+success(a=12 and b=27);
+}#

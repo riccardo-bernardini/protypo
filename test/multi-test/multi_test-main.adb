@@ -74,7 +74,7 @@ procedure Multi_Test.Main is
       Interpreter : Interpreters.Interpreter_Type;
    begin
       Define_Builtins (Interpreter);
-      Test_Results.New_Suite (Directories.Simple_Name (Filename));
+      Test_Results.New_Suite (Directories.Base_Name (Filename));
 
       Interpreters.Run (Interpreter => Interpreter,
                         Program     => Interpreters.Slurp (Filename),
