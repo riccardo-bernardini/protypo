@@ -60,7 +60,7 @@ procedure Multi_Test.Main is
          Target : constant String :=
                     Directories.Compose (Containing_Directory => "/tmp",
                                          Name                 => Name,
-                                         Extension            => ".out");
+                                         Extension            => "out");
       begin
          Put_Line ("[" & Target & "]");
          return Target;
@@ -74,7 +74,7 @@ procedure Multi_Test.Main is
       Interpreter : Interpreters.Interpreter_Type;
    begin
       Define_Builtins (Interpreter);
-      Test_Results.New_Suite (Filename);
+      Test_Results.New_Suite (Directories.Simple_Name (Filename));
 
       Interpreters.Run (Interpreter => Interpreter,
                         Program     => Interpreters.Slurp (Filename),

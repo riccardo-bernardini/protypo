@@ -29,7 +29,7 @@ package body Multi_Test.Test_Results is
 
 
    function Test_Number return Positive
-   is (Positive (Result_Journal.Last_Element.Results.Length) + 1);
+   is (Natural (Result_Journal.Last_Element.Results.Length) + 1);
 
 
    ---------------
@@ -71,50 +71,33 @@ package body Multi_Test.Test_Results is
    -------------
 
    procedure Success (Params : Protypo.Api.Engine_Values.Engine_Value_Array) is
-      use type Ada.Containers.Count_Type;
       use Protypo.Api.Engine_Values;
 
+      First : constant Engine_Value := Params (Engine_Index'First);
+
+      Second : constant Engine_Value := Params (Engine_Index'First + 1);
    begin
-      case Params.Length is
-         when 0 =>
-            Register_Result (Success => True,
-                             Message => "",
-                             Label   => Test_Number'Image);
+      if First.Class = Void and Second.Class = Void then
+         Register_Result (Success => True,
+                          Message => "",
+                          Label   => Test_Number'Image);
 
-         when 1 =>
-            if  Params.First_Element.Class /= Int then
-               raise Constraint_Error
-                 with "Expected int, found " & Params.First_Element.Class'Image;
-            end if;
+      elsif First.Class = Int and Second.Class = Void then
+         Register_Result (Success => Get_Boolean (Params.First_Element),
+                          Message => "",
+                          Label   => Test_Number'Image);
 
-            Register_Result (Success => Get_Boolean (Params.First_Element),
-                             Message => "",
-                             Label   => Test_Number'Image);
+      elsif First.Class = Int and Second.Class = Text then
+         Register_Result (Success => Get_Boolean (First),
+                          Message => Get_String (Second),
+                          Label   => Test_Number'Image);
+      else
+         raise Constraint_Error
+           with "Bad parameter combination: "
+           & First.Class'Image
+           & ", " & Second.Class'Image;
 
-
-         when 2 =>
-            declare
-               First : constant Engine_Value :=
-                         Params (Engine_Index'First);
-
-               Second : constant Engine_Value :=
-                          Params (Engine_Index'First + 1);
-
-            begin
-               if First.Class /= Int or else Second.Class /= Text then
-                  raise Constraint_Error
-                    with "Expected int+string";
-               end if;
-
-               Register_Result (Success => Get_Boolean (First),
-                                Message => Get_String (Second),
-                                Label   => Test_Number'Image);
-            end;
-
-         when others =>
-            raise Constraint_Error;
-
-      end case;
+      end if;
    end Success;
 
    -------------
@@ -122,27 +105,24 @@ package body Multi_Test.Test_Results is
    -------------
 
    procedure Failure (Params : Protypo.Api.Engine_Values.Engine_Value_Array) is
-      use type Ada.Containers.Count_Type;
       use Protypo.Api.Engine_Values;
+
+      First : constant Engine_Value := Params (Engine_Index'First);
    begin
-      case Params.Length is
-         when 0 =>
+      case first.class is
+         when Void =>
             Register_Result (Success => False,
                              Message => "",
                              Label   => Test_Number'Image);
 
-         when 1 =>
-            if  Params.First_Element.Class /= Text then
-               raise Constraint_Error
-                 with "Expected string, found " & Params.First_Element.Class'Image;
-            end if;
-
+         when Text =>
             Register_Result (Success => False,
                              Message => Get_String (Params.First_Element),
                              Label   => Test_Number'Image);
 
          when others =>
-            raise Constraint_Error;
+            raise Constraint_Error
+              with "Expected string, found " & Params.First_Element.Class'Image;
 
       end case;
    end Failure;
