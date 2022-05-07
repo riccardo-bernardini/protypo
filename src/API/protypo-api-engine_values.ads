@@ -15,9 +15,6 @@ package Protypo.Api.Engine_Values is
       Array_Handler,
       Ambivalent_Handler,
       Record_Handler,
-      --  Function_Handler,
-      --  Procedure_Handler,
-      --  Constant_Handler,
       Iterator
      );
 
@@ -45,9 +42,6 @@ package Protypo.Api.Engine_Values is
    subtype Record_Value     is Engine_Value (Record_Handler);
    subtype Ambivalent_Value is Engine_Value (Ambivalent_Handler);
    subtype Iterator_Value   is Engine_Value (Iterator);
-   --  subtype Function_Value   is Engine_Value (Function_Handler);
-   --  subtype Procedure_Value  is Engine_Value (Procedure_Handler);
-   --  subtype Constant_Value   is Engine_Value (Constant_Handler);
 
    subtype Handler_Value is Engine_Value
      with Dynamic_Predicate =>
@@ -271,7 +265,7 @@ package Protypo.Api.Engine_Values is
 
    type Junk_Interface is interface and Engine_Reference;
    --  Curious about this interface?  It is here because of a bug
-   --  in the compiler.  Without it, the compiler crashes
+   --  in the compiler.  Without it, the compiler crashes. Go figure.
 
 
 
