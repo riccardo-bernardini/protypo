@@ -29,7 +29,7 @@ package body Protypo.Api.Interpreters is
    ------------
 
    procedure Define (Interpreter : in out Interpreter_Type;
-                     Name        : ID;
+                     Name        : Id;
                      Value       : Engine_Values.Engine_Value;
                      Read_Only   : Boolean := True)
    is
@@ -42,27 +42,27 @@ package body Protypo.Api.Interpreters is
    -- Define --
    ------------
 
-   procedure Define (Interpreter : in out Interpreter_Type;
-                     Name        : Id;
-                     Funct       : Engine_Values.Handlers.Function_Interface'Class)
+   procedure Define_Function (Interpreter : in out Interpreter_Type;
+                              Name        : Id;
+                              Funct       : Engine_Values.Handlers.Function_Interface'Class)
    is
    begin
       Interpreter.Define (Name  => Name,
                           Value => Symbols.To_Symbol_Value (Funct));
-   end Define;
+   end Define_Function;
 
    ------------
    -- Define --
    ------------
 
-   procedure Define (Interpreter : in out Interpreter_Type;
-                     Name        : Id;
-                     Proc        : Engine_Values.Handlers.Procedure_Interface'Class)
+   procedure Define_Procedure (Interpreter : in out Interpreter_Type;
+                               Name        : Id;
+                               Proc        : Engine_Values.Handlers.Procedure_Interface'Class)
    is
    begin
       Interpreter.Define (Name  => Name,
                           Value => Symbols.To_Symbol_Value (Proc));
-   end Define;
+   end Define_Procedure;
 
 
 
@@ -74,7 +74,7 @@ package body Protypo.Api.Interpreters is
                   Program      : Compiled_Code;
                   Consumer     : Consumers.Consumer_Access)
    is
-      ignored : Engine_Values.Engine_Value_Array;
+      Ignored : Engine_Values.Engine_Value_Array;
    begin
       Run (Interpreter, Program, Consumer, Ignored);
    end Run;

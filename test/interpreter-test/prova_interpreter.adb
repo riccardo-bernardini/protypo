@@ -77,7 +77,7 @@ begin
    Engine.Define (Name => "scores",
                   Value => Scores);
 
-   Engine.Define (Name  => "splitbit",
+   Engine.Define_Function (Name  => "splitbit",
                   Funct => Handlers.Create (Val            => User_Records.Split_Bit'Access,
                                             Min_Parameters => 1,
                                             Max_Parameters => 2));

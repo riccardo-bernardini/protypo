@@ -17,6 +17,17 @@ with Utilities;
 --  This package provides functions and procedures to
 --
 --  * Compile a template to the internal format
+--  * Define variables, functions and procedures for the interpreter
+--  * Run a compiled code
+--  * Few "syntactic sugar" procedures that, for example, combine both
+--    compilation and execution in a single call
+--
+--  The template code can terminate the execution by using "return" at
+--  the top-level.  The values given to "return" are returned as an array
+--  of interpreter values to the caller of the procedure Run.
+--
+--  If the template terminates its execution normally, a vector with
+--  a single element equal to True is returned.
 --
 
 package Protypo.API.Interpreters is
@@ -43,13 +54,15 @@ package Protypo.API.Interpreters is
                      Read_Only   : Boolean := True);
    -- Define a new symbol in the global namespace of the interpreter
 
-   procedure Define (Interpreter : in out Interpreter_Type;
-                     Name        : Id;
-                     Funct       : Engine_Values.Handlers.Function_Interface'Class);
+   procedure Define_Function
+     (Interpreter : in out Interpreter_Type;
+      Name        : Id;
+      Funct       : Engine_Values.Handlers.Function_Interface'Class);
 
-   procedure Define (Interpreter : in out Interpreter_Type;
-                     Name        : Id;
-                     Proc        : Engine_Values.Handlers.Procedure_Interface'Class);
+   procedure Define_Procedure
+     (Interpreter : in out Interpreter_Type;
+      Name        : Id;
+      Proc        : Engine_Values.Handlers.Procedure_Interface'Class);
 
 
    procedure Run (Interpreter  : in out Interpreter_Type;

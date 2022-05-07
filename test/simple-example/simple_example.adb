@@ -24,8 +24,8 @@ begin
    Engine.Define (Name  => "the_answer",
                   Value => Engine_Values.Create (42));
 
-   Engine.Define (Name  => "sin",
-                  Funct => Engine_Values.Handlers.Create (Callbacks.Sin'Access));
+   Engine.Define_Function (Name  => "sin",
+                           Funct => Engine_Values.Handlers.Create (Callbacks.Sin'Access));
 
    Engine.Run (Program, Consumer);
 end Simple_Example;

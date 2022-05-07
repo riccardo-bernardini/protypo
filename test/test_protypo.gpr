@@ -2,9 +2,9 @@ with "../protypo.gpr";
 
 project Test_Protypo is
 
-   for Source_Dirs use ("examples", "interpreter-test", "scanning-test", "simple-example", "parsing-test");
+   for Source_Dirs use ("examples", "interpreter-test", "scanning-test", "simple-example", "parsing-test", "multi-test");
    for Object_Dir use "obj";
-   for Main use ("protypo-parsing-test.adb", "protypo-scanning-test.adb", "prova_interpreter.adb", "simple_example.adb", "string_sequences_test.adb");
+   for Main use ("multi_test-main.adb", "protypo-parsing-test.adb", "protypo-scanning-test.adb", "prova_interpreter.adb", "simple_example.adb", "string_sequences_test.adb");
 
    package Builder is
       for Switches ("ada") use ("-s");
