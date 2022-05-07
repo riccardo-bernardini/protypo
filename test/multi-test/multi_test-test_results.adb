@@ -31,6 +31,8 @@ package body Multi_Test.Test_Results is
    function Test_Number return Positive
    is (Natural (Result_Journal.Last_Element.Results.Length) + 1);
 
+   function Current_Test_Label return String
+   is ("Test N. " & Test_Number'Image);
 
    ---------------
    -- New_Suite --
@@ -80,17 +82,17 @@ package body Multi_Test.Test_Results is
       if First.Class = Void and Second.Class = Void then
          Register_Result (Success => True,
                           Message => "",
-                          Label   => Test_Number'Image);
+                          Label   => Current_Test_Label);
 
       elsif First.Class = Int and Second.Class = Void then
          Register_Result (Success => Get_Boolean (Params.First_Element),
                           Message => "",
-                          Label   => Test_Number'Image);
+                          Label   => Current_Test_Label);
 
       elsif First.Class = Int and Second.Class = Text then
          Register_Result (Success => Get_Boolean (First),
                           Message => Get_String (Second),
-                          Label   => Test_Number'Image);
+                          Label   => Current_Test_Label);
       else
          raise Constraint_Error
            with "Bad parameter combination: "
@@ -113,12 +115,12 @@ package body Multi_Test.Test_Results is
          when Void =>
             Register_Result (Success => False,
                              Message => "",
-                             Label   => Test_Number'Image);
+                             Label   => Current_Test_Label);
 
          when Text =>
             Register_Result (Success => False,
                              Message => Get_String (Params.First_Element),
-                             Label   => Test_Number'Image);
+                             Label   => Current_Test_Label);
 
          when others =>
             raise Constraint_Error
