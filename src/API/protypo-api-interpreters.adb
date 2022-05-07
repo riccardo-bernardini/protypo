@@ -66,8 +66,6 @@ package body Protypo.Api.Interpreters is
 
 
 
-
-
    ---------
    -- Run --
    ---------
@@ -76,10 +74,26 @@ package body Protypo.Api.Interpreters is
                   Program      : Compiled_Code;
                   Consumer     : Consumers.Consumer_Access)
    is
+      ignored : Engine_Values.Engine_Value_Array;
+   begin
+      Run (Interpreter, Program, Consumer, Ignored);
+   end Run;
+
+
+   ---------
+   -- Run --
+   ---------
+
+   procedure Run (Interpreter  : in out Interpreter_Type;
+                  Program      : Compiled_Code;
+                  Consumer     : Consumers.Consumer_Access;
+                  Result       : out Engine_Values.Engine_Value_Array)
+   is
    begin
       Code_Trees.Interpreter.Run (Program      => Program.Code,
                                   Symbol_Table => Interpreter.Symbol_Table,
-                                  Consumer     => Consumer);
+                                  Consumer     => Consumer,
+                                  Result       => Result);
    end Run;
 
    ---------
@@ -88,21 +102,33 @@ package body Protypo.Api.Interpreters is
 
    procedure Run (Interpreter  : in out Interpreter_Type;
                   Program      : Template_Type;
-                  Consumer     : Consumers.Consumer_Access)
+                  Consumer     : Consumers.Consumer_Access;
+                  Result       : out Engine_Values.Engine_Value_Array)
    is
    begin
       Run (Program      => Compile (Program),
            Interpreter  => Interpreter,
-           Consumer     => Consumer);
+           Consumer     => Consumer,
+           Result       => Result);
    end Run;
 
+
+   procedure Run (Interpreter  : in out Interpreter_Type;
+                  Program      : Template_Type;
+                  Consumer     : Consumers.Consumer_Access)
+   is
+      Ignored : Engine_Values.Engine_Value_Array;
+   begin
+      Run (Interpreter, Program, Consumer, Ignored);
+   end Run;
    ---------------------
    -- Expand_Template --
    ---------------------
 
    procedure Expand_Template (Interpreter     : in out Interpreter_Type;
                               Input_Filename  : String;
-                              Target_Filenane : String)
+                              Target_Filenane : String;
+                              Result          : out Engine_Values.Engine_Value_Array)
    is
       use Consumers.File_Writer;
 
@@ -117,7 +143,24 @@ package body Protypo.Api.Interpreters is
    begin
       Run (Interpreter => Interpreter,
            Program     => Template,
-           Consumer    => Consumer);
+           Consumer    => Consumer,
+           Result      => Result);
+   end Expand_Template;
+
+   ---------------------
+   -- Expand_Template --
+   ---------------------
+
+   procedure Expand_Template (Interpreter     : in out Interpreter_Type;
+                              Input_Filename  : String;
+                              Target_Filenane : String)
+   is
+      Ignored : Engine_Values.Engine_Value_Array;
+   begin
+      Expand_Template (Interpreter     => Interpreter,
+                       Input_Filename  => Input_Filename,
+                       Target_Filenane => Target_Filenane,
+                       Result          => Ignored);
    end Expand_Template;
 
    ----------

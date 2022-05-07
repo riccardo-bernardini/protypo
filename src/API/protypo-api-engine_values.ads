@@ -263,7 +263,7 @@ package Protypo.Api.Engine_Values is
                          is abstract;
 
 
-   type Junk_Interface is interface and Engine_Reference;
+   type Useless_Interface is interface and Engine_Reference;
    --  Curious about this interface?  It is here because of a bug
    --  in the compiler.  Without it, the compiler crashes. Go figure.
 

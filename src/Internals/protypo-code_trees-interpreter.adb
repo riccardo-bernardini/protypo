@@ -419,7 +419,8 @@ package body Protypo.Code_Trees.Interpreter is
    procedure Run
      (Program      : Parsed_Code;
       Symbol_Table : Symbol_Tables.Symbol_Table_Type;
-      Consumer     : Api.Consumers.Consumer_Access)
+      Consumer     : Api.Consumers.Consumer_Access;
+      Result       : out Api.Engine_Values.Engine_Value_Array)
    is
       use Symbol_Tables;
 
@@ -528,9 +529,27 @@ package body Protypo.Code_Trees.Interpreter is
 
       Statements.Run (Interpreter, Program.Pt);
 
-      if Interpreter.Break /= No_Break  then
-         raise Program_Error;
-      end if;
+      case  Interpreter.Break.Breaking_Reason is
+         when None =>
+            --  The program exited because it reached the end of the code
+            --  By default we return True
+            Result := Singleton (Create (True));
+
+         when Return_Statement =>
+            --  The program exited because of a return at the top level
+
+            if not Interpreter.Break.Result.Is_Empty then
+               Result := Interpreter.Break.Result;
+
+            else
+               Result := Singleton (Create (True));
+
+            end if;
+
+         when Exit_Statement =>
+            --  We should never arrive here
+            raise Program_Error;
+      end case;
    end Run;
 
 

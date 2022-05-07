@@ -7,7 +7,8 @@ with Ada.Containers.Indefinite_Doubly_Linked_Lists;
 package Protypo.Code_Trees.Interpreter is
    procedure Run (Program      : Parsed_Code;
                   Symbol_Table : Symbol_Tables.Symbol_Table_Type;
-                  Consumer     : Api.Consumers.Consumer_Access);
+                  Consumer     : Api.Consumers.Consumer_Access;
+                  Result       : out api.Engine_Values.Engine_Value_Array);
 
    Bad_Iterator : exception;
    Bad_Field    : exception;

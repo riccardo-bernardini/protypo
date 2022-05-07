@@ -8,6 +8,17 @@ private with Protypo.Code_Trees;
 
 with Utilities;
 
+--
+--  This package provides methods to interact with the actual interpreter
+--  As in many similar cases, the interpreter action is a two-step
+--  process: first the code is compiled into an internal format and
+--  successively the internal representation is interpreted.
+--
+--  This package provides functions and procedures to
+--
+--  * Compile a template to the internal format
+--
+
 package Protypo.API.Interpreters is
    type Template_Type is new String;
 
@@ -40,25 +51,56 @@ package Protypo.API.Interpreters is
                      Name        : Id;
                      Proc        : Engine_Values.Handlers.Procedure_Interface'Class);
 
+
+   procedure Run (Interpreter  : in out Interpreter_Type;
+                  Program      : Template_Type;
+                  Consumer     : Consumers.Consumer_Access;
+                  Result       : out Engine_Values.Engine_Value_Array);
+   --  Run the specified template and send the result to the consumer.
+   --  Return the value returned by the script in Result
+
    procedure Run (Interpreter  : in out Interpreter_Type;
                   Program      : Template_Type;
                   Consumer     : Consumers.Consumer_Access);
-   -- Run the specified template and send the result to the consumer
+   --  Run the specified template and send the result to the consumer.
+   --  The value returned by the script is ignored
+
+
+   procedure Run (Interpreter  : in out Interpreter_Type;
+                  Program      : Compiled_Code;
+                  Consumer     : Consumers.Consumer_Access;
+                  Result       : out Engine_Values.Engine_Value_Array);
+   --  Run the pre-compiled code and send the result to the consumer
+   --  Return the value returned by the script in Result
 
    procedure Run (Interpreter  : in out Interpreter_Type;
                   Program      : Compiled_Code;
                   Consumer     : Consumers.Consumer_Access);
-   -- Run the pre-compiled code and send the result to the consumer
+   --  Run the pre-compiled code and send the result to the consumer
+   --  The value returned by the script is ignored
+
 
 
    Standard_Output : constant String := "-";
 
    procedure Expand_Template (Interpreter     : in out Interpreter_Type;
                               Input_Filename  : String;
+                              Target_Filenane : String;
+                              Result          : out Engine_Values.Engine_Value_Array);
+   --  Expand the given template and write the result to the specified
+   --  target.  To write to standard output use "-" (or the
+   --  Standar_Output constant)
+   --  The value returned by the script is returned in Result
+
+
+   procedure Expand_Template (Interpreter     : in out Interpreter_Type;
+                              Input_Filename  : String;
                               Target_Filenane : String);
-   -- Expand the given template and write the result to the specified
-   -- target.  To write to standard output use "-" (or the
-   -- Standar_Output constant)
+   --  Expand the given template and write the result to the specified
+   --  target.  To write to standard output use "-" (or the
+   --  Standar_Output constant)
+   --  The value returned by the script is ignored
+
 
    function Slurp (Filename : String) return Template_Type;
    -- Read a template from the specified file.  Useful in conjuction with
