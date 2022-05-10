@@ -10,9 +10,20 @@ begin
   return x+y, x*y;
 end sum_and_mul;
 
+function factorial(n) is
+begin
+  if n < 1 then
+    return 1;
+  else
+    return n*factorial(n-1);
+  end if;
+end factorial;
+
 success(42 = sum(38, 4));
 
 a, b := sum_and_mul(3, 9);
 
 success(a=12 and b=27);
+
+success(720 = factorial(6));
 }#

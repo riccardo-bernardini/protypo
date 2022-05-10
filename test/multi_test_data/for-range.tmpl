@@ -9,6 +9,16 @@ end loop;
 
 success(acc = (N*(N+1)) / 2);
 
+M := 12;
+i := 1;
+acc := 0;
+while i < M loop
+  acc := acc + i;
+  i := i+1;
+end loop;
+
+success(acc = (M*(M+1))/2);
+
 return true;
 }#
 
