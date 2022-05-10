@@ -11,7 +11,7 @@ project Test_Protypo is
    end Builder;
 
    package Compiler is
-      for Switches ("ada") use ("-gnat12", "-g", "-gnatE", "-fstack-check", "-gnata", "-O3", "-fpreserve-control-flow", "-fdump-scos", "-gnatwa");
+      for Switches ("ada") use ("-gnat12", "-g", "-gnatE", "-fstack-check", "-gnata",  "-fpreserve-control-flow", "-fdump-scos", "-gnatwa");
    end Compiler;
 
    package Binder is

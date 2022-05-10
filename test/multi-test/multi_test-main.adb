@@ -4,6 +4,7 @@ with Ada.Directories;
 with Protypo.Api.Interpreters;
 with Protypo.Api.Engine_Values.Handlers;
 with Protypo.Api.Consumers.File_Writer;
+with Protypo.Api.Engine_Values.Engine_Value_Holders;
 
 with Multi_Test.Test_Results;
 
@@ -13,8 +14,11 @@ with Ada.Text_Io; use Ada.Text_Io;
 
 with Protypo.Api.Engine_Values.Array_Wrappers;
 
+with Multi_Test.User_Records;
+
 procedure Multi_Test.Main is
    type Integer_Array is array (Positive range <>) of Integer;
+
 
    package Integer_Array_Handlers is
      new Protypo.Api.Engine_Values.Array_Wrappers
@@ -25,6 +29,36 @@ procedure Multi_Test.Main is
         Get_Value    => Engine_Values.Get_Integer,
         Image        => Engine_Values.Image,
         Name         => "integer array");
+
+
+
+   function Get_User (X : Protypo.Api.Engine_Values.Engine_Value)
+                      return User_Records.Aggregate_Type
+   is
+      pragma Unreferenced (X);
+   begin
+      return User_Records.Void_Aggregate;
+   end Get_User;
+
+   function Image (El     : User_Records.Aggregate_Type;
+                   Format : String)
+                   return String
+   is
+      pragma Unreferenced (El, Format);
+   begin
+      return ("user");
+   end Image;
+
+   package User_Arrays is
+     new Protypo.Api.Engine_Values.Array_Wrappers
+       (Element_Type => User_Records.Aggregate_Type,
+        Index_Type   => Positive,
+        Array_Type   => User_Records.Multi_Aggregate,
+        Create       => User_Records.Make_Value,
+        Get_Value    => Get_User,
+        Image        => Image,
+        Name         => "user record");
+
 
    Bad_Command_Line : exception;
 
@@ -48,8 +82,18 @@ procedure Multi_Test.Main is
    procedure Define_Builtins (Interpreter : in out Interpreters.Interpreter_Type)
    is
       use Engine_Values.Handlers;
+      use Engine_Values;
+
 
       Fibonacci : constant Integer_Array (1 .. 5) := (1, 1, 2, 3, 5);
+
+      Users : constant User_Records.Multi_Aggregate :=
+                ((Name  => Engine_Value_Holders.To_Holder (Create ("pippo")),
+                  Serial => Engine_Value_Holders.To_Holder (Create ("12345")),
+                  Age    => Engine_Value_Holders.To_Holder (Create (42))),
+                 (Name   => Engine_Value_Holders.To_Holder (Create ("pluto")),
+                  Serial => Engine_Value_Holders.To_Holder (Create ("11111")),
+                  Age    => Engine_Value_Holders.To_Holder (Create (33))));
    begin
       Interpreters.Define_Procedure
         (Interpreter => Interpreter,
@@ -70,6 +114,12 @@ procedure Multi_Test.Main is
         (Interpreter => Interpreter,
          Name        => "fibo",
          Value       => Integer_Array_Handlers.Create (Fibonacci),
+         Read_Only   => True);
+
+      Interpreters.Define
+        (Interpreter => Interpreter,
+         Name        => "users",
+         Value       => User_Arrays.Create (Users),
          Read_Only   => True);
    end Define_Builtins;
 
