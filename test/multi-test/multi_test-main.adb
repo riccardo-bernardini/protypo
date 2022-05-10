@@ -9,9 +9,23 @@ with Multi_Test.Test_Results;
 
 use Ada;
 use Protypo.Api;
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_Io; use Ada.Text_Io;
+
+with Protypo.Api.Engine_Values.Array_Wrappers;
 
 procedure Multi_Test.Main is
+   type Integer_Array is array (Positive range <>) of Integer;
+
+   package Integer_Array_Handlers is
+     new Protypo.Api.Engine_Values.Array_Wrappers
+       (Element_Type => Integer,
+        Index_Type   => Positive,
+        Array_Type   => Integer_Array,
+        Create       => Engine_Values.Create,
+        Get_Value    => Engine_Values.Get_Integer,
+        Image        => Engine_Values.Image,
+        Name         => "integer array");
+
    Bad_Command_Line : exception;
 
    function Data_Directory return String
@@ -34,6 +48,8 @@ procedure Multi_Test.Main is
    procedure Define_Builtins (Interpreter : in out Interpreters.Interpreter_Type)
    is
       use Engine_Values.Handlers;
+
+      Fibonacci : constant Integer_Array (1 .. 5) := (1, 1, 2, 3, 5);
    begin
       Interpreters.Define_Procedure
         (Interpreter => Interpreter,
@@ -49,6 +65,12 @@ procedure Multi_Test.Main is
            Callback_Procedure_Handler'(Create (Val            => Test_Results.Failure'Access,
                                                Min_Parameters => 0,
                                                Max_Parameters => 1)));
+
+      Interpreters.Define
+        (Interpreter => Interpreter,
+         Name        => "fibo",
+         Value       => Integer_Array_Handlers.Create (Fibonacci),
+         Read_Only   => True);
    end Define_Builtins;
 
 

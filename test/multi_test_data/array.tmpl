@@ -1,0 +1,31 @@
+#{
+
+function fibonacci(n) is
+begin
+  if n < 3 then
+    return 1;
+  else
+    return fibonacci(n-1) + fibonacci(n-2);
+  end if;
+end fibonacci;
+
+acc := 0;
+expected := 1 + 1 + 2 + 3 + 5;
+
+for el in fibo.iterate loop
+  acc := acc + el;
+end loop;
+
+success(acc = expected);
+
+ok := true;
+
+for i in fibo.range loop
+  ok := ok and (fibo(i) = fibonacci(i));
+end loop;
+
+success(ok);
+
+success (fibo.first = 1 and fibo.last = 5);
+
+}#
