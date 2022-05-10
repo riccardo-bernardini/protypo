@@ -28,4 +28,12 @@ success(ok);
 
 success (fibo.first = 1 and fibo.last = 5);
 
+acc := 0;
+
+for user in users.iterate loop
+  acc := acc + user.age;
+end loop;
+
+success (acc = 75);
+
 }#

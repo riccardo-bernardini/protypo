@@ -58,6 +58,8 @@ package body Multi_Test.Test_Results is
          raise Program_Error;
       end if;
 
+      --  Put_Line ("Registering " & Success'Image);
+
       declare
          Current_Suite : constant Suite_Result_Lists.Reference_Type :=
                            Result_Journal.Reference (Result_Journal.Last);
@@ -88,7 +90,7 @@ package body Multi_Test.Test_Results is
                           Label   => Current_Test_Label);
 
       elsif First.Class = Int and Second.Class = Void then
-         Register_Result (Success => Get_Boolean (Params.First_Element),
+         Register_Result (Success => Get_Boolean (First),
                           Message => "",
                           Label   => Current_Test_Label);
 
@@ -146,7 +148,7 @@ package body Multi_Test.Test_Results is
             return Color_Text ("SUCCESS", Green);
 
          else
-            return Color_Text ("SUCCESS", Green);
+            return Color_Text ("FAIL", Red);
          end if;
       end Format_Success;
 
