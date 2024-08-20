@@ -16,4 +16,7 @@ obj/gpsauto.cgpr
 obj/*
 
 test/obj/[^.]*
-lib/[^.]*
+lib/[^.]*/obj/
+/lib/
+/alire/
+/config/

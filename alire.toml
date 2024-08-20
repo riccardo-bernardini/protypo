@@ -1,0 +1,10 @@
+name = "protypo"
+description = "A template expansion library \"alla mia maniera\""
+version = "0.1.0-dev"
+
+authors = ["Riccardo Bernardini"]
+maintainers = ["Riccardo Bernardini <riccardo.bernardini@uniud.it>"]
+maintainers-logins = ["riccardo-bernardini"]
+licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
+website = ""
+tags = ["expansion", "template", "macro", "page-generator", "script"]

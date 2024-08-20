@@ -1,23 +1,31 @@
-with "src/lib/ada-tokenizer/tokenizer.gpr";
+with "config/protypo_config.gpr";
+project Protypo is
 
-library project Protypo is
+   for Library_Name use "Protypo";
+   for Library_Version use Project'Library_Name & ".so." & Protypo_Config.Crate_Version;
 
-   for Source_Dirs use ("src", "src/lib/Generic_Symbol_Table", "src/lib/Generic_Symbol_Table/test", "src/lib/Readable_Sequences", "src/lib/Utilities", "src/API", "src/Internals");
-   for Object_Dir use "obj";
-   for Library_Name use "protypo";
+   for Source_Dirs use ("src/", "config/", "src/lib/Generic_Symbol_Table", "src/lib/Generic_Symbol_Table/test", "src/lib/Readable_Sequences", "src/lib/Utilities", "src/API", "src/Internals");
+   for Object_Dir use "obj/" & Protypo_Config.Build_Profile;
+   for Create_Missing_Dirs use "True";
    for Library_Dir use "lib";
 
-   package Builder is
-      for Switches ("ada") use ("-s", "-g", "-k");
-   end Builder;
+   type Library_Type_Type is ("relocatable", "static", "static-pic");
+   Library_Type : Library_Type_Type :=
+     external ("PROTYPO_LIBRARY_TYPE", external ("LIBRARY_TYPE", "static"));
+   for Library_Kind use Library_Type;
 
    package Compiler is
-      for Switches ("ada") use ("-gnat12", "-g", "-fstack-check", "-gnata", "-gnatE", "-gnatwa");
+      for Default_Switches ("Ada") use
+      Protypo_Config.Ada_Compiler_Switches &
+      ("-gnat12", "-g", "-fstack-check", "-gnata", "-gnatE", "-gnatwa");
    end Compiler;
 
    package Binder is
-      for Switches ("ada") use ("-E");
+      for Switches ("Ada") use ("-Es"); --  Symbolic traceback
    end Binder;
 
-end Protypo;
+   package Install is
+      for Artifacts (".") use ("share");
+   end Install;
 
+end Protypo;
