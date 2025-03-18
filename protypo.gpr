@@ -4,7 +4,7 @@ with "string-splitter/splitter.gpr";
 project Protypo is
 
    for Library_Name use "Protypo";
-   for Library_Version use "1.0.0";
+   for Library_Version use "1.0.0-beta";
 
    for Source_Dirs use
    (
